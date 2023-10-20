@@ -1,0 +1,188 @@
+// Required imports for creating the Final Shadow JAR
+import java.util.jar.JarInputStream
+
+plugins {
+    // You can prevent applying a plugin as follows:
+    // id "com.github.johnrengelman.shadow" version "7.1.0" apply false
+
+    // Required plugin to create an executable jar which does not require external dependencies
+    id "com.github.johnrengelman.shadow" version "7.1.0"
+
+    // Required plugin for checks testing
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+
+    // Required to work with Ballerina Project APIs
+    id 'java'
+    // id 'java-library'
+
+    // Additional Ballerina specific plugins
+}
+
+group = 'org.wso2.ballerina'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    // Required plugin repositories to work with sonar plugin API
+    mavenCentral()
+    gradlePluginPortal()
+    maven{
+        url = 'https://repox.jfrog.io/repox/plugins.gradle.org/'
+    }
+    // Required repository for testing
+    maven {
+        url = uri("https://plugins.gradle.org/m2/")
+    }
+
+    // Include Ballerina Specific Repository for fetching required Ballerina Plugins
+//    maven{
+//        url = 'https://maven.pkg.github.com/ballerina-platform/*'
+//        credentials {
+//            username System.getenv("packageUser")
+//            password System.getenv("packagePAT")
+//        }
+//    }
+}
+
+dependencies {
+    // Required dependencies to work with sonar plugin API
+    compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.12.0.310'
+    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-commons', version:'2.1.0.1111'
+    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-xml-parsing', version:'2.1.0.1111'
+    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-regex-parsing', version:'2.1.0.1111'
+    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-performance-measure', version:'2.1.0.1111'
+    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-recognizers', version:'2.1.0.1111'
+
+    // Required additional dependencies to make working with sonar plugin API easier
+    implementation group:'com.fasterxml.staxmate', name:'staxmate', version:'2.4.0'
+    implementation group:'com.google.code.gson', name:'gson', version:'2.9.0'
+
+    // Required dependencies for testing the plugin before building and deploying
+    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-api', version:'5.8.2'
+    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-params', version:'5.8.2'
+    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-engine', version:'5.8.2'
+    testImplementation group:'org.assertj', name:'assertj-core', version:'3.23.1'
+    testImplementation group:'org.mockito', name:'mockito-core', version:'4.6.1'
+    testImplementation group:'io.mockk', name:'mockk', version:'1.12.4'
+    testImplementation group:'io.github.classgraph', name:'classgraph', version:'4.8.149'
+    testImplementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-test-commons', version:'2.1.0.1111'
+    testImplementation group:'org.sonarsource.orchestrator', name:'sonar-orchestrator', version:'3.40.0.183'
+    testImplementation group:'org.sonarsource.sonarqube', name:'sonar-ws', version:'9.7.1.62043'
+    testImplementation group:'org.sonarsource.sonarlint.core', name:'sonarlint-core', version:'7.0.0.37656'
+    testImplementation group:'org.sonarsource.sonarqube', name:'sonar-plugin-api-impl', version:'9.7.1.62043'
+
+    // Required dependencies for accessing the ballerina java project API
+    // implementation group:'org.ballerinalang', name:'ballerina-lang', version:'2201.5.2'
+    // implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:'2201.5.2'
+    // implementation group:'org.ballerinalang', name:'ballerina-parser', version:'2201.5.2'
+
+    // Ballerina related dependencies
+}
+
+// Required to run tests relevant to the plugin
+tasks.test {
+    useJUnitPlatform()
+}
+
+// include compileOnly dependencies during test to prevent certificate issues
+configurations {
+    testImplementation {
+        extendsFrom compileOnly
+    }
+}
+
+// =====================
+// JAR creation settings
+// =====================
+// Configurations for the output jar file when the gradle build is performed
+// Configure global properties
+ext {
+    set("buildNumber", System.getProperty("buildNumber"))
+}
+
+tasks.jar {
+    manifest {
+        def displayVersion = (project.property("buildNumber") == null ? project.version : project.version.substring(0, project.version.lastIndexOf('.')) + " (build ${project.property("buildNumber")})")
+        def buildDate = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        attributes(
+                'Build-Time': buildDate,
+                'Implementation-Build': 'git rev-parse HEAD'.execute().text.trim(),
+                'Plugin-BuildDate': buildDate,
+                // Note that use of ChildFirstClassLoader is deprecated since SonarQube 7.9
+                'Plugin-ChildFirstClassLoader': 'false',
+                'Plugin-Class': 'org.wso2.ballerina.plugin.BallerinaPlugin',
+                'Plugin-Description': 'Code Analyzer for Ballerina',
+                'Plugin-Developers': 'WSO2 Team',
+                'Plugin-Display-Version': displayVersion,
+                'Plugin-Key': 'ballerina',
+                'Plugin-License': 'GNU LGPL 3',
+                'Plugin-Name': 'Ballerina Code Quality and Security',
+                'Plugin-Organization': 'WSO2',
+                'Plugin-OrganizationUrl': 'https://wso2.com/',
+                'Plugin-SourcesUrl': 'https://ballerina.io/',
+                'Plugin-Version': project.version,
+                'Plugin-RequiredForLanguages': 'ballerina',
+                'Sonar-Version': '6.7',
+                'Version': "${project.version}",
+                'Jre-Min-Version': '11',
+        )
+    }
+}
+
+// Configuration required to create the shadow jar file
+def shadowJar = tasks.shadowJar
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+tasks.shadowJar {
+    minimize {}
+
+    // build related files, useless for the plugin
+    exclude '**/*.js'
+    exclude '**/*.properties'
+    exclude '**/*.proto'
+    exclude '**/*.txt'
+
+    // The following command actually creates the final jar file if the build is between the size ranges given
+    // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)
+    doLast {
+        enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, 10L, 50_000_000L)
+    }
+}
+
+artifacts {
+    archives shadowJar
+}
+
+// This function determines the size of the shadow jar file
+// if the size is smaller than the one defined in the main build.gradle file
+// the build creation will fail
+static void enforceJarSizeAndCheckContent(File file, long minSize, long maxSize) {
+    long size = file.length()
+    if (size < minSize)  {
+        throw new GradleException("${file.path} size ($size) too small. Min is $minSize")
+    } else if (size > maxSize) {
+        throw new GradleException("${file.path} size ($size) too large. Max is $maxSize")
+    }
+    checkJarEntriesPathUniqueness file
+}
+
+// A jar should not contain 2 entries with the same path, furthermore Pack200 will fail to unpack it
+static void checkJarEntriesPathUniqueness(File file) {
+    def allNames = new HashSet()
+    def duplicatedNames = new HashSet()
+    file.withInputStream { input ->
+        new JarInputStream(input).withCloseable { jarInput ->
+            for (def jarEntry = jarInput.nextJarEntry; jarEntry != null; jarEntry = jarInput.nextJarEntry) {
+                if (!allNames.add(jarEntry.name)) {
+                    duplicatedNames.add jarEntry.name
+                }
+            }
+        }
+    }
+    if (!duplicatedNames.empty) {
+        throw new GradleException("Duplicated entries in the jar: '${file.path}': ${duplicatedNames.join(', ')}")
+    }
+}
