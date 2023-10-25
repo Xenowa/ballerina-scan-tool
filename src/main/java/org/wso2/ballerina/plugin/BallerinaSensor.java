@@ -1,22 +1,35 @@
 package org.wso2.ballerina.plugin;
 
+// Ballerina specific imports
+import io.ballerina.projects.DocumentId;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.directory.ProjectLoader;
+
 // Sonar Plugin API imports
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.fs.TextRange;
 import org.sonar.api.batch.rule.CheckFactory;
 import org.sonar.api.batch.sensor.Sensor;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
 import org.sonar.api.issue.NoSonarFilter;
 import org.sonar.api.measures.FileLinesContextFactory;
-import org.sonar.api.rule.RuleKey;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
-// Ballerina specific imports
-import static org.wso2.ballerina.plugin.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
+// Other imports
+import org.wso2.ballerina.checks.FunctionChecks;
+import org.wso2.ballerinalang.compiler.tree.BLangPackage;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 class BallerinaSensor implements Sensor {
     private static final Logger LOG = Loggers.get(BallerinaSensor.class);
@@ -41,60 +54,96 @@ class BallerinaSensor implements Sensor {
                 .name(language.getName() + " Sensor");
     }
 
+    public void setBalHome(){
+        // Running bal home command depending on the os
+        String command = System.getProperty("os.name").startsWith("Windows")
+                ? "cmd /c bal home"
+                : "sh -c bal home";
+
+        Process process = null;
+        try {
+            process = Runtime.getRuntime().exec(command);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // getting the result from the executed command
+        ByteArrayOutputStream balHome = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while (true) {
+            try {
+                if ((length = process.getInputStream().read(buffer)) == -1) break;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            balHome.write(buffer, 0, length);
+        }
+
+        // Setting the root path to the distribution obtained by bal home command
+        System.setProperty("ballerina.home", balHome.toString().trim());
+    }
+
     // The place which the entire scan logic should be defined, this is the starting point of the scanner
     @Override
     public void execute(SensorContext sensorContext) {
-        // Providing the base minimum features required to report an issue to sonarqube once a scan is triggered
-        // Dummy rule key creation
-        RuleKey ruleKey = RuleKey.of(BALLERINA_REPOSITORY_KEY, "S107");
+        // Setting up the ballerina home property from the sensor side depending on the type of OS the plugin is
+        // running on (In the go plugin it has been done from the Java side as well)
+        setBalHome();
 
-        // Feature to determine all input files
         // TODO: Implement feature to identify only ballerina files and create an Sonar InputFile using the semantic model
-        // The sonar plugin API itself provides a way to determine the scanned files to be Ballerina files
-        // It is implemented in all SonarQube plugins as follows:
+        // Retrieve all .bal source files from a project
         FileSystem fileSystem = sensorContext.fileSystem();
         FilePredicate mainFilePredicate = fileSystem.predicates()
                 .and(
                         fileSystem.predicates().hasLanguage(language.getKey()),
                         fileSystem.predicates().hasType(InputFile.Type.MAIN)
                 );
-
-        // Setting up the files to be analyzed
         Iterable<InputFile> filesToAnalyze = fileSystem.inputFiles(mainFilePredicate);
-        // It generates a list with the type InputFile
-        // This is a requirement in order to perform reporting of broken rules to SonarQube
 
-        // Reporting an issue for each input file scanned despite having no issues
-        // Dummy message to be reported
-        String message = "Reporting dummy Ballerina Check =)";
         for(InputFile inputFile : filesToAnalyze){
-            // Dummy text range of the file being reported
-            // This range is sensitive to the code provided and is aware regarding the starting point and ending points
-            TextRange textRange = inputFile.newRange(
-                    1,
-                    0,
-                    inputFile.lines(),
-                    1
-            );
+            // ==================================
+            // Ballerina Specific Implementations
+            // ==================================
+            // Ballerina Specific implementations start from here:
+            Path filePath = inputFile.path();
 
-            // Reporting the issue to SonarQube
-            sensorContext.newIssue()
-                    .forRule(ruleKey)
-                    .at(sensorContext.newIssue()
-                            .newLocation()
-                            .on(inputFile)
-                            .message(message)
-                            .at(inputFile.newRange(textRange.start().line()
-                                            , textRange.start().lineOffset()
-                                            , textRange.end().line()
-                                            , textRange.end().lineOffset()
-                                    )
-                            )
-                    )
-                    .save();
+            try {
+                // Load the Ballerina file
+                Project project = ProjectLoader.loadProject(filePath);
+
+                // get the document ID by considering if the project structure is relevant to Ballerina
+                DocumentId documentId = project.documentId(filePath);
+                if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
+                    documentId = project.documentId(filePath);
+                } else {
+                    // If project structure is different go to the next document
+                    Module currentModule = project.currentPackage().getDefaultModule();
+                    Iterator<DocumentId> documentIterator = currentModule.documentIds().iterator();
+
+                    // block is used to prevent crashing
+                    try{
+                        documentId = documentIterator.next();
+                    }catch (NoSuchElementException exception){
+                        LOG.error(exception.toString());
+                    }
+                }
+
+                // Compile the Ballerina source code file
+                PackageCompilation compilation = project.currentPackage().getCompilation();
+                // SemanticModel semanticModel = compilation.getSemanticModel(documentId.moduleId());
+                // List<Symbol> symbols = semanticModel.visibleSymbols();
+
+
+                // Retrieve the BLangPackage Node
+                BLangPackage bLangPackage = compilation.defaultModuleBLangPackage();
+
+                // Start performing checks
+                FunctionChecks.tooManyParametersCheck(sensorContext, inputFile, bLangPackage);
+            }catch (Exception exception){
+                LOG.error(exception.toString());
+            }
         }
-
-        LOG.info("Ballerina Sensor execution completed!");
 
         // Starting the performance test of the sensor
 //        PerformanceMeasure.Duration sensorDuration = createPerformanceMeasureReport(sensorContext);

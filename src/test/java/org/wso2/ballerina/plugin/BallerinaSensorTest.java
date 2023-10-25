@@ -1,12 +1,18 @@
 package org.wso2.ballerina.plugin;
 
+// Testing imports
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+// Sonar Plugin API based imports
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.rule.CheckFactory;
+import org.sonar.api.batch.sensor.issue.Issue;
+import org.sonar.api.batch.sensor.issue.internal.DefaultIssueLocation;
 import org.sonar.api.batch.sensor.issue.internal.DefaultNoSonarFilter;
 
+// Other imports
 import java.util.Iterator;
 
 class BallerinaSensorTest extends AbstractSensorTest {
@@ -26,13 +32,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
     @Test
     void test_one_rule() {
         // Simulating a Ballerina file in a project
-        InputFile inputFile = createInputFile("file1.bal"
-                , ("// Non compliant as the function has more than 7 parameters in it\n" +
-                        "fun tooManyParamsFunc(a:Int, b:Int, c:Int, d:Int, e:Int, f:Int, g:Int, h:Int, i:Int): Int{\n" +
-                        "    return a + b + c + d + e + f + g + h + i\n" +
-                        "}").trim()
-                , InputFile.Status.SAME
-        );
+        InputFile inputFile = createInputFileFromPath("sonar_bal_testing/main.bal");
         context.fileSystem().add(inputFile);
 
         // Setting up a dummy rule
@@ -41,16 +41,16 @@ class BallerinaSensorTest extends AbstractSensorTest {
         sensor.execute(context);
 
         // Retrieving all issues sent by the sensor scan
-        Iterator<org.sonar.api.batch.sensor.issue.Issue> issues = context.allIssues().iterator();
+        Iterator<Issue> issues = context.allIssues().iterator();
 
-        // Checking if the sensor triggers the dummy rule
-        org.sonar.api.batch.sensor.issue.Issue issue = issues.next();
+//        // Checking if the sensor triggers the dummy rule
+        Issue issue = issues.next();
         Assertions.assertThat(issue.ruleKey().rule()).isEqualTo("S107");
 
         // Checking the location where the dummy rule was triggered from
-        org.sonar.api.batch.sensor.issue.internal.DefaultIssueLocation location = (org.sonar.api.batch.sensor.issue.internal.DefaultIssueLocation) issue.primaryLocation();
+        DefaultIssueLocation location = (DefaultIssueLocation) issue.primaryLocation();
         Assertions.assertThat(location.inputComponent()).isEqualTo(inputFile);
-        Assertions.assertThat(location.message()).isEqualTo("Reporting dummy Ballerina Check =)");
+        Assertions.assertThat(location.message()).isEqualTo("This function has 8 parameters, which is greater than the 7 authorized.");
     }
 
     private BallerinaSensor sensor(CheckFactory checkFactory) {

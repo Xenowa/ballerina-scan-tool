@@ -36,7 +36,10 @@ public abstract class AbstractSensorTest {
 
     @BeforeEach
     public void setup() throws IOException {
-        baseDir = Files.createTempDirectory(temp.toFile().toPath(), null);
+        // Pointing the testing directory
+        baseDir = Path.of("src/test/java/org/wso2/ballerina/plugin/");
+
+        // Setting the context for the testing directory
         context = SensorContextTester.create(baseDir);
         FileLinesContext fileLinesContext = Mockito.mock(FileLinesContext.class);
         Mockito.when(
@@ -69,6 +72,25 @@ public abstract class AbstractSensorTest {
                 .setCharset(StandardCharsets.UTF_8)
                 .setContents(content)
                 .setStatus(status)
+                .build();
+    }
+    protected InputFile createInputFileFromPath(String relativePath) {
+        Path balFilePath = Path.of(baseDir.toString() + "/" + relativePath);
+
+        String fileContent = null;
+        try {
+            fileContent = new String(Files.readAllBytes(balFilePath)).trim();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return TestInputFileBuilder.create("moduleKey", relativePath)
+                .setModuleBaseDir(baseDir)
+                .setType(InputFile.Type.MAIN)
+                .setLanguage(language().getKey())
+                .setCharset(StandardCharsets.UTF_8)
+                .setContents(fileContent)
+                .setStatus(InputFile.Status.SAME)
                 .build();
     }
 
