@@ -1,80 +1,23 @@
 # SonarQube Ballerina Plugin (Sonar Plugin API)
 
-## How it works
+SonarQube plugins allow developers to provide static code analysis support for new languages.
 
-This Plugin provides Ballerina static code analysis support for SonarQube.
+This plugin consist of 2 parts to function, the bal scan tool and the SonarQube ballerina plugin.
+The SonarQube Ballerina Plugin is dependent on the bal scan tool, as the scanner is responsible
+for performing the static code analysis for ballerina projects and the plugin is responsible for
+aggregating and reporting the results on the scan to the SonarQube server.
 
-## Other ways to create a SonarQube plugin
+## Prerequisites
 
-- Using SSLR (SonarSource Language Recognizer)
+The following software should be installed locally
 
-  - [SSLR documentation](https://github.com/SonarSource/sslr)
-  - [SonarQube Java Plugin](https://github.com/SonarSource/sonar-java)
-  - [SonarQube Python Plugin](https://github.com/SonarSource/sonar-python)
+- [Java version: 17](https://adoptium.net/temurin/releases/?version=17)
+- [SonarQube version: 9.9 (LTS)](https://www.sonarsource.com/products/sonarqube/downloads/lts/9-9-lts)
+- [Ballerina version: 2201.8.2](https://ballerina.io/downloads/archived/#swan-lake-archived-versions)
 
-- Using SLang (Sonar Lang)
+## Getting started
 
-  - [SLang documentation](https://github.com/SonarSource/slang)
-  - [SonarQube jProperties Plugin](https://github.com/pepaproch/slang-jproperties)
-
-- Using SonarQube Java Plugin API
-
-  - [SonarQube Java Plugin API documentation](https://docs.sonarsource.com/sonarqube/9.9/extension-guide/developing-a-plugin/plugin-basics/)
-  - [SonarQube Kotlin Plugin](https://github.com/SonarSource/SonarJS)
-  - [SonarQube JavaScript Plugin](https://github.com/SonarSource/SonarJS)
-
-## Plugin Creation steps
-
-Steps will be added soon...
-
-## Resources utilized for testing and creating the plugin
-
-- Testing Source files analysis from SonarQube: [SonarQube Scans Project](https://github.com/SonarDance/SonarQube-scans-testing)
-- Testing Ballerina Packages for integrations: [Shariff Project](https://github.com/SonarDance/ShariffCommand)
-
-## SonarQube plugin integration steps
-
-1. Run the gradle command to build a jar of the plugin
-
-- With tests
-
-```cmd
-gradlew clean build
-```
-
-- Ignoring tests
-
-```cmd
-gradlew clean build -x test
-```
-
-2. The generated jar file can be found in the libs directory as follows:
-
-```
-📦sonar-ballerina
- ┣ 📂.gradle
- ┣ 📂.idea
- ┗ 📂build
-    ┣ 📂classes
-    ┣ 📂generated
-    ┗ 📂libs
-      ┗ **📜sonar-ballerina-1.0-SNAPSHOT-all.jar**
-```
-
-3. Place the generated jar file in the plugins directory of SonarQube as follows:
-
-```
-📦sonarqube-9.9.2.77730
- ┣ 📂bin
- ┣ 📂conf
- ┣ 📂data
- ┣ 📂elasticsearch
- ┣ 📂extensions
- ┃ ┣ 📂downloads
- ┃ ┣ 📂jdbc-driver
- ┃ ┗ 📂plugins
- ┃ ┃ ┣ 📜README.txt
- ┃ ┃ ┗ **📜sonar-ballerina-1.0-SNAPSHOT-all.jar**
-```
-
-4. Run SonarQube
+1. Create the bal scan tool by following the instructions [here](https://github.com/Xenowa/sonar-ballerina/ScanCommand/)
+2. Create the SonarQube Ballerina Plugin by following the instructions [here](https://github.com/Xenowa/sonar-ballerina/sonar-ballerina-plugin)
+3. Run SonarQube server instance
+4. Initialize a sonar scan in a project, [example](https://github.com/SonarDance/SonarQube-scans-testing)

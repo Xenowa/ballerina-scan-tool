@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    // For running the main class of the ballerina tool tester package
+    id 'application'
+    // For using the ballerina java project API
+    id 'java-library'
+}
+
+group = 'org.wso2.ballerina'
+version = 'unspecified'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven{
+        url = 'https://maven.pkg.github.com/ballerina-platform/*'
+        credentials {
+            username System.getenv("packageUser")
+            password System.getenv("packagePAT")
+        }
+    }
+}
+
+dependencies {
+    implementation group:'info.picocli', name:'picocli', version:'4.7.5'
+
+    // ====================
+    // Testing Dependencies (Related to Getting the Ballerina source file Syntax Tree)
+    // ====================
+    // Required dependencies for accessing the ballerina java project API
+    // The version should match the version you have in the local machine
+    implementation group:'org.ballerinalang', name:'ballerina-lang', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-parser', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-runtime', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'jballerina-tools', version:"${project.ballerinaVersion}"
+    // Required dependencies for building a ballerina cli application
+    implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
+    // Required Module to convert the AST to a JSON File
+    implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
+
+}
+
+// Setting up the ballerina home property for the project
+tasks.withType(JavaExec).configureEach {
+    // From the local ballerina distribution
+    // Following code is the same as:
+    // systemProperty 'ballerina.home', System.getProperty('C:/Program Files/Ballerina/distributions/ballerina-2201.8.2')
+    systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
+}
+
+
+// class to build when gradlew run is executed in there terminal
+application {
+    mainClass = 'balToolTester.Main'
+}

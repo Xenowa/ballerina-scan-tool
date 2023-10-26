@@ -45,12 +45,17 @@ repositories {
 
 dependencies {
     // Required dependencies to work with sonar plugin API
-    compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.12.0.310'
+    // compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.12.0.310'
+    compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.14.0.375'
     implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-commons', version:'2.1.0.1111'
     implementation group:'org.sonarsource.analyzer-commons', name:'sonar-xml-parsing', version:'2.1.0.1111'
     implementation group:'org.sonarsource.analyzer-commons', name:'sonar-regex-parsing', version:'2.1.0.1111'
     implementation group:'org.sonarsource.analyzer-commons', name:'sonar-performance-measure', version:'2.1.0.1111'
     implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-recognizers', version:'2.1.0.1111'
+
+    // Adding following dependencies to remove SL4J Errors during testing
+    implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'ch.qos.logback:logback-classic:1.2.9'
 
     // Required additional dependencies to make working with sonar plugin API easier
     implementation group:'com.fasterxml.staxmate', name:'staxmate', version:'2.4.0'
@@ -73,14 +78,18 @@ dependencies {
     testImplementation group:'org.sonarsource.sonarqube', name:'sonar-plugin-api-impl', version:'9.7.1.62043'
 
     // Packages required to get access to the Ballerina Project API
-    implementation group:'org.ballerinalang', name:'diagram-util', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'ballerina-cli', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'ballerina-lang', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'ballerina-parser', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'jballerina-tools', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'ballerina-runtime', version:'2201.7.2'
-    implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:'2201.7.2'
+    implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-lang', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-parser', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'jballerina-tools', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-runtime', version:"${project.ballerinaVersion}"
+    implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
 }
+
+// Ballerina dependencies do not get loaded
+// Normally the ballerina distribution is loaded for the tool created
+// is there are ballerina gradle plugin
 
 //// Setting up the ballerina home property for the project (This property does not get set)
 //tasks.withType(JavaExec).configureEach {
@@ -162,7 +171,7 @@ tasks.jar {
                 'Plugin-RequiredForLanguages': 'ballerina',
                 'Sonar-Version': '6.7',
                 'Version': "${project.version}",
-                'Jre-Min-Version': '11'
+                'Jre-Min-Version': '17'
         )
     }
 }
