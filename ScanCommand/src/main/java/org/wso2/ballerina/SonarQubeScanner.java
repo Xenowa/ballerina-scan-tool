@@ -68,7 +68,6 @@ public class SonarQubeScanner {
             // Return back the compiled objects
             return compiledOutputs;
         }catch (Exception e){
-            errorStream.println(e);
             PackageValidator.reportIssue(userFile, errorStream);
             return null;
         }

@@ -87,42 +87,6 @@ dependencies {
     implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
 }
 
-// Ballerina dependencies do not get loaded
-// Normally the ballerina distribution is loaded for the tool created
-// is there are ballerina gradle plugin
-
-//// Setting up the ballerina home property for the project (This property does not get set)
-//tasks.withType(JavaExec).configureEach {
-////    doFirst {
-////        def balHome = new ByteArrayOutputStream()
-////        // TODO: Convert the exec command to run in shell instead of cmd
-////        // Check Link here: https://github.com/ballerina-platform/ballerina-distribution/blob/master/ballerina/build.gradle#L800
-////        exec {
-////            commandLine 'cmd', 'bal', 'home'
-////            standardOutput = balHome
-////        }
-////
-////        systemProperty 'ballerina.home', balHome.toString().trim()
-////    }
-//    // Or we can use the following command
-//      systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
-//}
-//
-//// For setting the bal home during test executions using bal home command
-//test {
-////        doFirst {
-////        def balHome = new ByteArrayOutputStream()
-////        exec {
-////            commandLine 'cmd', 'bal', 'home'
-////            standardOutput = balHome
-////        }
-////
-////        systemProperty 'ballerina.home', balHome.toString().trim()
-////        }
-//    // Or we can use the following command
-//      systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
-//}
-
 // =======================================
 // Sonar Plugin API Testing configurations
 // =======================================

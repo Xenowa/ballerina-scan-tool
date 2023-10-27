@@ -1,5 +1,8 @@
 package org.wso2.ballerina.checks;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerinalang.compiler.tree.BLangFunction;
 import org.wso2.ballerinalang.compiler.tree.BLangPackage;
@@ -33,53 +36,23 @@ public class FunctionChecks {
     }
 
     public static void reportIssue(String issueType, LineRange issueLocation, String ruleID, String message, PrintStream outputStream){
+        // TODO: Should be aggregated to a JSON Array and then logged out
         // For now we will be displaying the rule violation output directly to the console
-        outputStream.println("Displaying Static Code Analysis results:");
-        outputStream.println("Issue Type: " + issueType);
-        outputStream.println("Start Line: " + issueLocation.startLine().line());
-        outputStream.println("Start Line Offset: " + issueLocation.startLine().offset());
-        outputStream.println("End Line: " + issueLocation.endLine().line());
-        outputStream.println("End Line Offset: " + issueLocation.endLine().offset());
-        outputStream.println("Rule ID: " + ruleID);
-        outputStream.println(message);
+        // Create a JSON Object of the report
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("issueType", issueType);
+        jsonObject.addProperty("startLine", issueLocation.startLine().line());
+        jsonObject.addProperty("startLineOffset", issueLocation.startLine().offset());
+        jsonObject.addProperty("endLine", issueLocation.endLine().line());
+        jsonObject.addProperty("endLineOffset", issueLocation.endLine().offset());
+        jsonObject.addProperty("ruleID", ruleID);
+        jsonObject.addProperty("message", message);
 
+        // Convert the JSON output to print to the console
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(jsonObject);
 
-        // What we can and need to send from the bal scan tool side:
-        // 1. Issue type (custom - to determine which reportIssue method should be called in the SonarScanner side):
-        // i.e: CHECK_VIOLATION -> for violating rules during the scan
-        // i.e: SOURCE_INVALID -> if the provided file is not scannable
-        // 2. lineRange: should be sent in it's atomic form as follows
-        // LineRange issueLocation = bLangFunction.getPosition().lineRange()
-        //  int startLine = issueLocation.startLine().line()
-        //  int startLineOffset = issueLocation.startLine().offset(),
-        //  int endLine = issueLocation.endLine().line(),
-        //  int endLineOffset = issueLocation.endLine().offset()
-        // 3. ruleID : S107
-        // 4. message: ""This function has " + bLangFunction.getParameters().size() + " parameters, which is greater than the 7 authorized.""
-        // We should ideally send a GSON JSON output to the outputStream
-
-        // The following properties should be set up from the SonarQube plugin side
-        // 1. SensorContext context
-        // 2. InputFile inputFile
-
-        // Final reporting code from the SonarQube Plugin side should be something like the following
-        /*
-        * // GSON Object that has all bal scan outputs named "balScanOutput"
-        * RuleKey ruleKey = RuleKey.of(BALLERINA_REPOSITORY_KEY, balScanOutput.ruleID);
-        * context.newIssue()
-                .forRule(ruleKey)
-                .at(context.newIssue()
-                        .newLocation()
-                        .on(inputFile)
-                        .message(balScanOutput.message)
-                        .at(inputFile.newRange(
-                                balScanOutput.startLine(),
-                                balScanOutput.startLineOffset(),
-                                balScanOutput.endLine(),
-                                balScanOutput.endLineOffset(),
-                        ))
-                )
-                .save();
-        * */
+        // print the result to console
+        outputStream.println(jsonOutput);
     }
 }

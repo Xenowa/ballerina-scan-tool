@@ -43,7 +43,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
         // Retrieving all issues sent by the sensor scan
         Iterator<Issue> issues = context.allIssues().iterator();
 
-//        // Checking if the sensor triggers the dummy rule
+        // Checking if the sensor triggers the dummy rule
         Issue issue = issues.next();
         Assertions.assertThat(issue.ruleKey().rule()).isEqualTo("S107");
 
