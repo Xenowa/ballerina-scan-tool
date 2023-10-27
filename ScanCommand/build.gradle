@@ -22,7 +22,11 @@ repositories {
 }
 
 dependencies {
+    // Required dependency for developing ballerina cli applications
     implementation group:'info.picocli', name:'picocli', version:'4.7.5'
+
+    // set the correct gson version
+    implementation "com.google.code.gson:gson:${project.gsonVersion}"
 
     // ====================
     // Testing Dependencies (Related to Getting the Ballerina source file Syntax Tree)
@@ -38,7 +42,6 @@ dependencies {
     implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
     // Required Module to convert the AST to a JSON File
     implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
-
 }
 
 // Setting up the ballerina home property for the project

@@ -60,13 +60,6 @@ public class ScanCommand implements BLauncherCmd {
         return userFilePath;
     }
 
-    public void sonarScan(String userFile){
-        this.outStream.println("sonarqube static code analysis successful!");
-        // TODO: Set up functionality to get access to the Ballerina Semantic Model
-        // TODO: Implement one rule to check against
-        // TODO: send the analysis report info to the prinstream
-    }
-
     // MAIN method
     @Override
     public void execute(){
@@ -93,7 +86,7 @@ public class ScanCommand implements BLauncherCmd {
         // --platform=<option>
         switch (platform){
             case "sonarqube":
-                sonarScan(userFilePath);
+                SonarQubeScanner.scan(userFilePath, outStream, errorStream);
                 break;
             case "codeql":
             case "semgrep":
