@@ -1,6 +1,8 @@
 package org.wso2.ballerina.plugin;
 
 // Ballerina specific imports
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -82,18 +84,25 @@ class BallerinaSensor implements Sensor {
             String output = scanner.hasNext() ? scanner.next() : "";
 
             // TODO: Should be changed to a JSON array
-            JsonObject balScanOutput;
+            JsonArray balScanOutput;
             try{
                 // Parse the object into a JSON object
-                 balScanOutput = JsonParser.parseString(output).getAsJsonObject();
+                 balScanOutput = JsonParser.parseString(output).getAsJsonArray();
 
-                 // get the issueType from the output
-                String issueType = balScanOutput.get("issueType").getAsString();
+                 // Perform the remaining operations if the output is not empty
+                if(!balScanOutput.isEmpty()){
+                    // Iteratively perform reporting from SonarScanner
+                    balScanOutput.forEach(outputObject ->{
+                        JsonObject issue = outputObject.getAsJsonObject();
+                        // get the issueType from the output
+                        String issueType = issue.get("issueType").getAsString();
 
-                // perform validations on the issueType and proceed
-                switch (issueType) {
-                    case "CHECK_VIOLATION" -> reportIssue(inputFile, context, balScanOutput);
-                    case "SOURCE_INVALID" -> reportParseIssue(balScanOutput.get("message").getAsString());
+                        // perform validations on the issueType and proceed
+                        switch (issueType) {
+                            case "CHECK_VIOLATION" -> reportIssue(inputFile, context, issue);
+                            case "SOURCE_INVALID" -> reportParseIssue(issue.get("message").getAsString());
+                        }
+                    });
                 }
             }catch (Exception ignored){}
         } catch (IOException e) {

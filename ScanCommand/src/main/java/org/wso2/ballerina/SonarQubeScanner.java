@@ -1,5 +1,8 @@
 package org.wso2.ballerina;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
@@ -21,14 +24,15 @@ public class SonarQubeScanner {
     // Final attributes for determining the type of issues reported to Sonar Scanner
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String SOURCE_INVALID = "SOURCE_INVALID";
+    public static final JsonArray analysisIssues = new JsonArray();
 
     // TODO: Set up functionality to get access to the Ballerina Semantic Model
     public static void scanWithSemanticModel(SemanticModel semanticModel,PrintStream outputStream){
         outputStream.println(semanticModel.toString());
     }
 
-    public static void scanWithPackageNode(BLangPackage bLangPackage, PrintStream outputStream){
-        FunctionChecks.tooManyParametersCheck(bLangPackage, outputStream);
+    public static void scanWithPackageNode(BLangPackage bLangPackage){
+        FunctionChecks.tooManyParametersCheck(bLangPackage);
     }
 
     public static Map<String, Object> parseBallerinaProject(String userFile, Path userFilePath, PrintStream errorStream){
@@ -50,7 +54,7 @@ public class SonarQubeScanner {
                 try{
                     documentId = documentIterator.next();
                 }catch (NoSuchElementException exception){
-                    PackageValidator.reportIssue(userFile, errorStream);
+                    PackageValidator.reportIssue(userFile);
                     return null;
                 }
             }
@@ -68,7 +72,7 @@ public class SonarQubeScanner {
             // Return back the compiled objects
             return compiledOutputs;
         }catch (Exception e){
-            PackageValidator.reportIssue(userFile, errorStream);
+            PackageValidator.reportIssue(userFile);
             return null;
         }
     }
@@ -82,10 +86,15 @@ public class SonarQubeScanner {
 
         // perform the static code analysis if the file was successfully parsed
         if(compilation != null){
-            scanWithPackageNode((BLangPackage) compilation.get("blangPackage"), outputStream);
+            scanWithPackageNode((BLangPackage) compilation.get("blangPackage"));
 
             // We will be using the semantic model in the later implementations
             // scanWithSemanticModel((SemanticModel) compilation.get("semanticModel"), outputStream);
         }
+
+        // Convert the JSON analysis results to the console
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(analysisIssues);
+        outputStream.println(jsonOutput);
     }
 }

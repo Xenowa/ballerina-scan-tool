@@ -11,10 +11,11 @@ import java.io.PrintStream;
 import java.util.List;
 
 import static org.wso2.ballerina.SonarQubeScanner.CHECK_VIOLATION;
+import static org.wso2.ballerina.SonarQubeScanner.analysisIssues;
 
 public class FunctionChecks {
     // First Ballerina Specific rule
-    public static void tooManyParametersCheck(BLangPackage mainNode, PrintStream outputStream){
+    public static void tooManyParametersCheck(BLangPackage mainNode){
         // Obtain all functions from the syntax tree
         List<BLangFunction> functions = mainNode.getFunctions();
 
@@ -27,18 +28,14 @@ public class FunctionChecks {
                             CHECK_VIOLATION,
                             bLangFunction.getPosition().lineRange(),
                             "S107",
-                            "This function has " + bLangFunction.getParameters().size() + " parameters, which is greater than the 7 authorized.",
-                            outputStream
+                            "This function has " + bLangFunction.getParameters().size() + " parameters, which is greater than the 7 authorized."
                             );
                 }
             });
         }
     }
 
-    public static void reportIssue(String issueType, LineRange issueLocation, String ruleID, String message, PrintStream outputStream){
-        // TODO: Should be aggregated to a JSON Array and then logged out
-        // For now we will be displaying the rule violation output directly to the console
-        // Create a JSON Object of the report
+    public static void reportIssue(String issueType, LineRange issueLocation, String ruleID, String message){
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("issueType", issueType);
         jsonObject.addProperty("startLine", issueLocation.startLine().line());
@@ -52,7 +49,7 @@ public class FunctionChecks {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonOutput = gson.toJson(jsonObject);
 
-        // print the result to console
-        outputStream.println(jsonOutput);
+        // add the analysis issue to the issues array
+        analysisIssues.add(jsonObject);
     }
 }
