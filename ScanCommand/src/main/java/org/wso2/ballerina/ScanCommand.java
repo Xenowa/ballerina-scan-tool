@@ -86,7 +86,8 @@ public class ScanCommand implements BLauncherCmd {
         // --platform=<option>
         switch (platform){
             case "sonarqube":
-                SonarQubeScanner.scan(userFilePath, outStream, errorStream);
+                SonarQubeScanner sonarQubeScanner = new SonarQubeScanner();
+                sonarQubeScanner.scan(userFilePath, outStream);
                 break;
             case "codeql":
             case "semgrep":

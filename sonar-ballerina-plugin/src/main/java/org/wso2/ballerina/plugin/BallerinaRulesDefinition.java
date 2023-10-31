@@ -29,6 +29,8 @@ public class BallerinaRulesDefinition implements RulesDefinition {
         // NOTE: Rule number 001 is not valid
         List<String> BALLERINA_CHECKS = new ArrayList<>();
         BALLERINA_CHECKS.add("S107");
+        BALLERINA_CHECKS.add("S108");
+
         ruleMetadataLoader.addRulesByRuleKey(repository, BALLERINA_CHECKS);
 
         // the meta data loading from the classes have been commented out for testing purposes

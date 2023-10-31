@@ -1,0 +1,17 @@
+{
+  "title": "use check keyword instead of checkpanic",
+  "type": "CODE_SMELL",
+  "status": "ready",
+  "remediation": {
+    "func": "Constant\/Issue",
+    "constantCost": "2min"
+  },
+  "tags": [
+    "error-handling"
+  ],
+  "defaultSeverity": "Major",
+  "ruleSpecification": "RSPEC-108",
+  "sqKey": "S108",
+  "scope": "All",
+  "quickfix": "unknown"
+}

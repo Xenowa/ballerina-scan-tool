@@ -83,7 +83,6 @@ class BallerinaSensor implements Sensor {
             Scanner scanner = new Scanner(scanProcessInput).useDelimiter("\\A");
             String output = scanner.hasNext() ? scanner.next() : "";
 
-            // TODO: Should be changed to a JSON array
             JsonArray balScanOutput;
             try{
                 // Parse the object into a JSON object
@@ -92,17 +91,23 @@ class BallerinaSensor implements Sensor {
                  // Perform the remaining operations if the output is not empty
                 if(!balScanOutput.isEmpty()){
                     // Iteratively perform reporting from SonarScanner
-                    balScanOutput.forEach(outputObject ->{
-                        JsonObject issue = outputObject.getAsJsonObject();
-                        // get the issueType from the output
+                    for(JsonElement scanElement : balScanOutput){
+                        // first convert the element into an object
+                        JsonObject issue = scanElement.getAsJsonObject();
+
+                        // Get the issue type from the output
                         String issueType = issue.get("issueType").getAsString();
 
-                        // perform validations on the issueType and proceed
-                        switch (issueType) {
-                            case "CHECK_VIOLATION" -> reportIssue(inputFile, context, issue);
-                            case "SOURCE_INVALID" -> reportParseIssue(issue.get("message").getAsString());
+                        // Perform validations on the issueType and proceed
+                        switch (issueType){
+                            case "CHECK_VIOLATION":
+                                reportIssue(inputFile, context, issue);
+                                break;
+                            case "SOURCE_INVALID":
+                                reportParseIssue(issue.get("message").getAsString());
+                                break;
                         }
-                    });
+                    }
                 }
             }catch (Exception ignored){}
         } catch (IOException e) {
@@ -118,6 +123,8 @@ class BallerinaSensor implements Sensor {
         int startLineOffset = balScanOutput.get("startLineOffset").getAsInt();
         int endLine = balScanOutput.get("endLine").getAsInt();
         int endLineOffset = balScanOutput.get("endLineOffset").getAsInt();
+        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts from 1
+        int sonarScannerOffset = 1;
 
         // Creating the initial rule
         RuleKey ruleKey = RuleKey.of(BALLERINA_REPOSITORY_KEY, ruleID);
@@ -130,9 +137,9 @@ class BallerinaSensor implements Sensor {
                         .on(inputFile)
                         .message(message)
                         .at(inputFile.newRange(
-                                startLine,
+                                startLine + sonarScannerOffset,
                                 startLineOffset,
-                                endLine,
+                                endLine+ + sonarScannerOffset,
                                 endLineOffset
                         ))
                 )
