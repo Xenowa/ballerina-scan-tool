@@ -5,12 +5,17 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.wso2.ballerina.platforms.CodeQL;
+import org.wso2.ballerina.platforms.Local;
+import org.wso2.ballerina.platforms.Platform;
+import org.wso2.ballerina.platforms.SemGrep;
+import org.wso2.ballerina.platforms.SonarQube;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
 public class ScanCommand implements BLauncherCmd {
     // CMD Launcher Attributes
-    private final PrintStream outStream; // for success outputs
+    private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
 
     @CommandLine.Parameters(description = "Program arguments")
@@ -19,23 +24,23 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden=true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform")
+    @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform", defaultValue = "")
     private String platform;
 
     public ScanCommand() {
-        this.outStream = System.out;
+        this.outputStream = System.out;
         this.errorStream = System.err;
     }
 
-    public ScanCommand(PrintStream outStream) {
-        this.outStream = outStream;
-        this.errorStream = outStream;
+    public ScanCommand(PrintStream outputStream) {
+        this.outputStream = outputStream;
+        this.errorStream = outputStream;
     }
 
     public String checkPath(){
-        // if an invalid argument is passed to the bal scan command
-        if (this.argList == null || this.argList.size() != 1) {
-            this.outStream.println("Invalid number of arguments received!\n try bal scan --help for more information.");
+        // if invalid number of arguments are passed to the bal scan command
+        if (this.argList.size() != 1) {
+            this.outputStream.println("Invalid number of arguments received!\n try bal scan --help for more information.");
             return "";
         }
 
@@ -45,14 +50,14 @@ public class ScanCommand implements BLauncherCmd {
         // check if the user passed file is a ballerina file or not
         String[] userFileExtension = userFilePath.split("\\.(?=[^\\.]+$)"); // [userFile, bal]
         if((userFileExtension.length != 2) || !userFileExtension[1].equals("bal")){
-            this.outStream.println("Invalid file format received!\n file format should be of type '.bal'");
+            this.outputStream.println("Invalid file format received!\n file format should be of type '.bal'");
             return "";
         }
 
         // check if such ballerina file exists in the working directory
         File file = new File(userFilePath);
         if (!file.exists()) {
-            this.outStream.println("No such file exists!\n please check the file name and then re run the command");
+            this.outputStream.println("No such file exists!\n please check the file name and then re run the command");
             return "";
         }
 
@@ -73,7 +78,7 @@ public class ScanCommand implements BLauncherCmd {
             builder.append("\toption 2: codeql\n");
             builder.append("\toption 3: semgrep\n\n");
             builder.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
-            this.outStream.println(builder);
+            this.outputStream.println(builder);
             return;
         }
 
@@ -83,18 +88,23 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // --platform=<option>
-        switch (platform){
-            case "sonarqube":
-                SonarQubeScanner sonarQubeScanner = new SonarQubeScanner();
-                sonarQubeScanner.scan(userFilePath, outStream);
-                break;
-            case "codeql":
-            case "semgrep":
-                this.outStream.println("Platform support is not available yet!");
-                break;
-            default:
-                this.outStream.println("Entered platform is invalid!, please run bal scan --help for more info");
+        // Set the trigger platform depending on user input
+        Platform triggerPlatform = null;
+        boolean platFormValid = true;
+        switch (platform) {
+            case "sonarqube" -> triggerPlatform = new SonarQube();
+            case "codeql" -> triggerPlatform = new CodeQL();
+            case "semgrep" -> triggerPlatform = new SemGrep();
+            case "" -> triggerPlatform = new Local();
+            default -> {
+                platFormValid = false;
+                outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
+            }
+        }
+
+        // execute relevant scanner if a valid platform is provided
+        if(platFormValid){
+            triggerPlatform.scan(userFilePath, outputStream);
         }
     }
 

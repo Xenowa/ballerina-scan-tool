@@ -1,8 +1,6 @@
 package org.wso2.ballerina.checks;
 
-import io.ballerina.compiler.internal.parser.tree.STNodeList;
 import io.ballerina.compiler.internal.parser.tree.STToken;
-import io.ballerina.compiler.syntax.tree.ChildNodeEntry;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
 import io.ballerina.compiler.syntax.tree.FunctionBodyNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
@@ -14,13 +12,11 @@ import io.ballerina.compiler.syntax.tree.ParameterNode;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.wso2.ballerina.SonarQubeScanner.CHECK_VIOLATION;
+import static org.wso2.ballerina.platforms.SonarQube.CHECK_VIOLATION;
 
 public class FunctionChecks extends ReportJsonIssue{
     // TODO: The whole approach of getting and using the Syntax Tree should be different

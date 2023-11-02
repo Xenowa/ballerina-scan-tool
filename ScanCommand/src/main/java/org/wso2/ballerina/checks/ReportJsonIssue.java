@@ -5,14 +5,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
-import static org.wso2.ballerina.SonarQubeScanner.analysisIssues;
+ import static org.wso2.ballerina.platforms.Platform.analysisIssues;
 
 public abstract class ReportJsonIssue implements Issue{
     public String issueType;
 
     public void reportIssue(String issueType, LineRange issueLocation, String ruleID, String message){
         this.issueType = issueType;
-        reportSonarIssue(issueLocation.startLine().line(),
+        reportJSONIssue(issueLocation.startLine().line(),
                 issueLocation.startLine().offset(),
                 issueLocation.endLine().line(),
                 issueLocation.endLine().offset(),
@@ -22,7 +22,7 @@ public abstract class ReportJsonIssue implements Issue{
     }
 
     @Override
-    public void reportSonarIssue(int startLine, int startLineOffset, int endLine, int endLineOffset, String ruleID, String message) {
+    public void reportJSONIssue(int startLine, int startLineOffset, int endLine, int endLineOffset, String ruleID, String message) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("issueType", issueType);
         jsonObject.addProperty("startLine", startLine);
