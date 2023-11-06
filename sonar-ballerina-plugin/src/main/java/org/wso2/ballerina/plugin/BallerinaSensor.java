@@ -73,7 +73,7 @@ class BallerinaSensor implements Sensor {
         LOG.info("analyzing File: " + absolutePath);
 
         // Build a process to run the bal tool
-        ProcessBuilder fileScan = new ProcessBuilder("cmd","/c", "bal", "scan", "--platform=sonarqube", absolutePath);
+        ProcessBuilder fileScan = new ProcessBuilder("cmd","/c", "bal", "scan", absolutePath);
         try {
             // Start the process
             Process process = fileScan.start();

@@ -2,11 +2,10 @@ package org.wso2.ballerina.platforms;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import org.wso2.ballerina.checks.FunctionChecks;
+import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -33,6 +32,9 @@ public class SonarQube extends Platform{
         String jsonOutput = gson.toJson(analysisIssues);
 
         // TODO: Instead of printing the JSONArray to output, try to find a way to pass it to the sonar bal jar directly
+        // Identifying if the sonar ballerina jar file is installed in sonarqube 9.9
+        // If it's installed then calling that jar file from here
+
         outputStream.println(jsonOutput);
     }
 

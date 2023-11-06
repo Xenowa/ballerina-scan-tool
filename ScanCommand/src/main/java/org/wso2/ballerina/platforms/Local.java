@@ -2,11 +2,10 @@ package org.wso2.ballerina.platforms;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import org.wso2.ballerina.checks.FunctionChecks;
+import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 
 import java.io.PrintStream;
 import java.util.Map;
