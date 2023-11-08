@@ -4,14 +4,22 @@ plugins {
     id 'application'
     // For using the ballerina java project API
     id 'java-library'
+
+    // For creating a fat jar
+    id "com.github.johnrengelman.shadow" version "7.1.0"
 }
 
 group = 'org.wso2.ballerina'
 version = 'unspecified'
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
+    maven {
+        url = uri('https://repo.maven.apache.org/maven2/')
+    }
+
+    // For Ballerina Plugins
     maven{
         url = 'https://maven.pkg.github.com/ballerina-platform/*'
         credentials {
@@ -28,9 +36,6 @@ dependencies {
     // set the correct gson version
     implementation "com.google.code.gson:gson:${project.gsonVersion}"
 
-    // ====================
-    // Testing Dependencies (Related to Getting the Ballerina source file Syntax Tree)
-    // ====================
     // Required dependencies for accessing the ballerina java project API
     // The version should match the version you have in the local machine
     implementation group:'org.ballerinalang', name:'ballerina-lang', version:"${project.ballerinaVersion}"
@@ -39,9 +44,12 @@ dependencies {
     implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
     implementation group:'org.ballerinalang', name:'jballerina-tools', version:"${project.ballerinaVersion}"
     // Required dependencies for building a ballerina cli application
-    implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
+     implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
     // Required Module to convert the AST to a JSON File
     implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
+
+    // Required for creating a sonar scanner from ballerina side
+    implementation group:'org.sonarsource.scanner.api', name:'sonar-scanner-api', version:'2.16.3.1081'
 }
 
 // Setting up the ballerina home property for the project
@@ -56,4 +64,77 @@ tasks.withType(JavaExec).configureEach {
 // class to build when gradlew run is executed in there terminal
 application {
     mainClass = 'balToolTester.Main'
+}
+
+// Required configurations to create a sonar scanner
+// Creating a fat jar
+tasks.shadowJar {
+    minimize {}
+
+    // Removing all unwanted files and directories
+    // build related files, useless for the plugin
+    exclude '**/*.js'
+    exclude '**/*.properties'
+    exclude '**/*.proto'
+    exclude '**/*.txt'
+
+    // Removing unwanted directories and subdirectories in them
+    exclude "balToolTester/**"
+    exclude "cli-help/**"
+    exclude "com/**"
+    exclude "create_cmd_templates/**"
+    exclude "doc-ui/**"
+    exclude "io/**"
+    exclude "javax/**"
+    exclude "kotlin/**"
+    exclude "licenses/**"
+    exclude "me/**"
+    exclude "new_cmd_defaults/**"
+    exclude "okhttp3/**"
+    exclude "okio/**"
+    exclude "picocli/**"
+    exclude "about.html"
+    exclude "bal-tools-toml-schema.json"
+    exclude "ballerina-toml-schema.json"
+    exclude "dependencies-toml-schema.json"
+    exclude "jballerina-tools-2201.8.2.zip"
+    exclude "old-dependencies-toml-schema.json"
+    exclude "plugin.xml"
+    exclude "production.html"
+    exclude "release-description.md"
+    exclude "settings-toml-schema.json"
+    exclude "syntax_tree_descriptor.json"
+    exclude "template.declaration.mustache"
+    exclude "template.execution.mustache"
+    exclude "testng.css"
+    exclude "testng-1.0.dtd"
+    exclude "testngtasks"
+    exclude "org/apache/**"
+    exclude "org/slf4j/**"
+    exclude "org/sonatype/**"
+    exclude "org/ballerinalang/**"
+    exclude "org/codehaus/**"
+    exclude "org/eclipse/**"
+    exclude "org/jacoco/**"
+    exclude "org/jetbrains/**"
+    exclude "org/jline/**"
+    exclude "org/objectweb/**"
+    exclude "org/sl4j/**"
+    exclude "org/testng/**"
+    exclude "org/wso2/ballerinalang/**"
+
+    // Excluding the sonar-scanner-api-batch jar from fat jar
+    // Step 1: We exclude the sonar scanner api jar when the bal tool is created
+    // Step 2: We manually add the sonar scanner api jar from the resources folder to the folder where the jar exist
+    // Step 3: We manually include that jar file in the bal scan tool jar and delete it
+     // exclude "sonar-scanner-api-batch.jar/**"
+
+    // The following command creates the FAT jar
+    doLast {
+        shadowJar.archiveFile.get().asFile
+    }
+}
+
+artifacts {
+    archives shadowJar
 }

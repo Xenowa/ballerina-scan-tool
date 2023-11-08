@@ -4,9 +4,7 @@ import io.ballerina.compiler.internal.parser.tree.STToken;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
 import io.ballerina.compiler.syntax.tree.FunctionBodyNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
-import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
-import io.ballerina.compiler.syntax.tree.ParameterNode;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import org.wso2.ballerina.checks.ReportJsonIssue;
@@ -14,7 +12,7 @@ import org.wso2.ballerina.checks.ReportJsonIssue;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.wso2.ballerina.platforms.SonarQube.CHECK_VIOLATION;
+import static org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld.CHECK_VIOLATION;
 
 public class CheckPanicCountCheck extends ReportJsonIssue {
     public void triggerCheck(FunctionDefinitionNode functionDefinitionNode){

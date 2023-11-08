@@ -6,10 +6,6 @@ import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 
 public class FunctionChecks{
-    // TODO: The whole approach of getting and using the Syntax Tree should be different
-    // Current implementation uses the internal syntax tree which should be avoided and replaced by the usage of the
-    // external syntax tree
-
     // Initializing the function checks
     Node mainNode;
     public FunctionChecks(SyntaxTree syntaxTree){
@@ -17,7 +13,7 @@ public class FunctionChecks{
     }
 
     public void initialize(){
-        // Entry point to all visitors
+        // Entry point to all function visitors
         mainNode.accept(new NodeVisitor(){
             @Override
             public void visit(FunctionDefinitionNode functionDefinitionNode) {

@@ -1,12 +1,7 @@
 package org.wso2.ballerina.plugin;
 
-// Ballerina specific imports
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 // Sonar Plugin API imports
+
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
@@ -25,6 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import static org.wso2.ballerina.plugin.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
 
 class BallerinaSensor implements Sensor {
@@ -35,7 +35,7 @@ class BallerinaSensor implements Sensor {
     private final CheckFactory checkFactory;
 
     // Initialize language specific information when the plugin is triggered
-    public BallerinaSensor(CheckFactory checkFactory,  FileLinesContextFactory fileLinesContextFactory,  NoSonarFilter noSonarFilter,  BallerinaLanguage language){
+    public BallerinaSensor(CheckFactory checkFactory, FileLinesContextFactory fileLinesContextFactory, NoSonarFilter noSonarFilter, BallerinaLanguage language) {
         this.checkFactory = checkFactory;
         this.fileLinesContextFactory = fileLinesContextFactory;
         this.noSonarFilter = noSonarFilter;
@@ -63,17 +63,17 @@ class BallerinaSensor implements Sensor {
         Iterable<InputFile> filesToAnalyze = fileSystem.inputFiles(mainFilePredicate);
 
         // Iterate through all ballerina files and perform analysis
-        for(InputFile inputFile : filesToAnalyze){
+        for (InputFile inputFile : filesToAnalyze) {
             analyzeFile(inputFile, sensorContext);
         }
     }
 
-    public void analyzeFile(InputFile inputFile, SensorContext context){
+    public void analyzeFile(InputFile inputFile, SensorContext context) {
         String absolutePath = inputFile.path().toAbsolutePath().toString();
         LOG.info("analyzing File: " + absolutePath);
 
         // Build a process to run the bal tool
-        ProcessBuilder fileScan = new ProcessBuilder("cmd","/c", "bal", "scan", absolutePath);
+        ProcessBuilder fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath);
         try {
             // Start the process
             Process process = fileScan.start();
@@ -84,14 +84,14 @@ class BallerinaSensor implements Sensor {
             String output = scanner.hasNext() ? scanner.next() : "";
 
             JsonArray balScanOutput;
-            try{
+            try {
                 // Parse the object into a JSON object
-                 balScanOutput = JsonParser.parseString(output).getAsJsonArray();
+                balScanOutput = JsonParser.parseString(output).getAsJsonArray();
 
-                 // Perform the remaining operations if the output is not empty
-                if(!balScanOutput.isEmpty()){
+                // Perform the remaining operations if the output is not empty
+                if (!balScanOutput.isEmpty()) {
                     // Iteratively perform reporting from SonarScanner
-                    for(JsonElement scanElement : balScanOutput){
+                    for (JsonElement scanElement : balScanOutput) {
                         // first convert the element into an object
                         JsonObject issue = scanElement.getAsJsonObject();
 
@@ -99,7 +99,7 @@ class BallerinaSensor implements Sensor {
                         String issueType = issue.get("issueType").getAsString();
 
                         // Perform validations on the issueType and proceed
-                        switch (issueType){
+                        switch (issueType) {
                             case "CHECK_VIOLATION":
                                 reportIssue(inputFile, context, issue);
                                 break;
@@ -109,13 +109,14 @@ class BallerinaSensor implements Sensor {
                         }
                     }
                 }
-            }catch (Exception ignored){}
+            } catch (Exception ignored) {
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void reportIssue(InputFile inputFile, SensorContext context, JsonObject balScanOutput){
+    public void reportIssue(InputFile inputFile, SensorContext context, JsonObject balScanOutput) {
         // parsing JSON issue outputs to the formats required to report via the Sonar Scanner
         String ruleID = balScanOutput.get("ruleID").getAsString();
         String message = balScanOutput.get("message").getAsString();
@@ -139,14 +140,14 @@ class BallerinaSensor implements Sensor {
                         .at(inputFile.newRange(
                                 startLine + sonarScannerOffset,
                                 startLineOffset,
-                                endLine+ + sonarScannerOffset,
+                                endLine + +sonarScannerOffset,
                                 endLineOffset
                         ))
                 )
                 .save();
     }
 
-    public void reportParseIssue(String message){
+    public void reportParseIssue(String message) {
         LOG.error(message);
     }
 }

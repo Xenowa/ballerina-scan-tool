@@ -6,7 +6,7 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.ParameterNode;
 import org.wso2.ballerina.checks.ReportJsonIssue;
 
-import static org.wso2.ballerina.platforms.SonarQube.CHECK_VIOLATION;
+import static org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld.CHECK_VIOLATION;
 
 public class TooManyParametersCheck extends ReportJsonIssue {
     public void triggerCheck(FunctionDefinitionNode functionDefinitionNode){

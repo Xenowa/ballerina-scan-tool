@@ -2,4 +2,5 @@
 id = “scan” # need to be same as picoclie name in java file
 
 [[dependency]]
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\build\\libs\\ScanCommand.jar" # tool jar file location
+# Shadow jar is required as it contains dependencies needed to run the sonar scanner methods in the bal scanner
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\build\\libs\\ScanCommand-all.jar"

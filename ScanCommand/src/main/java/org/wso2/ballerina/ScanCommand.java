@@ -9,7 +9,8 @@ import org.wso2.ballerina.platforms.CodeQL;
 import org.wso2.ballerina.platforms.Local;
 import org.wso2.ballerina.platforms.Platform;
 import org.wso2.ballerina.platforms.SemGrep;
-import org.wso2.ballerina.platforms.SonarQube;
+import org.wso2.ballerina.platforms.sonarqube.SonarQube;
+import org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
@@ -24,7 +25,7 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden=true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform", defaultValue = "")
+    @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform", defaultValue = "local")
     private String platform;
 
     public ScanCommand() {
@@ -65,6 +66,14 @@ public class ScanCommand implements BLauncherCmd {
         return userFilePath;
     }
 
+    public String validateEmptyPath(){
+        if(!this.argList.isEmpty()){
+            this.outputStream.println("arguments are invalid!,\n try bal scan --help for more information.");
+            return "invalidEntry";
+        }
+        return "";
+    }
+
     // MAIN method
     @Override
     public void execute(){
@@ -82,23 +91,32 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // check for user provided file path is in the directory
-        String userFilePath = checkPath();
-        if(userFilePath.equals("")){
-            return;
-        }
-
         // Set the trigger platform depending on user input
         Platform triggerPlatform = null;
         boolean platFormValid = true;
         switch (platform) {
             case "sonarqube" -> triggerPlatform = new SonarQube();
+            case "sonarqubeold" -> triggerPlatform = new SonarQubeOld();
             case "codeql" -> triggerPlatform = new CodeQL();
             case "semgrep" -> triggerPlatform = new SemGrep();
-            case "" -> triggerPlatform = new Local();
+            case "local" -> triggerPlatform = new Local();
             default -> {
                 platFormValid = false;
                 outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
+            }
+        }
+
+        // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+        String userFilePath;
+        if(platform.equals("local")){
+            userFilePath = checkPath();
+            if(userFilePath.equals("")){
+                return;
+            }
+        }else{
+            userFilePath = validateEmptyPath();
+            if(!userFilePath.equals("")){
+                return;
             }
         }
 
