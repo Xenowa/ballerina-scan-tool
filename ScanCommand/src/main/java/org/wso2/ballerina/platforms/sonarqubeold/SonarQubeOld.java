@@ -8,8 +8,6 @@ import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 import org.wso2.ballerina.platforms.Platform;
 
 import java.io.PrintStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.Properties;
 
@@ -18,7 +16,11 @@ public class SonarQubeOld extends Platform {
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String SOURCE_INVALID = "SOURCE_INVALID";
 
-    public void scan(String userFile, PrintStream outputStream){
+    public void scan(String userFile, PrintStream outputStream) {
+        // initiating a scan from the bal scan tool to perform analysis in a project
+        PluginTrigger.triggerPlugin();
+
+        // Integrating the static code analysis from the bal tool with the triggered scan
 //        // parse the ballerina file
 //        Map<String, Object> compilation = parseBallerinaProject(userFile);
 //
@@ -34,18 +36,13 @@ public class SonarQubeOld extends Platform {
 //        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 //        String jsonOutput = gson.toJson(analysisIssues);
 //
-//        // TODO: Instead of printing the JSONArray to output, try to find a way to pass it to the sonar bal jar directly
 //        // Identifying if the sonar ballerina jar file is installed in sonarqube 9.9
 //        // If it's installed then calling that jar file from here
 //
 //        outputStream.println(jsonOutput);
-
-        // Create a bal scan side trigger to initiate a sonar scan and transfer the analysis results to sonarqube
-        // via the sonar ballerina plugin
-        PluginTrigger.triggerPlugin();
     }
 
-    public static class PluginTrigger{
+    public static class PluginTrigger {
         // Properties related to initiating a sonar scan from bal scan side
         private Conf conf;
         private Cli cli;
@@ -60,48 +57,52 @@ public class SonarQubeOld extends Platform {
             this.logger = logger;
         }
 
-        public static void triggerPlugin(){
+        public static void triggerPlugin() {
             Logs logs = new Logs(System.out, System.err);
             Cli cli = new Cli(logs).parse();
             PluginTrigger pluginTrigger = new PluginTrigger(cli, new Conf(cli, logs, System.getenv()), new ScannerFactory(logs), logs);
             pluginTrigger.execute();
         }
 
-        public void execute(){
+        public void execute() {
             try {
                 Properties p = conf.properties();
                 init(p);
 
-                // Beginning of test feature: (To be removed later)
-                // The URLClassLoader creates a new system classloader
-                  URLClassLoader classLoader = URLClassLoader.newInstance(new URL[0], ClassLoader.getSystemClassLoader());
+                // ==================================================================
+                // Replacing the CustomToolClassLoader with a new Custom Class Loader
+                // ==================================================================
+                // Get the current context of the class loader
+                ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 
-
-                // For the current context use the class loader we have defined above
-//                  Thread.currentThread().setContextClassLoader(classLoader);
-                // End of test feature
-                // if it's possible to add it as a resource as a dynamically
-                // before running put it into the big jar
-                // next remove that
+                // Create and set the new custom class loader to perform operations
+                CustomBalScanClassLoader customBalScanClassLoader =
+                        new CustomBalScanClassLoader("C:/Users/Tharana Wanigaratne/.ballerina/repositories/central.ballerina.io/bala/tharana_wanigaratne/tool_scan/0.1.0/java17/tool/libs/ScanCommand-all.jar"
+                                , "sonar-scanner-api-batch.jar");
+                Thread.currentThread().setContextClassLoader(customBalScanClassLoader);
 
                 embeddedScanner.start();
+
+                // Replace the custom class loader with the previous class loader
+                Thread.currentThread().setContextClassLoader(oldClassLoader);
+
                 execute(p);
             } catch (Throwable e) {
                 logger.info("Error during SonarScanner execution");
             }
         }
 
-        private void init(Properties p){
+        private void init(Properties p) {
             embeddedScanner = runnerFactory.create(p, "");
         }
 
-        private void execute(Properties p){
+        private void execute(Properties p) {
             embeddedScanner.execute((Map) p);
         }
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void scanWithSyntaxTree(SyntaxTree syntaxTree){
+    public void scanWithSyntaxTree(SyntaxTree syntaxTree) {
         // Function related visits
         FunctionChecks functionChecks = new FunctionChecks(syntaxTree);
         functionChecks.initialize();
@@ -110,11 +111,11 @@ public class SonarQubeOld extends Platform {
     }
 
     // For rules that can be implemented using the semantic model
-    public void scanWithSemanticModel(SemanticModel semanticModel,PrintStream outputStream){
+    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
         outputStream.println(semanticModel.toString());
     }
 
-    public void handleParseIssue(String userFile){
+    public void handleParseIssue(String userFile) {
         JsonObject jsonObject = new JsonObject();
 
         // Create a JSON Object of the error
