@@ -10,17 +10,18 @@ import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 import java.io.PrintStream;
 import java.util.Map;
 
-public class Local extends Platform{
-    // Final attributes for determining the type of issues reported to Sonar Scanner
-    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
-    public static final String SOURCE_INVALID = "SOURCE_INVALID";
+public class Local extends Platform {
+    @Override
+    public void scan(PrintStream outputStream) {
+    }
 
-    public void scan(String userFile, PrintStream outputStream){
+    @Override
+    public void scan(String userFile, PrintStream outputStream) {
         // parse the ballerina file
         Map<String, Object> compilation = parseBallerinaProject(userFile);
 
         // perform the static code analysis if the file was successfully parsed
-        if(compilation != null){
+        if (compilation != null) {
             scanWithSyntaxTree((SyntaxTree) compilation.get("syntaxTree"));
 
             // The semantic model will be used later when implementing complex rules
@@ -34,7 +35,7 @@ public class Local extends Platform{
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void scanWithSyntaxTree(SyntaxTree syntaxTree){
+    public void scanWithSyntaxTree(SyntaxTree syntaxTree) {
         // Function related visits
         FunctionChecks functionChecks = new FunctionChecks(syntaxTree);
         functionChecks.initialize();
@@ -43,11 +44,12 @@ public class Local extends Platform{
     }
 
     // For rules that can be implemented using the semantic model
-    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream){
+    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
         outputStream.println(semanticModel.toString());
     }
 
-    public void handleParseIssue(String userFile){
+    @Override
+    public void handleParseIssue(String userFile) {
         JsonObject jsonObject = new JsonObject();
 
         // Create a JSON Object of the error

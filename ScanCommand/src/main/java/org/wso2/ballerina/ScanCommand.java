@@ -1,4 +1,5 @@
 package org.wso2.ballerina;
+
 import io.ballerina.cli.BLauncherCmd;
 
 import java.io.*;
@@ -22,11 +23,14 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
 
-    @CommandLine.Option(names = {"--help", "-h", "?"}, hidden=true)
+    @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
     @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform", defaultValue = "local")
     private String platform;
+
+    @CommandLine.Option(names = {"--rule"}, description = "single rule to be checked during the static code analysis", defaultValue = "all")
+    public static String userRule;
 
     public ScanCommand() {
         this.outputStream = System.out;
@@ -38,7 +42,7 @@ public class ScanCommand implements BLauncherCmd {
         this.errorStream = outputStream;
     }
 
-    public String checkPath(){
+    public String checkPath() {
         // if invalid number of arguments are passed to the bal scan command
         if (this.argList.size() != 1) {
             this.outputStream.println("Invalid number of arguments received!\n try bal scan --help for more information.");
@@ -50,7 +54,7 @@ public class ScanCommand implements BLauncherCmd {
 
         // check if the user passed file is a ballerina file or not
         String[] userFileExtension = userFilePath.split("\\.(?=[^\\.]+$)"); // [userFile, bal]
-        if((userFileExtension.length != 2) || !userFileExtension[1].equals("bal")){
+        if ((userFileExtension.length != 2) || !userFileExtension[1].equals("bal")) {
             this.outputStream.println("Invalid file format received!\n file format should be of type '.bal'");
             return "";
         }
@@ -66,8 +70,8 @@ public class ScanCommand implements BLauncherCmd {
         return userFilePath;
     }
 
-    public String validateEmptyPath(){
-        if(!this.argList.isEmpty()){
+    public String validateEmptyPath() {
+        if (!this.argList.isEmpty()) {
             this.outputStream.println("arguments are invalid!,\n try bal scan --help for more information.");
             return "invalidEntry";
         }
@@ -76,9 +80,9 @@ public class ScanCommand implements BLauncherCmd {
 
     // MAIN method
     @Override
-    public void execute(){
+    public void execute() {
         // if bal scan --help is passed
-        if (this.helpFlag) {
+        if (helpFlag) {
             StringBuilder builder = new StringBuilder();
             builder.append("Tool for providing static code analysis results for Ballerina projects\n\n");
             builder.append("bal scan --platform=<option> <ballerina-file>\n\n");
@@ -91,38 +95,51 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
+        // if the rule to scan is passed by the user
+        boolean rulesAreActivated;
+        if (!userRule.equals("all")) {
+            rulesAreActivated = InbuiltRules.activateUserDefinedRule(userRule);
+        } else {
+            rulesAreActivated = true;
+        }
+
+        // proceed with the scanning only if all the rules are activated
+        if (!rulesAreActivated) {
+            outputStream.println("The provided rule is invalid, please run bal scan --help for more info!");
+            return;
+        }
+
         // Set the trigger platform depending on user input
-        Platform triggerPlatform = null;
-        boolean platFormValid = true;
+        Platform triggerPlatform;
         switch (platform) {
             case "sonarqube" -> triggerPlatform = new SonarQube();
             case "sonarqubeold" -> triggerPlatform = new SonarQubeOld();
             case "codeql" -> triggerPlatform = new CodeQL();
             case "semgrep" -> triggerPlatform = new SemGrep();
             case "local" -> triggerPlatform = new Local();
-            default -> {
-                platFormValid = false;
-                outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
-            }
+            default -> triggerPlatform = null;
         }
 
         // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
         String userFilePath;
-        if(platform.equals("local")){
+        if (platform.equals("local")) {
             userFilePath = checkPath();
-            if(userFilePath.equals("")){
+            if (userFilePath.equals("")) {
                 return;
             }
-        }else{
-            userFilePath = validateEmptyPath();
-            if(!userFilePath.equals("")){
-                return;
-            }
-        }
 
-        // execute relevant scanner if a valid platform is provided
-        if(platFormValid){
+            // execute local scanner
             triggerPlatform.scan(userFilePath, outputStream);
+        } else if (triggerPlatform != null) {
+            userFilePath = validateEmptyPath();
+            if (!userFilePath.equals("")) {
+                return;
+            }
+
+            // execute relevant scanner if a valid platform is provided
+            triggerPlatform.scan(outputStream);
+        } else {
+            outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
         }
     }
 

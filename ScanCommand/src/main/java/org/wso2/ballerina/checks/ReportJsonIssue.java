@@ -5,12 +5,34 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
- import static org.wso2.ballerina.platforms.Platform.analysisIssues;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-public abstract class ReportJsonIssue implements Issue{
-    public String issueType;
+import static org.wso2.ballerina.platforms.Platform.analysisIssues;
+import static org.wso2.ballerina.InbuiltRules.INBUILT_RULES;
 
-    public void reportIssue(String issueType, LineRange issueLocation, String ruleID, String message){
+public abstract class ReportJsonIssue implements Issue {
+    private String issueType;
+    private final String ruleID;
+    private boolean ruleIsActive;
+
+    public ReportJsonIssue(String ruleID) {
+        this.ruleID = ruleID;
+        this.ruleIsActive = false;
+    }
+
+    protected abstract void triggerCheck();
+
+    // Only trigger the implemented check if it's available in the active ruleset and is active
+    protected void activateRule() {
+        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
+            ruleIsActive = true;
+            triggerCheck();
+        }
+    }
+
+    // Only report the issue if the rule id is available in the active ruleset
+    protected void reportIssue(String issueType, LineRange issueLocation, String message) {
         this.issueType = issueType;
         reportJSONIssue(issueLocation.startLine().line(),
                 issueLocation.startLine().offset(),
@@ -23,20 +45,22 @@ public abstract class ReportJsonIssue implements Issue{
 
     @Override
     public void reportJSONIssue(int startLine, int startLineOffset, int endLine, int endLineOffset, String ruleID, String message) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("issueType", issueType);
-        jsonObject.addProperty("startLine", startLine);
-        jsonObject.addProperty("startLineOffset", startLineOffset);
-        jsonObject.addProperty("endLine", endLine);
-        jsonObject.addProperty("endLineOffset", endLineOffset);
-        jsonObject.addProperty("ruleID", ruleID);
-        jsonObject.addProperty("message", message);
+        if (ruleIsActive) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("issueType", issueType);
+            jsonObject.addProperty("startLine", startLine);
+            jsonObject.addProperty("startLineOffset", startLineOffset);
+            jsonObject.addProperty("endLine", endLine);
+            jsonObject.addProperty("endLineOffset", endLineOffset);
+            jsonObject.addProperty("ruleID", ruleID);
+            jsonObject.addProperty("message", message);
 
-        // Convert the JSON output to print to the console
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(jsonObject);
+            // Convert the JSON output to print to the console
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonOutput = gson.toJson(jsonObject);
 
-        // add the analysis issue to the issues array
-        analysisIssues.add(jsonObject);
+            // add the analysis issue to the issues array
+            analysisIssues.add(jsonObject);
+        }
     }
 }

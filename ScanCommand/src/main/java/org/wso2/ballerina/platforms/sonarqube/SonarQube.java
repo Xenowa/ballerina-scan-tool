@@ -1,9 +1,7 @@
 package org.wso2.ballerina.platforms.sonarqube;
 
 import com.google.gson.JsonObject;
-import io.ballerina.compiler.api.SemanticModel;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
+import org.apache.commons.lang3.SystemUtils;
 import org.wso2.ballerina.platforms.Platform;
 
 import java.io.BufferedReader;
@@ -21,39 +19,40 @@ import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.wso2.ballerina.ScanCommand.userRule;
 
 public class SonarQube extends Platform {
-    // Final attributes for determining the type of issues reported to Sonar Scanner
-    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
-    public static final String SOURCE_INVALID = "SOURCE_INVALID";
-
+    @Override
     public void scan(String userFile, PrintStream outputStream) {
-        // executeThroughProcessBuilder(outputStream);
-        executeThroughClassLoaders(outputStream);
-
-//        // parse the ballerina file
-//        Map<String, Object> compilation = parseBallerinaProject(userFile);
-//
-//        // perform the static code analysis if the file was successfully parsed
-//        if(compilation != null){
-//            scanWithSyntaxTree((SyntaxTree) compilation.get("syntaxTree"));
-//
-//            // The semantic model will be used later when implementing complex rules
-//            // scanWithSemanticModel((SemanticModel) compilation.get("semanticModel"), outputStream);
-//        }
-//
-//        // Convert the JSON analysis results to the console
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        String jsonOutput = gson.toJson(analysisIssues);
-//
-//        // Output the JSON results to the console
-//        outputStream.println(jsonOutput);
     }
 
-    // Method 1: bal scan initiating sonar scan through process builder
-    public void executeThroughProcessBuilder(PrintStream outputStream) {
+    @Override
+    public void scan(PrintStream outputStream) {
+        // Method 1: bal scan initiating sonar scan through process builder
+        // Setting up initial arguments to run the sonar-scanner depending on the OS
+        List<String> arguments = new ArrayList<>();
+        if (SystemUtils.IS_OS_WINDOWS) {
+            arguments.add("cmd");
+            arguments.add("/c");
+        } else {
+            arguments.add("sh");
+            arguments.add("-c");
+        }
+        arguments.add("sonar-scanner");
+
+        // By default the sonar scan executed through ballerina will scan only ballerina files
+        arguments.add("-Dsonar.exclusions='**/*.java,**/*.xml,**/*.yaml,**/*.go,**/*.kt,**/*.js,**/*.html,**/*.YAML,**/*.rb,**/*.scala,**/*.py'");
+
+        // if the user has passed the rule to be analyzed
+        if (!userRule.equals("all")) {
+            arguments.add("-Drule=" + userRule);
+        }
+
         // Execute the sonar-scanner through a sub process
-        ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", "sonar-scanner", "-Dsonar.exclusions='**/*.java,**/*.xml,**/*.yaml,**/*.go,**/*.kt,**/*.js,**/*.html,**/*.YAML,**/*.rb,**/*.scala, **/*.py'");
+        ProcessBuilder processBuilder = new ProcessBuilder(arguments);
         try {
             Process process = processBuilder.start();
             InputStream inputStream = process.getInputStream();
@@ -66,6 +65,9 @@ public class SonarQube extends Platform {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        // Method 2: bal scan initiating sonar scan through java class loaders
+        // executeThroughClassLoaders(outputStream);
     }
 
     // Method 2: bal scan initiating sonar scan through java class loaders
@@ -126,21 +128,7 @@ public class SonarQube extends Platform {
         }
     }
 
-
-    // For rules that can be implemented using the syntax tree model
-    public void scanWithSyntaxTree(SyntaxTree syntaxTree) {
-        // Function related visits
-        FunctionChecks functionChecks = new FunctionChecks(syntaxTree);
-        functionChecks.initialize();
-
-        // Other visits
-    }
-
-    // For rules that can be implemented using the semantic model
-    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
-        outputStream.println(semanticModel.toString());
-    }
-
+    @Override
     public void handleParseIssue(String userFile) {
         JsonObject jsonObject = new JsonObject();
 

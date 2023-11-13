@@ -72,8 +72,15 @@ class BallerinaSensor implements Sensor {
         String absolutePath = inputFile.path().toAbsolutePath().toString();
         LOG.info("analyzing File: " + absolutePath);
 
-        // Build a process to run the bal tool
-        ProcessBuilder fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath);
+        // Build a process to run the bal tool depending on user rule inputs
+        String userRule = context.config().get("rule").orElse(null);
+        ProcessBuilder fileScan;
+        if (userRule != null) {
+            fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath, "--rule=" + userRule);
+        } else {
+            fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath);
+        }
+
         try {
             // Start the process
             Process process = fileScan.start();

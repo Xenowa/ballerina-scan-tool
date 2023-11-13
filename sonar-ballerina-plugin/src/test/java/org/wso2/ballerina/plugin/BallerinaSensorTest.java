@@ -1,6 +1,7 @@
 package org.wso2.ballerina.plugin;
 
 // Testing imports
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -23,12 +24,15 @@ class BallerinaSensorTest extends AbstractSensorTest {
         InputFile inputFile = createInputFileFromPath("sonar_bal_testing/main.bal");
         context.fileSystem().add(inputFile);
 
+        // Adding custom user properties for testing
+        // context.config()
+
         // Setting up a dummy rule
         CheckFactory checkFactory = checkFactory("S107", "S108");
         BallerinaSensor sensor = sensor(checkFactory);
         sensor.execute(context);
         context.allIssues().forEach(issue -> {
-            if(!(issue.ruleKey() == null)){
+            if (!(issue.ruleKey() == null)) {
                 System.out.println(issue.ruleKey().rule());
                 DefaultIssueLocation location = (DefaultIssueLocation) issue.primaryLocation();
                 System.out.println(location.message());

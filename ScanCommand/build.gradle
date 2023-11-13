@@ -20,7 +20,7 @@ repositories {
     }
 
     // For Ballerina Plugins
-    maven{
+    maven {
         url = 'https://maven.pkg.github.com/ballerina-platform/*'
         credentials {
             username System.getenv("packageUser")
@@ -31,25 +31,28 @@ repositories {
 
 dependencies {
     // Required dependency for developing ballerina cli applications
-    implementation group:'info.picocli', name:'picocli', version:'4.7.5'
+    implementation group: 'info.picocli', name: 'picocli', version: '4.7.5'
 
     // set the correct gson version
     implementation "com.google.code.gson:gson:${project.gsonVersion}"
 
     // Required dependencies for accessing the ballerina java project API
     // The version should match the version you have in the local machine
-    implementation group:'org.ballerinalang', name:'ballerina-lang', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-parser', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-runtime', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'jballerina-tools', version:"${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-runtime', version: "${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'jballerina-tools', version: "${project.ballerinaVersion}"
     // Required dependencies for building a ballerina cli application
-     implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-cli', version: "${project.ballerinaVersion}"
     // Required Module to convert the AST to a JSON File
-    implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
+    implementation group: 'org.ballerinalang', name: 'diagram-util', version: "${project.ballerinaVersion}"
+
+    // Required for determining the platform a java process is running on
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
     // Required for creating a sonar scanner from ballerina side
-    implementation group:'org.sonarsource.scanner.api', name:'sonar-scanner-api', version:'2.16.3.1081'
+    implementation group: 'org.sonarsource.scanner.api', name: 'sonar-scanner-api', version: '2.16.3.1081'
 }
 
 // Setting up the ballerina home property for the project
@@ -127,7 +130,7 @@ tasks.shadowJar {
     // Step 1: We exclude the sonar scanner api jar when the bal tool is created
     // Step 2: We manually add the sonar scanner api jar from the resources folder to the folder where the jar exist
     // Step 3: We manually include that jar file in the bal scan tool jar and delete it
-     // exclude "sonar-scanner-api-batch.jar/**"
+    // exclude "sonar-scanner-api-batch.jar/**"
 
     // The following command creates the FAT jar
     doLast {

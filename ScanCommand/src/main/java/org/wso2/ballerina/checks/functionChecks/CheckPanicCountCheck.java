@@ -9,15 +9,23 @@ import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import org.wso2.ballerina.checks.ReportJsonIssue;
 
+import static org.wso2.ballerina.platforms.Platform.CHECK_VIOLATION;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld.CHECK_VIOLATION;
-
 public class CheckPanicCountCheck extends ReportJsonIssue {
-    public void triggerCheck(FunctionDefinitionNode functionDefinitionNode){
+    FunctionDefinitionNode startingNode;
+
+    public CheckPanicCountCheck(FunctionDefinitionNode startingNode) {
+        super("S108");
+        this.startingNode = startingNode;
+        activateRule();
+    }
+
+    public void triggerCheck() {
         // Retrieve the body of functions
-        FunctionBodyNode functionBody = functionDefinitionNode.functionBody();
+        FunctionBodyNode functionBody = startingNode.functionBody();
 
         // Get the function body only
         FunctionBodyBlockNode functionBodyBlock = (FunctionBodyBlockNode) functionBody;
@@ -26,25 +34,24 @@ public class CheckPanicCountCheck extends ReportJsonIssue {
         NodeList<StatementNode> statements = functionBodyBlock.statements();
 
         AtomicInteger checkPanicCounter = new AtomicInteger(0);
-        statements.forEach(statement ->{
+        statements.forEach(statement -> {
             // Iterate through each statement
-            statement.children().forEach(childPair ->{
+            statement.children().forEach(childPair -> {
                 // Iterate through each child pair
                 List<STToken> tokens = childPair.internalNode().tokens();
-                tokens.forEach(token ->{
+                tokens.forEach(token -> {
                     // If there are tokens with checkpanic keyword increment the checkpanic keyword counter
-                    if(token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)){
+                    if (token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
                         checkPanicCounter.getAndIncrement();
                     }
                 });
             });
         });
 
-        if(checkPanicCounter.get() > 0){
+        if (checkPanicCounter.get() > 0) {
             reportIssue(
                     CHECK_VIOLATION,
                     functionBody.lineRange(),
-                    "S108",
                     "This function has " + checkPanicCounter.get() + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
             );
         }

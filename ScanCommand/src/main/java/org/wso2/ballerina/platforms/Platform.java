@@ -18,13 +18,15 @@ import java.util.NoSuchElementException;
 
 public abstract class Platform {
     // variable to hold all issues
+    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
+    public static final String SOURCE_INVALID = "SOURCE_INVALID";
     public static final JsonArray analysisIssues = new JsonArray();
 
-    public Map<String, Object> parseBallerinaProject(String userFile){
+    public Map<String, Object> parseBallerinaProject(String userFile) {
         // get the file path of the user provided ballerina file
         Path userFilePath = Path.of(userFile);
 
-        try{
+        try {
             // Map to store the parsed & Compiled outputs
             Map<String, Object> compiledOutputs = new HashMap<>();
 
@@ -42,9 +44,9 @@ public abstract class Platform {
                 Iterator<DocumentId> documentIterator = currentModule.documentIds().iterator();
 
                 // Block is used to prevent crashing
-                try{
+                try {
                     documentId = documentIterator.next();
-                }catch (NoSuchElementException exception){
+                } catch (NoSuchElementException exception) {
                     handleParseIssue(userFile);
                     return null;
                 }
@@ -67,11 +69,15 @@ public abstract class Platform {
 
             // Return back the compiled objects
             return compiledOutputs;
-        }catch (Exception e){
+        } catch (Exception e) {
             handleParseIssue(userFile);
             return null;
         }
     }
+
     abstract public void scan(String userFile, PrintStream outputStream);
+
+    abstract public void scan(PrintStream outputStream);
+
     abstract public void handleParseIssue(String userFile);
 }

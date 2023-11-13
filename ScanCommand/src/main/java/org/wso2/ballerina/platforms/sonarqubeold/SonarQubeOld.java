@@ -12,34 +12,14 @@ import java.util.Map;
 import java.util.Properties;
 
 public class SonarQubeOld extends Platform {
-    // Final attributes for determining the type of issues reported to Sonar Scanner
-    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
-    public static final String SOURCE_INVALID = "SOURCE_INVALID";
-
+    @Override
     public void scan(String userFile, PrintStream outputStream) {
+    }
+
+    @Override
+    public void scan(PrintStream outputStream) {
         // initiating a scan from the bal scan tool to perform analysis in a project
         PluginTrigger.triggerPlugin();
-
-        // Integrating the static code analysis from the bal tool with the triggered scan
-//        // parse the ballerina file
-//        Map<String, Object> compilation = parseBallerinaProject(userFile);
-//
-//        // perform the static code analysis if the file was successfully parsed
-//        if(compilation != null){
-//            scanWithSyntaxTree((SyntaxTree) compilation.get("syntaxTree"));
-//
-//            // The semantic model will be used later when implementing complex rules
-//            // scanWithSemanticModel((SemanticModel) compilation.get("semanticModel"), outputStream);
-//        }
-//
-//        // Convert the JSON analysis results to the console
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        String jsonOutput = gson.toJson(analysisIssues);
-//
-//        // Identifying if the sonar ballerina jar file is installed in sonarqube 9.9
-//        // If it's installed then calling that jar file from here
-//
-//        outputStream.println(jsonOutput);
     }
 
     public static class PluginTrigger {
@@ -101,20 +81,7 @@ public class SonarQubeOld extends Platform {
         }
     }
 
-    // For rules that can be implemented using the syntax tree model
-    public void scanWithSyntaxTree(SyntaxTree syntaxTree) {
-        // Function related visits
-        FunctionChecks functionChecks = new FunctionChecks(syntaxTree);
-        functionChecks.initialize();
-
-        // Other visits
-    }
-
-    // For rules that can be implemented using the semantic model
-    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
-        outputStream.println(semanticModel.toString());
-    }
-
+    @Override
     public void handleParseIssue(String userFile) {
         JsonObject jsonObject = new JsonObject();
 
