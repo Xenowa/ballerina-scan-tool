@@ -4,11 +4,11 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.ParameterNode;
-import org.wso2.ballerina.checks.ReportJsonIssue;
+import org.wso2.ballerina.ReportJsonIssueOld;
 
 import static org.wso2.ballerina.platforms.Platform.CHECK_VIOLATION;
 
-public class TooManyParametersCheck extends ReportJsonIssue {
+public class TooManyParametersCheck extends ReportJsonIssueOld {
     FunctionDefinitionNode startingNode;
 
     public TooManyParametersCheck(FunctionDefinitionNode startingNode) {

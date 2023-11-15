@@ -1,4 +1,4 @@
-package org.wso2.ballerina.checks;
+package org.wso2.ballerina;
 
 public interface Issue {
     void reportJSONIssue(int startLine

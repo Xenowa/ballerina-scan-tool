@@ -1,22 +1,19 @@
-package org.wso2.ballerina.checks;
+package org.wso2.ballerina;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import static org.wso2.ballerina.platforms.Platform.analysisIssues;
 import static org.wso2.ballerina.InbuiltRules.INBUILT_RULES;
 
-public abstract class ReportJsonIssue implements Issue {
+public abstract class ReportJsonIssueOld implements Issue {
     private String issueType;
     private final String ruleID;
     private boolean ruleIsActive;
 
-    public ReportJsonIssue(String ruleID) {
+    public ReportJsonIssueOld(String ruleID) {
         this.ruleID = ruleID;
         this.ruleIsActive = false;
     }
@@ -54,10 +51,6 @@ public abstract class ReportJsonIssue implements Issue {
             jsonObject.addProperty("endLineOffset", endLineOffset);
             jsonObject.addProperty("ruleID", ruleID);
             jsonObject.addProperty("message", message);
-
-            // Convert the JSON output to print to the console
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String jsonOutput = gson.toJson(jsonObject);
 
             // add the analysis issue to the issues array
             analysisIssues.add(jsonObject);

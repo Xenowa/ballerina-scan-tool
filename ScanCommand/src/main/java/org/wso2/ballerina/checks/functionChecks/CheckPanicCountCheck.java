@@ -7,14 +7,14 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import org.wso2.ballerina.checks.ReportJsonIssue;
+import org.wso2.ballerina.ReportJsonIssueOld;
 
 import static org.wso2.ballerina.platforms.Platform.CHECK_VIOLATION;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CheckPanicCountCheck extends ReportJsonIssue {
+public class CheckPanicCountCheck extends ReportJsonIssueOld {
     FunctionDefinitionNode startingNode;
 
     public CheckPanicCountCheck(FunctionDefinitionNode startingNode) {

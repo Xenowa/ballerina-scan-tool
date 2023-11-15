@@ -1,8 +1,7 @@
-package org.wso2.ballerina.platforms.sonarqube;
+package org.wso2.ballerina.platforms;
 
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
-import org.wso2.ballerina.platforms.Platform;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,7 +42,7 @@ public class SonarQube extends Platform {
         }
         arguments.add("sonar-scanner");
 
-        // By default the sonar scan executed through ballerina will scan only ballerina files
+        // By default, the sonar scan executed through ballerina will scan only ballerina files
         arguments.add("-Dsonar.exclusions='**/*.java,**/*.xml,**/*.yaml,**/*.go,**/*.kt,**/*.js,**/*.html,**/*.YAML,**/*.rb,**/*.scala,**/*.py'");
 
         // if the user has passed the rule to be analyzed

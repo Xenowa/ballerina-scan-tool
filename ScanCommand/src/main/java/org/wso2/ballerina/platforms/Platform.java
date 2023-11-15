@@ -17,9 +17,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 public abstract class Platform {
-    // variable to hold all issues
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String SOURCE_INVALID = "SOURCE_INVALID";
+
+    // variable to hold all issues
     public static final JsonArray analysisIssues = new JsonArray();
 
     public Map<String, Object> parseBallerinaProject(String userFile) {

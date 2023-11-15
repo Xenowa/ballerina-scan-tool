@@ -10,7 +10,7 @@ import org.wso2.ballerina.platforms.CodeQL;
 import org.wso2.ballerina.platforms.Local;
 import org.wso2.ballerina.platforms.Platform;
 import org.wso2.ballerina.platforms.SemGrep;
-import org.wso2.ballerina.platforms.sonarqube.SonarQube;
+import org.wso2.ballerina.platforms.SonarQube;
 import org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld;
 import picocli.CommandLine;
 

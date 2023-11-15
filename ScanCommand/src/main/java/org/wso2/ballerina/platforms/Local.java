@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import org.wso2.ballerina.StaticCodeAnalyzer;
 import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 
 import java.io.PrintStream;
@@ -24,6 +25,9 @@ public class Local extends Platform {
         if (compilation != null) {
             scanWithSyntaxTree((SyntaxTree) compilation.get("syntaxTree"));
 
+            // Deprecated scan with syntax tree
+            // scanWithSyntaxTreeOld((SyntaxTree) compilation.get("syntaxTree"));
+
             // The semantic model will be used later when implementing complex rules
             // scanWithSemanticModel((SemanticModel) compilation.get("semanticModel"), outputStream);
         }
@@ -36,11 +40,14 @@ public class Local extends Platform {
 
     // For rules that can be implemented using the syntax tree model
     public void scanWithSyntaxTree(SyntaxTree syntaxTree) {
-        // Function related visits
+        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
+        analyzer.initialize();
+    }
+
+    public void scanWithSyntaxTreeOld(SyntaxTree syntaxTree) {
+        // Function relaated visits
         FunctionChecks functionChecks = new FunctionChecks(syntaxTree);
         functionChecks.initialize();
-
-        // Other visits
     }
 
     // For rules that can be implemented using the semantic model
