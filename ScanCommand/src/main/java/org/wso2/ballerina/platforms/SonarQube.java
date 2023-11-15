@@ -43,7 +43,20 @@ public class SonarQube extends Platform {
         arguments.add("sonar-scanner");
 
         // By default, the sonar scan executed through ballerina will scan only ballerina files
-        arguments.add("-Dsonar.exclusions='**/*.java,**/*.xml,**/*.yaml,**/*.go,**/*.kt,**/*.js,**/*.html,**/*.YAML,**/*.rb,**/*.scala,**/*.py'");
+        arguments.add("-Dsonar.exclusions=" +
+                "'" +
+                "**/*.java," +
+                "**/*.xml," +
+                "**/*.yaml," +
+                "**/*.go," +
+                "**/*.kt," +
+                "**/*.js," +
+                "**/*.html," +
+                "**/*.YAML" +
+                ",**/*.rb," +
+                "**/*.scala," +
+                "**/*.py" +
+                "'");
 
         // if the user has passed the rule to be analyzed
         if (!userRule.equals("all")) {
@@ -91,11 +104,16 @@ public class SonarQube extends Platform {
         File currentJar = new File(decodedPath);
 
         // Creating absolute file path to the sonar-scanner-cli.jar from the bal tool jar
-        File referencedJar = new File(currentJar.getParentFile().getParentFile().getParentFile(), "resources/sonar-scanner-cli-5.0.1.3006.jar");
+        File referencedJar = new File(currentJar.getParentFile()
+                .getParentFile()
+                .getParentFile(),
+                "resources/sonar-scanner-cli-5.0.1.3006.jar");
 
         // Initiating the class loader
         try {
-            // cl = new URLClassLoader(new URL[]{new File("C:/src/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows/lib/sonar-scanner-cli-5.0.1.3006.jar")
+            // cl = new URLClassLoader(
+            // new URL[]{
+            // new File("C:/src/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows/lib/sonar-scanner-cli-5.0.1.3006.jar")
             cl = new URLClassLoader(new URL[]{referencedJar.toURI().toURL()}, ClassLoader.getSystemClassLoader());
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
@@ -118,7 +136,21 @@ public class SonarQube extends Platform {
         }
 
         // Call the method retrieved from the main class
-        String[] args = new String[]{"-Dsonar.exclusions='**/*.java,**/*.xml,**/*.yaml,**/*.go,**/*.kt,**/*.js,**/*.html,**/*.YAML,**/*.rb,**/*.scala, **/*.py'"};
+        String[] args = new String[]{"-Dsonar.exclusions=" +
+                "'" +
+                "**/*.java," +
+                "**/*.xml," +
+                "**/*.yaml," +
+                "**/*.go," +
+                "**/*.kt," +
+                "**/*.js," +
+                "**/*.html," +
+                "**/*.YAML," +
+                "**/*.rb," +
+                "**/*.scala," +
+                "**/*.py" +
+                "'"};
+
         try {
             // invoke(ifNonStaticThenObject, (Object) arguments)
             mainMethod.invoke(null, (Object) args);

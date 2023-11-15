@@ -20,7 +20,12 @@ public class ReportJsonIssue implements Issue {
     }
 
     @Override
-    public void reportJSONIssue(int startLine, int startLineOffset, int endLine, int endLineOffset, String ruleID, String message) {
+    public void reportJSONIssue(int startLine,
+                                int startLineOffset,
+                                int endLine,
+                                int endLineOffset,
+                                String ruleID,
+                                String message) {
         // Only trigger the activated rules by the user
         if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
             JsonObject jsonObject = new JsonObject();

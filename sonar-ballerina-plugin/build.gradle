@@ -7,26 +7,28 @@ plugins {
 
     // Required plugin to create an executable jar which does not require external dependencies
     id "com.github.johnrengelman.shadow" version "7.1.0"
-
     // Required plugin for checks testing
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
-
-    // Required to work with Ballerina Project APIs
+    // Required to work with Java tests
     id 'java'
     id 'java-library'
-
-    // Additional Ballerina specific plugins
+    // For checkstyle configurations
+    id 'checkstyle'
+    // For spotbugs configurations
+    id "com.github.spotbugs" version "5.0.14"
+    // For providing file download tasks functionality
+    id "de.undercouch.download" version "5.4.0"
 }
 
 group = 'org.wso2.ballerina'
-version = '1.0-SNAPSHOT'
+version = '1.0'
 
 repositories {
     // Required plugin repositories to work with sonar plugin API
     mavenLocal()
     mavenCentral()
     gradlePluginPortal()
-    maven{
+    maven {
         url = 'https://repox.jfrog.io/repox/plugins.gradle.org/'
     }
     // Required repository for testing
@@ -34,7 +36,7 @@ repositories {
         url = uri("https://plugins.gradle.org/m2/")
     }
     // Include Ballerina Specific Repository for fetching required Ballerina Plugins
-    maven{
+    maven {
         url = 'https://maven.pkg.github.com/ballerina-platform/*'
         credentials {
             username System.getenv("packageUser")
@@ -49,46 +51,125 @@ dependencies {
 
     // Required dependencies to work with sonar plugin API
     // compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.12.0.310'
-    compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.14.0.375'
-    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-commons', version:'2.1.0.1111'
-    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-xml-parsing', version:'2.1.0.1111'
-    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-regex-parsing', version:'2.1.0.1111'
-    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-performance-measure', version:'2.1.0.1111'
-    implementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-recognizers', version:'2.1.0.1111'
+    compileOnly group: 'org.sonarsource.api.plugin', name: 'sonar-plugin-api', version: '9.14.0.375'
+    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-commons', version: '2.1.0.1111'
+    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-xml-parsing', version: '2.1.0.1111'
+    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-regex-parsing', version: '2.1.0.1111'
+    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-performance-measure', version: '2.1.0.1111'
+    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-recognizers', version: '2.1.0.1111'
 
     // Adding following dependencies to remove SL4J Errors during testing
     implementation 'org.slf4j:slf4j-api:1.7.32'
     implementation 'ch.qos.logback:logback-classic:1.2.9'
 
     // Required additional dependencies to make working with sonar plugin API easier
-    implementation group:'com.fasterxml.staxmate', name:'staxmate', version:'2.4.0'
+    implementation group: 'com.fasterxml.staxmate', name: 'staxmate', version: '2.4.0'
 
     // set the correct gson version
     implementation "com.google.code.gson:gson:${project.gsonVersion}"
 
-    // Required dependencies for testing the plugin before building and deploying
-    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-api', version:'5.8.2'
-    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-params', version:'5.8.2'
-    testImplementation group:'org.junit.jupiter', name:'junit-jupiter-engine', version:'5.8.2'
-    testImplementation group:'org.assertj', name:'assertj-core', version:'3.23.1'
-    testImplementation group:'org.mockito', name:'mockito-core', version:'4.6.1'
-    testImplementation group:'io.mockk', name:'mockk', version:'1.12.4'
-    testImplementation group:'io.github.classgraph', name:'classgraph', version:'4.8.149'
-    testImplementation group:'org.sonarsource.analyzer-commons', name:'sonar-analyzer-test-commons', version:'2.1.0.1111'
-    testImplementation group:'org.sonarsource.orchestrator', name:'sonar-orchestrator', version:'3.40.0.183'
-    testImplementation group:'org.sonarsource.sonarqube', name:'sonar-ws', version:'9.7.1.62043'
-    testImplementation group:'org.sonarsource.sonarlint.core', name:'sonarlint-core', version:'7.0.0.37656'
-    testImplementation group:'org.sonarsource.sonarqube', name:'sonar-plugin-api-impl', version:'9.7.1.62043'
+    // Required for applying checkstyle & Spotbugs to the project
+    checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
 
-    // Packages required to get access to the Ballerina Project API
-    implementation group:'org.ballerinalang', name:'diagram-util', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-cli', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-lang', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-parser', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'jballerina-tools', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-runtime', version:"${project.ballerinaVersion}"
-    implementation group:'org.ballerinalang', name:'ballerina-tools-api', version:"${project.ballerinaVersion}"
+    // Required dependencies for testing the plugin before building and deploying
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.8.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.6.1'
+    testImplementation group: 'io.mockk', name: 'mockk', version: '1.12.4'
+    testImplementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.149'
+    testImplementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-test-commons', version: '2.1.0.1111'
+    testImplementation group: 'org.sonarsource.orchestrator', name: 'sonar-orchestrator', version: '3.40.0.183'
+    testImplementation group: 'org.sonarsource.sonarqube', name: 'sonar-ws', version: '9.7.1.62043'
+    testImplementation group: 'org.sonarsource.sonarlint.core', name: 'sonarlint-core', version: '7.0.0.37656'
+    testImplementation group: 'org.sonarsource.sonarqube', name: 'sonar-plugin-api-impl', version: '9.7.1.62043'
 }
+
+// =====================
+// Setting up checkstyle
+// =====================
+// Downloading checkstyle configurations of WSO2
+task downloadCheckstyleRuleFiles(type: Download) {
+    src([
+            'https://raw.githubusercontent.com/wso2/code-quality-tools/v1.4/checkstyle/jdk-17/checkstyle.xml',
+            'https://raw.githubusercontent.com/wso2/code-quality-tools/v1.4/checkstyle/jdk-17/suppressions.xml'
+    ])
+    overwrite false
+    onlyIfNewer true
+    dest buildDir
+}
+
+// Location for placing the wso2 checkstyle configuration
+artifacts.add('default', file("$project.buildDir/checkstyle.xml")) {
+    builtBy('downloadCheckstyleRuleFiles')
+}
+
+// Location for placing the suppression files configurations
+artifacts.add('default', file("$project.buildDir/suppressions.xml")) {
+    builtBy('downloadCheckstyleRuleFiles')
+}
+
+// Files to be excluded from checkstyle \
+def excludePattern = '**/module-info.java'
+tasks.withType(Checkstyle) {
+    exclude excludePattern
+}
+
+// Checkstyle outputs locations
+checkstyle {
+    toolVersion "10.12.1"
+    // As in the current implementation the project is as a sub module
+    configFile rootProject.file("sonar-ballerina-plugin/build/checkstyle.xml")
+    configProperties = ["suppressionFile": file("${rootDir}/sonar-ballerina-plugin/build/suppressions.xml")]
+}
+
+// Run checkstyle only after downloading the custom checkstyle configurations
+checkstyleMain.dependsOn(":sonar-ballerina-plugin:downloadCheckstyleRuleFiles")
+
+// ===================
+// Setting up spotbugs
+// ===================
+spotbugsMain {
+    effort "max"
+    reportLevel "low"
+
+    // Spotbugs report destination
+    reportsDir = file("$project.buildDir/reports/spotbugs")
+
+    // Spotbugs report types to generate
+    reports {
+        html.enabled true
+        text.enabled = true
+    }
+
+    // spotbugs exclusions file destination
+    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    if (excludeFile.exists()) {
+        excludeFilter = excludeFile
+    }
+}
+
+// Disable spotbugs for test files
+spotbugsTest {
+    enabled = false
+}
+
+task validateSpotbugs() {
+    doLast {
+        if (spotbugsMain.reports.size() > 0 &&
+                spotbugsMain.reports[0].destination.exists() &&
+                spotbugsMain.reports[0].destination.text.readLines().size() > 0) {
+            spotbugsMain.reports[0].destination?.eachLine {
+                println 'Failure: ' + it
+            }
+            throw new GradleException("Spotbugs rule violations were found.");
+        }
+    }
+}
+
+spotbugsMain.finalizedBy validateSpotbugs
+
 
 // =======================================
 // Sonar Plugin API Testing configurations
@@ -176,7 +257,7 @@ artifacts {
 // the build creation will fail
 static void enforceJarSizeAndCheckContent(File file, long minSize, long maxSize) {
     long size = file.length()
-    if (size < minSize)  {
+    if (size < minSize) {
         throw new GradleException("${file.path} size ($size) too small. Min is $minSize")
     } else if (size > maxSize) {
         throw new GradleException("${file.path} size ($size) too large. Max is $maxSize")

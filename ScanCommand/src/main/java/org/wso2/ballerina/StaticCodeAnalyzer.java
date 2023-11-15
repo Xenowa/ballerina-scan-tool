@@ -39,7 +39,9 @@ public class StaticCodeAnalyzer extends NodeVisitor {
             issueReporter.reportIssue(
                     functionSignatureNode.lineRange(),
                     "S107",
-                    "This function has " + parameterCount + " parameters, which is greater than the 7 authorized."
+                    "This function has "
+                            + parameterCount
+                            + " parameters, which is greater than the 7 authorized."
             );
         }
 
@@ -70,11 +72,12 @@ public class StaticCodeAnalyzer extends NodeVisitor {
             issueReporter.reportIssue(
                     functionBodyBlockNode.lineRange(),
                     "S108",
-                    "This function has " + checkPanicCounter.get() + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
+                    "This function has "
+                            + checkPanicCounter.get()
+                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
             );
         }
 
         this.visitSyntaxNode(functionBodyBlockNode);
     }
-
 }

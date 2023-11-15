@@ -1,7 +1,5 @@
 package org.wso2.ballerina;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
@@ -41,7 +39,12 @@ public abstract class ReportJsonIssueOld implements Issue {
     }
 
     @Override
-    public void reportJSONIssue(int startLine, int startLineOffset, int endLine, int endLineOffset, String ruleID, String message) {
+    public void reportJSONIssue(int startLine,
+                                int startLineOffset,
+                                int endLine,
+                                int endLineOffset,
+                                String ruleID,
+                                String message) {
         if (ruleIsActive) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("issueType", issueType);

@@ -2,7 +2,8 @@ package org.wso2.ballerina;
 
 import io.ballerina.cli.BLauncherCmd;
 
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -52,7 +52,9 @@ public class CheckPanicCountCheck extends ReportJsonIssueOld {
             reportIssue(
                     CHECK_VIOLATION,
                     functionBody.lineRange(),
-                    "This function has " + checkPanicCounter.get() + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
+                    "This function has "
+                            + checkPanicCounter.get()
+                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
             );
         }
     }

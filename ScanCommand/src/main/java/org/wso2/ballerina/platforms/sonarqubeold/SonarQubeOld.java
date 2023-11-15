@@ -1,10 +1,7 @@
 package org.wso2.ballerina.platforms.sonarqubeold;
 
 import com.google.gson.JsonObject;
-import io.ballerina.compiler.api.SemanticModel;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import org.sonarsource.scanner.api.EmbeddedScanner;
-import org.wso2.ballerina.checks.functionChecks.FunctionChecks;
 import org.wso2.ballerina.platforms.Platform;
 
 import java.io.PrintStream;
@@ -40,7 +37,9 @@ public class SonarQubeOld extends Platform {
         public static void triggerPlugin() {
             Logs logs = new Logs(System.out, System.err);
             Cli cli = new Cli(logs).parse();
-            PluginTrigger pluginTrigger = new PluginTrigger(cli, new Conf(cli, logs, System.getenv()), new ScannerFactory(logs), logs);
+            PluginTrigger pluginTrigger = new PluginTrigger(cli,
+                    new Conf(cli, logs, System.getenv()),
+                    new ScannerFactory(logs), logs);
             pluginTrigger.execute();
         }
 
