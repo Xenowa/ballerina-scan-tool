@@ -1,4 +1,4 @@
-package org.wso2.ballerina.checks.functionChecks;
+package org.wso2.ballerina.internal.miscellaneous;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.Node;

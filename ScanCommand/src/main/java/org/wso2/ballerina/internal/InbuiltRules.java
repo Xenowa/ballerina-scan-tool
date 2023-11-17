@@ -1,4 +1,4 @@
-package org.wso2.ballerina;
+package org.wso2.ballerina.internal;
 
 import java.util.HashMap;
 import java.util.Map;

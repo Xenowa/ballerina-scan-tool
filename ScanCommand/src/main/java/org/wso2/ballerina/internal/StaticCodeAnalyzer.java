@@ -1,4 +1,4 @@
-package org.wso2.ballerina;
+package org.wso2.ballerina.internal;
 
 import io.ballerina.compiler.internal.parser.tree.STToken;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
-    ReportJsonIssue issueReporter = new ReportJsonIssue();
+    ReportLocalIssue issueReporter = new ReportLocalIssue();
 
     // Initialize the static code analyzer
     private static Node mainNode;

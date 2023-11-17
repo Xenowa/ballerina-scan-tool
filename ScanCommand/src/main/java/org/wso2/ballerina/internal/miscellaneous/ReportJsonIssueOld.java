@@ -1,10 +1,10 @@
-package org.wso2.ballerina;
+package org.wso2.ballerina.internal.miscellaneous;
 
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
+import org.wso2.ballerina.Issue;
 
-import static org.wso2.ballerina.platforms.Platform.analysisIssues;
-import static org.wso2.ballerina.InbuiltRules.INBUILT_RULES;
+import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 
 public abstract class ReportJsonIssueOld implements Issue {
     private String issueType;
@@ -39,14 +39,15 @@ public abstract class ReportJsonIssueOld implements Issue {
     }
 
     @Override
-    public void reportJSONIssue(int startLine,
-                                int startLineOffset,
-                                int endLine,
-                                int endLineOffset,
-                                String ruleID,
-                                String message) {
+    public JsonObject reportJSONIssue(int startLine,
+                                      int startLineOffset,
+                                      int endLine,
+                                      int endLineOffset,
+                                      String ruleID,
+                                      String message) {
+        JsonObject jsonObject = new JsonObject();
+
         if (ruleIsActive) {
-            JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("issueType", issueType);
             jsonObject.addProperty("startLine", startLine);
             jsonObject.addProperty("startLineOffset", startLineOffset);
@@ -54,9 +55,9 @@ public abstract class ReportJsonIssueOld implements Issue {
             jsonObject.addProperty("endLineOffset", endLineOffset);
             jsonObject.addProperty("ruleID", ruleID);
             jsonObject.addProperty("message", message);
-
-            // add the analysis issue to the issues array
-            analysisIssues.add(jsonObject);
         }
+
+        // Return the packaged JSON issue object
+        return jsonObject;
     }
 }

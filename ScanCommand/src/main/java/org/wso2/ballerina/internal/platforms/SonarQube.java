@@ -1,6 +1,5 @@
-package org.wso2.ballerina.platforms;
+package org.wso2.ballerina.internal.platforms;
 
-import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.BufferedReader;
@@ -21,17 +20,16 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.wso2.ballerina.ScanCommand.userRule;
+import static org.wso2.ballerina.internal.ScanCommand.userRule;
 
 public class SonarQube extends Platform {
     @Override
     public void scan(String userFile, PrintStream outputStream) {
     }
 
+    // Temporary testing
     @Override
     public void scan(PrintStream outputStream) {
-        // Method 1: bal scan initiating sonar scan through process builder
-        // Setting up initial arguments to run the sonar-scanner depending on the OS
         List<String> arguments = new ArrayList<>();
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
@@ -40,23 +38,11 @@ public class SonarQube extends Platform {
             arguments.add("sh");
             arguments.add("-c");
         }
-        arguments.add("sonar-scanner");
 
-        // By default, the sonar scan executed through ballerina will scan only ballerina files
-        arguments.add("-Dsonar.exclusions=" +
-                "'" +
-                "**/*.java," +
-                "**/*.xml," +
-                "**/*.yaml," +
-                "**/*.go," +
-                "**/*.kt," +
-                "**/*.js," +
-                "**/*.html," +
-                "**/*.YAML" +
-                ",**/*.rb," +
-                "**/*.scala," +
-                "**/*.py" +
-                "'");
+        // Mandatory arguments to execute the analysis
+        arguments.add("java");
+        arguments.add("-jar");
+        arguments.add("C:/src/sonarqube-9.9.2.77730/extensions/plugins/sonar-ballerina-plugin-1.0-all.jar");
 
         // if the user has passed the rule to be analyzed
         if (!userRule.equals("all")) {
@@ -77,10 +63,61 @@ public class SonarQube extends Platform {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        // Method 2: bal scan initiating sonar scan through java class loaders
-        // executeThroughClassLoaders(outputStream);
     }
+
+//    @Override
+//    public void scan(PrintStream outputStream) {
+//        // Method 1: bal scan initiating sonar scan through process builder
+//        // Setting up initial arguments to run the sonar-scanner depending on the OS
+//        List<String> arguments = new ArrayList<>();
+//        if (SystemUtils.IS_OS_WINDOWS) {
+//            arguments.add("cmd");
+//            arguments.add("/c");
+//        } else {
+//            arguments.add("sh");
+//            arguments.add("-c");
+//        }
+//        arguments.add("sonar-scanner");
+//
+//        // By default, the sonar scan executed through ballerina will scan only ballerina files
+//        arguments.add("-Dsonar.exclusions=" +
+//                "'" +
+//                "**/*.java," +
+//                "**/*.xml," +
+//                "**/*.yaml," +
+//                "**/*.go," +
+//                "**/*.kt," +
+//                "**/*.js," +
+//                "**/*.html," +
+//                "**/*.YAML" +
+//                ",**/*.rb," +
+//                "**/*.scala," +
+//                "**/*.py" +
+//                "'");
+//
+//        // if the user has passed the rule to be analyzed
+//        if (!userRule.equals("all")) {
+//            arguments.add("-Drule=" + userRule);
+//        }
+//
+//        // Execute the sonar-scanner through a sub process
+//        ProcessBuilder processBuilder = new ProcessBuilder(arguments);
+//        try {
+//            Process process = processBuilder.start();
+//            InputStream inputStream = process.getInputStream();
+//            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+//
+//            String line;
+//            while ((line = bufferedReader.readLine()) != null) {
+//                outputStream.println(line);
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        // Method 2: bal scan initiating sonar scan through java class loaders
+//        // executeThroughClassLoaders(outputStream);
+//    }
 
     // Method 2: bal scan initiating sonar scan through java class loaders
     public void executeThroughClassLoaders(PrintStream outputStream) {
@@ -157,18 +194,5 @@ public class SonarQube extends Platform {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void handleParseIssue(String userFile) {
-        JsonObject jsonObject = new JsonObject();
-
-        // Create a JSON Object of the error
-        jsonObject.addProperty("issueType", SOURCE_INVALID);
-        String message = "Unable to parse file " + userFile;
-        jsonObject.addProperty("message", message);
-
-        // add the analysis issue to the issues array
-        analysisIssues.add(jsonObject);
     }
 }

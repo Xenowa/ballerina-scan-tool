@@ -1,12 +1,11 @@
-package org.wso2.ballerina.checks.functionChecks;
+package org.wso2.ballerina.internal.miscellaneous;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.ParameterNode;
-import org.wso2.ballerina.ReportJsonIssueOld;
 
-import static org.wso2.ballerina.platforms.Platform.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
 
 public class TooManyParametersCheck extends ReportJsonIssueOld {
     FunctionDefinitionNode startingNode;

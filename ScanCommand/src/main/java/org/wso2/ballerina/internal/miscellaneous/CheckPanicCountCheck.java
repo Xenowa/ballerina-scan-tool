@@ -1,4 +1,4 @@
-package org.wso2.ballerina.checks.functionChecks;
+package org.wso2.ballerina.internal.miscellaneous;
 
 import io.ballerina.compiler.internal.parser.tree.STToken;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
@@ -7,9 +7,8 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import org.wso2.ballerina.ReportJsonIssueOld;
 
-import static org.wso2.ballerina.platforms.Platform.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

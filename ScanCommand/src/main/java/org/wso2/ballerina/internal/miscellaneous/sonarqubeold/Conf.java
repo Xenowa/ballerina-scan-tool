@@ -1,4 +1,4 @@
-package org.wso2.ballerina.platforms.sonarqubeold;
+package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import org.sonarsource.scanner.api.Utils;
 
 class Conf {
@@ -259,10 +260,9 @@ class Conf {
     /**
      * Transforms a comma-separated list String property in to a array of
      * trimmed strings.
-     *
+     * <p>
      * This works even if they are separated by whitespace characters (space
      * char, EOL, ...)
-     *
      */
     static String[] getListFromProperty(Properties properties, String key) {
         String value = properties.getProperty(key, "").trim();

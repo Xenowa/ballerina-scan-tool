@@ -1,4 +1,4 @@
-package org.wso2.ballerina;
+package org.wso2.ballerina.internal;
 
 import io.ballerina.cli.BLauncherCmd;
 
@@ -7,12 +7,12 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.wso2.ballerina.platforms.CodeQL;
-import org.wso2.ballerina.platforms.Local;
-import org.wso2.ballerina.platforms.Platform;
-import org.wso2.ballerina.platforms.SemGrep;
-import org.wso2.ballerina.platforms.SonarQube;
-import org.wso2.ballerina.platforms.sonarqubeold.SonarQubeOld;
+import org.wso2.ballerina.internal.platforms.CodeQL;
+import org.wso2.ballerina.internal.platforms.Local;
+import org.wso2.ballerina.internal.platforms.Platform;
+import org.wso2.ballerina.internal.platforms.SemGrep;
+import org.wso2.ballerina.internal.platforms.SonarQube;
+import org.wso2.ballerina.internal.miscellaneous.sonarqubeold.SonarQubeOld;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
@@ -128,6 +128,10 @@ public class ScanCommand implements BLauncherCmd {
             if (userFilePath.equals("")) {
                 return;
             }
+
+            // TODO: Obtaining and processing of custom user defined
+            //  rules compiler plugin JAR should be implemented here
+            //  validations on if
 
             // execute local scanner
             triggerPlatform.scan(userFilePath, outputStream);

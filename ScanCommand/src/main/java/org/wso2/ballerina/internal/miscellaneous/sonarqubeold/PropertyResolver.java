@@ -1,4 +1,4 @@
-package org.wso2.ballerina.platforms.sonarqubeold;
+package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
 
 import java.util.LinkedList;
 import java.util.List;

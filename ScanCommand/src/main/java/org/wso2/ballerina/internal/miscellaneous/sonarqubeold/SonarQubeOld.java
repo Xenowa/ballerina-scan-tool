@@ -1,8 +1,7 @@
-package org.wso2.ballerina.platforms.sonarqubeold;
+package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
 
-import com.google.gson.JsonObject;
 import org.sonarsource.scanner.api.EmbeddedScanner;
-import org.wso2.ballerina.platforms.Platform;
+import org.wso2.ballerina.internal.platforms.Platform;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class SonarQubeOld extends Platform {
 
                 // Create and set the new custom class loader to perform operations
                 CustomBalScanClassLoader customBalScanClassLoader =
-                        new CustomBalScanClassLoader("C:/Users/Tharana Wanigaratne/.ballerina/repositories/central.ballerina.io/bala/tharana_wanigaratne/tool_scan/0.1.0/java17/tool/libs/ScanCommand-all.jar"
+                        new CustomBalScanClassLoader("C:/Users/Tharana Wanigaratne/.ballerina/repositories/central.ballerina.io/bala/tharana_wanigaratne/tool_scan/0.1.0/java17/tool/libs/ScanCommand-1.0.jar"
                                 , "sonar-scanner-api-batch.jar");
                 Thread.currentThread().setContextClassLoader(customBalScanClassLoader);
 
@@ -78,18 +77,5 @@ public class SonarQubeOld extends Platform {
         private void execute(Properties p) {
             embeddedScanner.execute((Map) p);
         }
-    }
-
-    @Override
-    public void handleParseIssue(String userFile) {
-        JsonObject jsonObject = new JsonObject();
-
-        // Create a JSON Object of the error
-        jsonObject.addProperty("issueType", SOURCE_INVALID);
-        String message = "Unable to parse file " + userFile;
-        jsonObject.addProperty("message", message);
-
-        // add the analysis issue to the issues array
-        analysisIssues.add(jsonObject);
     }
 }

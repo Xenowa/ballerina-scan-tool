@@ -1,4 +1,4 @@
-package org.wso2.ballerina.platforms.sonarqubeold;
+package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
 
 import org.sonarsource.scanner.api.EmbeddedScanner;
 import org.sonarsource.scanner.api.LogOutput;

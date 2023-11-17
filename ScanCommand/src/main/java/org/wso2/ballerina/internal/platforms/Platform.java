@@ -1,6 +1,7 @@
-package org.wso2.ballerina.platforms;
+package org.wso2.ballerina.internal.platforms;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
@@ -80,5 +81,15 @@ public abstract class Platform {
 
     abstract public void scan(PrintStream outputStream);
 
-    abstract public void handleParseIssue(String userFile);
+    public void handleParseIssue(String userFile) {
+        JsonObject jsonObject = new JsonObject();
+
+        // Create a JSON Object of the error
+        jsonObject.addProperty("issueType", SOURCE_INVALID);
+        String message = "Unable to parse file " + userFile;
+        jsonObject.addProperty("message", message);
+
+        // add the analysis issue to the issues array
+        analysisIssues.add(jsonObject);
+    }
 }

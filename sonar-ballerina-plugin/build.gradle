@@ -12,6 +12,8 @@ plugins {
     // Required to work with Java tests
     id 'java'
     id 'java-library'
+    // For triggering the plugin through bal scan tool
+    id 'application'
     // For checkstyle configurations
     id 'checkstyle'
     // For spotbugs configurations
@@ -70,6 +72,9 @@ dependencies {
 
     // Required for applying checkstyle & Spotbugs to the project
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
+
+    // Required for determining the platform a java process is running on
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
     // Required dependencies for testing the plugin before building and deploying
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
@@ -184,6 +189,11 @@ configurations {
     testImplementation {
         extendsFrom compileOnly
     }
+}
+
+// class to trigger when the JAR is engaged
+application {
+    mainClass = 'org.wso2.ballerina.Main'
 }
 
 // ===========================
