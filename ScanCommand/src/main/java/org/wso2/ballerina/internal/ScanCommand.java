@@ -129,10 +129,6 @@ public class ScanCommand implements BLauncherCmd {
                 return;
             }
 
-            // TODO: Obtaining and processing of custom user defined
-            //  rules compiler plugin JAR should be implemented here
-            //  validations on if
-
             // execute local scanner
             triggerPlatform.scan(userFilePath, outputStream);
         } else if (triggerPlatform != null) {

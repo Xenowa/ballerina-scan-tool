@@ -1,0 +1,34 @@
+package org.wso2.ballerina.plugin;
+
+import com.google.gson.JsonArray;
+import io.ballerina.compiler.api.SemanticModel;
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import org.wso2.ballerina.ExternalRules;
+import org.wso2.ballerina.plugin.checks.CustomChecks;
+
+import java.util.ArrayList;
+
+public class CustomBallerinaPlugin implements ExternalRules {
+    @Override
+    public void setCustomRules() {
+        // Adding rule to check for functions with empty body
+        CUSTOM_RULES.add("S109");
+    }
+
+    @Override
+    public ArrayList<String> getCustomRules() {
+        return CUSTOM_RULES;
+    }
+
+    @Override
+    public JsonArray getExternalIssues() {
+        return externalIssues;
+    }
+
+    @Override
+    public void initialize(SyntaxTree syntaxTree, SemanticModel semanticModel) {
+        // Perform the check
+        CustomChecks customChecks = new CustomChecks(syntaxTree);
+        customChecks.initialize(externalIssues);
+    }
+}

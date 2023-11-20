@@ -11,6 +11,9 @@ import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
 import static org.wso2.ballerina.internal.platforms.Platform.analysisIssues;
 
 public class ReportLocalIssue extends ReportJsonIssue {
+    public ReportLocalIssue(JsonArray externalIssues) {
+        super(externalIssues);
+    }
 
     @Override
     public void reportIssue(LineRange issueLocation, String ruleID, String message) {
@@ -42,17 +45,26 @@ public class ReportLocalIssue extends ReportJsonIssue {
                 try {
                     // retrieve all object keys and validate if they are correct
                     int startLine = issueObject.get("startLine").getAsInt();
-                    int startLineOffeset = issueObject.get("startLineOffset").getAsInt();
+                    int startLineOffset = issueObject.get("startLineOffset").getAsInt();
                     int endLine = issueObject.get("endLine").getAsInt();
                     int endLineOffset = issueObject.get("endLineOffset").getAsInt();
                     String ruleID = issueObject.get("ruleID").getAsString();
                     String message = issueObject.get("message").getAsString();
 
+                    // Since the issueObject may have multiple other parameters an internal one is created
+                    JsonObject newExternalIssue = new JsonObject();
+                    newExternalIssue.addProperty("startLine", startLine);
+                    newExternalIssue.addProperty("startLineOffset", startLineOffset);
+                    newExternalIssue.addProperty("endLine", endLine);
+                    newExternalIssue.addProperty("endLineOffset", endLineOffset);
+                    newExternalIssue.addProperty("ruleID", ruleID);
+                    newExternalIssue.addProperty("message", message);
+
                     // if all other checks passes, then add the property CHECK_VIOLATION
-                    issueObject.addProperty("issueType", CHECK_VIOLATION);
+                    newExternalIssue.addProperty("issueType", CHECK_VIOLATION);
 
                     // add external issue as analysis issue
-                    analysisIssues.add(issueObject);
+                    analysisIssues.add(newExternalIssue);
                 } catch (Exception e) {
                     externalIssuesAreValid = false;
                     break;

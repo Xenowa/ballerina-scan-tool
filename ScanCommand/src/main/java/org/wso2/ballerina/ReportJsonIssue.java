@@ -5,8 +5,11 @@ import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
 public abstract class ReportJsonIssue implements Issue {
-    public JsonArray externalIssues = new JsonArray();
+    JsonArray externalIssues;
 
+    public ReportJsonIssue(JsonArray externalIssues) {
+        this.externalIssues = externalIssues;
+    }
 
     /**
      * For reporting custom rule violations consider using

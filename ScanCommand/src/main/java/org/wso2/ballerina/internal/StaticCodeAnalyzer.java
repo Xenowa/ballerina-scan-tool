@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
-    ReportLocalIssue issueReporter = new ReportLocalIssue();
+    ReportLocalIssue issueReporter;
 
     // Initialize the static code analyzer
     private static Node mainNode;
@@ -22,7 +22,8 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         mainNode = syntaxTree.rootNode();
     }
 
-    public void initialize() {
+    public void initialize(ReportLocalIssue issueReporter) {
+        this.issueReporter = issueReporter;
         // Go with the following approach as in like the CodeAnalyzer
         this.visit((ModulePartNode) mainNode);
 
