@@ -6,18 +6,22 @@ import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.rule.CheckFactory;
+import org.sonar.api.batch.rule.Severity;
 import org.sonar.api.batch.sensor.Sensor;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
 import org.sonar.api.issue.NoSonarFilter;
 import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.rules.RuleType;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 // Other imports
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import com.google.gson.JsonArray;
@@ -33,6 +37,8 @@ class BallerinaSensor implements Sensor {
     private final NoSonarFilter noSonarFilter;
     private final BallerinaLanguage language;
     private final CheckFactory checkFactory;
+
+    private final ArrayList<String> externalRules = new ArrayList<>();
 
     // Initialize language specific information when the plugin is triggered
     public BallerinaSensor(CheckFactory checkFactory, FileLinesContextFactory fileLinesContextFactory, NoSonarFilter noSonarFilter, BallerinaLanguage language) {
@@ -110,6 +116,9 @@ class BallerinaSensor implements Sensor {
                             case "CHECK_VIOLATION":
                                 reportIssue(inputFile, context, issue);
                                 break;
+                            case "CUSTOM_CHECK_VIOLATION":
+                                reportExternalIssue(inputFile, context, issue);
+                                break;
                             case "SOURCE_INVALID":
                                 reportParseIssue(issue.get("message").getAsString());
                                 break;
@@ -124,6 +133,7 @@ class BallerinaSensor implements Sensor {
     }
 
     public void reportIssue(InputFile inputFile, SensorContext context, JsonObject balScanOutput) {
+
         // parsing JSON issue outputs to the formats required to report via the Sonar Scanner
         String ruleID = balScanOutput.get("ruleID").getAsString();
         String message = balScanOutput.get("message").getAsString();
@@ -140,6 +150,60 @@ class BallerinaSensor implements Sensor {
         // reporting the issue to SonarQube
         context.newIssue()
                 .forRule(ruleKey)
+                .at(context.newIssue()
+                        .newLocation()
+                        .on(inputFile)
+                        .message(message)
+                        .at(inputFile.newRange(
+                                startLine + sonarScannerOffset,
+                                startLineOffset,
+                                endLine + +sonarScannerOffset,
+                                endLineOffset
+                        ))
+                )
+                .save();
+    }
+
+    public void reportExternalIssue(InputFile inputFile, SensorContext context, JsonObject balScanOutput) {
+        // parsing JSON issue outputs to the formats required to report via the Sonar Scanner
+        String ruleID = balScanOutput.get("ruleID").getAsString();
+        String message = balScanOutput.get("message").getAsString();
+        int startLine = balScanOutput.get("startLine").getAsInt();
+        int startLineOffset = balScanOutput.get("startLineOffset").getAsInt();
+        int endLine = balScanOutput.get("endLine").getAsInt();
+        int endLineOffset = balScanOutput.get("endLineOffset").getAsInt();
+        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts from 1
+        int sonarScannerOffset = 1;
+
+        // Checking if the ruleID already exists in the externalIssues, if not create a new adhoc issue
+        if (!externalRules.contains(ruleID)) {
+            // Create a new ad hoc rule
+            /**
+             * {@link org.sonar.api.batch.sensor.rule.internal.DefaultAdHocRule}
+             * */
+            context.newAdHocRule()
+                    .engineId("bal_scan_tool")
+                    .ruleId(ruleID)
+                    .name("Custom_Rule " + ruleID)
+                    .type(RuleType.CODE_SMELL)
+                    .severity(Severity.MAJOR)
+                    .description(message)
+                    .save();
+
+            // Add the new ruleID to external rules arraylist
+            externalRules.add(ruleID);
+        }
+
+        // Report the custom rule as a external issue
+        /**
+         * {@link org.sonar.api.batch.sensor.issue.internal.DefaultExternalIssue}
+         * */
+        context.newExternalIssue()
+                .engineId("bal_scan_tool")
+                .ruleId(ruleID)
+                .type(RuleType.CODE_SMELL)
+                .severity(Severity.MAJOR)
+                .remediationEffortMinutes(10L)
                 .at(context.newIssue()
                         .newLocation()
                         .on(inputFile)

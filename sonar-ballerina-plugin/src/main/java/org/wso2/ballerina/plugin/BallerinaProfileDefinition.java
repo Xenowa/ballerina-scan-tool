@@ -5,7 +5,7 @@ import org.sonarsource.analyzer.commons.BuiltInQualityProfileJsonLoader;
 
 public class BallerinaProfileDefinition implements BuiltInQualityProfilesDefinition {
     public static final String PATH_TO_JSON = "org/sonar/l10n/ballerina/rules/ballerina/Sonar_way_profile.json";
-
+    
     @Override
     public void define(Context context) {
         // Create a new quality profile for Ballerina

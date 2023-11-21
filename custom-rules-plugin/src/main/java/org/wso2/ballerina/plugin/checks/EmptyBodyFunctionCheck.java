@@ -2,8 +2,6 @@ package org.wso2.ballerina.plugin.checks;
 
 import com.google.gson.JsonArray;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
-import io.ballerina.compiler.syntax.tree.FunctionBodyNode;
-import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import org.wso2.ballerina.ReportJsonIssue;
 
 public class EmptyBodyFunctionCheck extends ReportJsonIssue {

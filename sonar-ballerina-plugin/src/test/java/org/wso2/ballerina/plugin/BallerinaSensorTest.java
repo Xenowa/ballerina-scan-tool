@@ -28,7 +28,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
         // context.config()
 
         // Setting up a dummy rule
-        CheckFactory checkFactory = checkFactory("S107", "S108");
+        CheckFactory checkFactory = checkFactory("S107", "S108", "S109");
         BallerinaSensor sensor = sensor(checkFactory);
         sensor.execute(context);
         context.allIssues().forEach(issue -> {

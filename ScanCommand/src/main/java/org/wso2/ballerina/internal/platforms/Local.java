@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import org.wso2.ballerina.ExternalRules;
 
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 
@@ -15,7 +14,6 @@ import org.wso2.ballerina.internal.miscellaneous.FunctionChecks;
 
 import java.io.File;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -43,6 +41,7 @@ public class Local extends Platform {
             // ======================
             // Accessing Custom Rules
             // ======================
+            // TODO: There is a better way to load external JAR files: Using java SPI
             // For now try to access custom rules from 1 JAR
             String CUSTOM_PLUGIN_JAR_PATH = "C:/Users/Tharana Wanigaratne/Desktop" +
                     "/sonar-ballerina/custom-rules-plugin/build/libs/custom-rules-plugin-1.0-all.jar";

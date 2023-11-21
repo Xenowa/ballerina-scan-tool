@@ -2,7 +2,6 @@ package org.wso2.ballerina.plugin.checks;
 
 import com.google.gson.JsonArray;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
-import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;

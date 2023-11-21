@@ -8,6 +8,7 @@ import org.wso2.ballerina.ReportJsonIssue;
 
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.platforms.Platform.CUSTOM_CHECK_VIOLATION;
 import static org.wso2.ballerina.internal.platforms.Platform.analysisIssues;
 
 public class ReportLocalIssue extends ReportJsonIssue {
@@ -60,8 +61,8 @@ public class ReportLocalIssue extends ReportJsonIssue {
                     newExternalIssue.addProperty("ruleID", ruleID);
                     newExternalIssue.addProperty("message", message);
 
-                    // if all other checks passes, then add the property CHECK_VIOLATION
-                    newExternalIssue.addProperty("issueType", CHECK_VIOLATION);
+                    // if all other checks passes, then add the property CUSTOM_CHECK_VIOLATION
+                    newExternalIssue.addProperty("issueType", CUSTOM_CHECK_VIOLATION);
 
                     // add external issue as analysis issue
                     analysisIssues.add(newExternalIssue);

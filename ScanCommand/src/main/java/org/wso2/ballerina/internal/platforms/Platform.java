@@ -19,6 +19,7 @@ import java.util.NoSuchElementException;
 
 public abstract class Platform {
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
+    public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
     public static final String SOURCE_INVALID = "SOURCE_INVALID";
 
     // variable to hold all issues
