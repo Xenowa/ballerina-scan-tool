@@ -6,17 +6,26 @@ import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerina.ReportJsonIssue;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
 import static org.wso2.ballerina.internal.platforms.Platform.CUSTOM_CHECK_VIOLATION;
 import static org.wso2.ballerina.internal.platforms.Platform.analysisIssues;
 
 public class ReportLocalIssue extends ReportJsonIssue {
+    // Parameters required for custom rules
+    private final int SONARQUBE_RESERVED_RULES = 106;
+    private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
+    private Map<String, String> customRules = new HashMap<>();
+
     public ReportLocalIssue(JsonArray externalIssues) {
         super(externalIssues);
     }
 
-    @Override
     public void reportIssue(LineRange issueLocation, String ruleID, String message) {
         // Only report the issues if it's present locally and activated
         if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
@@ -49,23 +58,29 @@ public class ReportLocalIssue extends ReportJsonIssue {
                     int startLineOffset = issueObject.get("startLineOffset").getAsInt();
                     int endLine = issueObject.get("endLine").getAsInt();
                     int endLineOffset = issueObject.get("endLineOffset").getAsInt();
-                    String ruleID = issueObject.get("ruleID").getAsString();
                     String message = issueObject.get("message").getAsString();
 
-                    // Since the issueObject may have multiple other parameters an internal one is created
-                    JsonObject newExternalIssue = new JsonObject();
-                    newExternalIssue.addProperty("startLine", startLine);
-                    newExternalIssue.addProperty("startLineOffset", startLineOffset);
-                    newExternalIssue.addProperty("endLine", endLine);
-                    newExternalIssue.addProperty("endLineOffset", endLineOffset);
-                    newExternalIssue.addProperty("ruleID", ruleID);
-                    newExternalIssue.addProperty("message", message);
+                    String customRuleID = generateCustomRuleID(message);
 
-                    // if all other checks passes, then add the property CUSTOM_CHECK_VIOLATION
-                    newExternalIssue.addProperty("issueType", CUSTOM_CHECK_VIOLATION);
+                    // verify if customRuleID generation was successful
+                    if (customRuleID == null) {
+                        externalIssuesAreValid = false;
+                    } else {
+                        // Since the issueObject may have multiple other parameters an internal one is created
+                        JsonObject newExternalIssue = new JsonObject();
+                        newExternalIssue.addProperty("startLine", startLine);
+                        newExternalIssue.addProperty("startLineOffset", startLineOffset);
+                        newExternalIssue.addProperty("endLine", endLine);
+                        newExternalIssue.addProperty("endLineOffset", endLineOffset);
+                        newExternalIssue.addProperty("ruleID", customRuleID);
+                        newExternalIssue.addProperty("message", message);
 
-                    // add external issue as analysis issue
-                    analysisIssues.add(newExternalIssue);
+                        // if all other checks passes, then add the property CUSTOM_CHECK_VIOLATION
+                        newExternalIssue.addProperty("issueType", CUSTOM_CHECK_VIOLATION);
+
+                        // add external issue as analysis issue
+                        analysisIssues.add(newExternalIssue);
+                    }
                 } catch (Exception e) {
                     externalIssuesAreValid = false;
                     break;
@@ -74,5 +89,32 @@ public class ReportLocalIssue extends ReportJsonIssue {
         }
 
         return externalIssuesAreValid;
+    }
+
+    public String generateCustomRuleID(String customRuleMessage) {
+        // Check if the custom rule has a valid message
+        if (customRuleMessage.isEmpty()) {
+            return null;
+        }
+
+        // Check if the custom rule message already exists and if so return the rule assigned to the message
+        if (customRules.containsKey(customRuleMessage)) {
+            return customRules.get(customRuleMessage);
+        }
+
+        // Increment the last rule index
+        lastRuleIndex++;
+
+        // Create custom rule ID
+        String customRuleID = "S" + lastRuleIndex;
+
+        // Put the message mapped with the custom rule ID
+        customRules.put(customRuleMessage, customRuleID);
+
+        // Put the new rule ID to the inbuilt rules array
+        INBUILT_RULES.put(customRuleID, true);
+
+        // return the ruleID
+        return customRuleID;
     }
 }

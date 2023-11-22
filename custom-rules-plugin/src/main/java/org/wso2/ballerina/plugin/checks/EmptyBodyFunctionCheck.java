@@ -6,7 +6,6 @@ import org.wso2.ballerina.ReportJsonIssue;
 
 public class EmptyBodyFunctionCheck extends ReportJsonIssue {
     private final FunctionBodyBlockNode functionBodyBlockNode;
-    String ruleID = "S109";
 
     public EmptyBodyFunctionCheck(FunctionBodyBlockNode functionBodyBlockNode, JsonArray externalIssues) {
         super(externalIssues);
@@ -21,7 +20,6 @@ public class EmptyBodyFunctionCheck extends ReportJsonIssue {
             // Reporting logic goes here
             reportIssue(
                     functionBodyBlockNode.lineRange(),
-                    ruleID,
                     "Add a nested comment explaining why" +
                             " this function is empty or complete the implementation."
             );

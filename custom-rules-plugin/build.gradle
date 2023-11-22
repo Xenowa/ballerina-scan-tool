@@ -1,17 +1,12 @@
-// Required imports for creating the Final Shadow JAR
-import java.util.jar.JarInputStream
-
 plugins {
     id 'java'
     // For using the ballerina java project API
     id 'java-library'
-    // For creating a fat jar
-    id "com.github.johnrengelman.shadow" version "7.1.0"
     // For checkstyle configurations
     id 'checkstyle'
     // For spotbugs configurations
     id "com.github.spotbugs" version "5.0.14"
-    // For providing file download tasks functionality
+    // For providing file download tasks functionality of checkstyle files
     id "de.undercouch.download" version "5.4.0"
 }
 
@@ -68,26 +63,6 @@ dependencies {
 
     // Required for applying checkstyle & Spotbugs to the project
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
-
-    // ============================================
-    // For Sonar Custom Rules (To be created later)
-    // ============================================
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    // Required dependencies to work with sonar plugin API
-    compileOnly group: 'org.sonarsource.api.plugin', name: 'sonar-plugin-api', version: '9.14.0.375'
-    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-commons', version: '2.1.0.1111'
-    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-xml-parsing', version: '2.1.0.1111'
-    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-regex-parsing', version: '2.1.0.1111'
-    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-performance-measure', version: '2.1.0.1111'
-    implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-recognizers', version: '2.1.0.1111'
-
-    // Adding following dependencies to remove SL4J Errors during testing
-    implementation 'org.slf4j:slf4j-api:1.7.32'
-    implementation 'ch.qos.logback:logback-classic:1.2.9'
-
-    // Required additional dependencies to make working with sonar plugin API easier
-    implementation group: 'com.fasterxml.staxmate', name: 'staxmate', version: '2.4.0'
 
     // Adding dependency to the bal scan tool to retrieve the interface methods
     implementation project(path: ':ScanCommand')
@@ -181,152 +156,3 @@ task validateSpotbugs() {
 }
 
 spotbugsMain.finalizedBy validateSpotbugs
-
-// ===========================
-// JAR creation configurations
-// ===========================
-// Configurations for the output jar file when the gradle build is performed
-// Configure global properties
-ext {
-    set("buildNumber", System.getProperty("buildNumber"))
-}
-
-tasks.jar {
-    manifest {
-        def displayVersion = (project.property("buildNumber") == null ? project.version : project.version.substring(0, project.version.lastIndexOf('.')) + " (build ${project.property("buildNumber")})")
-        def buildDate = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        attributes(
-                'Build-Time': buildDate,
-                'Implementation-Build': 'git rev-parse HEAD'.execute().text.trim(),
-                'Plugin-BuildDate': buildDate,
-                // Note that use of ChildFirstClassLoader is deprecated since SonarQube 7.9
-                'Plugin-ChildFirstClassLoader': 'false',
-                'Plugin-Class': 'org.wso2.ballerina.plugin.CustomBallerinaPlugin',
-                'Plugin-Description': 'Custom rules for Ballerina',
-                'Plugin-Developers': 'third party developer',
-                'Plugin-Display-Version': displayVersion,
-                'Plugin-Key': 'ballerina',
-                'Plugin-License': 'GNU LGPL 3',
-                'Plugin-Name': 'Ballerina custom rules',
-                'Plugin-Organization': 'third party',
-                'Plugin-Version': project.version,
-                'Plugin-RequiredForLanguages': 'ballerina',
-                'Sonar-Version': '6.7',
-                'Version': "${project.version}",
-                'Jre-Min-Version': '17'
-        )
-    }
-}
-
-// Configuration required to create the shadow jar file
-def shadowJar = tasks.shadowJar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
-}
-
-tasks.shadowJar {
-    minimize {}
-
-    // build related files, useless for the plugin
-    exclude '**/*.js'
-    exclude '**/*.properties'
-    exclude '**/*.proto'
-    exclude '**/*.txt'
-
-    // Other unwanted exclusions
-    exclude 'ch/**'
-    exclude 'cli-help/**'
-    exclude 'com/**'
-    exclude 'create_cmd_templates/**'
-    exclude 'doc-ui/**'
-    exclude 'io/**'
-    exclude 'javax/**'
-    exclude 'kotlin/**'
-    exclude 'licenses/**'
-    exclude 'license/**'
-    exclude 'META-INF/maven/**'
-    exclude 'META-INF/native-image/**'
-    exclude 'META-INF/native/**'
-    exclude 'META-INF/proguard/**'
-    exclude 'META-INF/resources/**'
-    exclude 'META-INF/sisu/**'
-    exclude 'META-INF/versions/**'
-    exclude 'META-INF/axiom.xml'
-    exclude 'META-INF/DEPENDENCIES'
-    exclude 'META-INF/**.kotlin_module'
-    exclude 'META-INF/LICENSE'
-    exclude 'META-INF/NOTICE'
-    exclude 'META-INF/NOTICE.md'
-    exclude 'META-INF/properties'
-    exclude 'new_cmd_defaults/**'
-    exclude 'okhttp3/**'
-    exclude 'okio/**'
-    exclude 'me/**'
-    exclude 'org/apache/**'
-    exclude 'org/eclipse/**'
-    exclude 'org/jacoco/**'
-    exclude 'org/jline/**'
-    exclude 'org/sonatype/**'
-    exclude 'org/testng/**'
-    exclude 'org/ballerinalang/**'
-    exclude 'org/codehaus/**'
-    exclude 'org/jetbrains/**'
-    exclude 'org/objectweb/**'
-    exclude 'org/slf4j/**'
-    exclude 'org/w3c/**'
-    exclude 'org/xml/**'
-    exclude 'org/wso2/ballerinalang/**'
-    exclude 'about.html'
-    exclude 'release-description.md'
-    exclude '**.json'
-    exclude '**.mustache'
-    exclude 'testng.css'
-    exclude 'testng-1.0.dtd'
-    exclude 'testngtasks'
-    exclude 'jballerina-tools-2201.8.2.zip'
-    exclude 'plugin.xml'
-    exclude 'production.html'
-
-    // The following command actually creates the final jar file if the build is between the size ranges given
-    // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)
-    doLast {
-        enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, 10L, 500_000_000L)
-    }
-}
-
-artifacts {
-    archives shadowJar
-}
-
-// This function determines the size of the shadow jar file
-// if the size is smaller than the one defined in the main build.gradle file
-// the build creation will fail
-static void enforceJarSizeAndCheckContent(File file, long minSize, long maxSize) {
-    long size = file.length()
-    if (size < minSize) {
-        throw new GradleException("${file.path} size ($size) too small. Min is $minSize")
-    } else if (size > maxSize) {
-        throw new GradleException("${file.path} size ($size) too large. Max is $maxSize")
-    }
-    checkJarEntriesPathUniqueness file
-}
-
-// A jar should not contain 2 entries with the same path, furthermore Pack200 will fail to unpack it
-static void checkJarEntriesPathUniqueness(File file) {
-    def allNames = new HashSet()
-    def duplicatedNames = new HashSet()
-    file.withInputStream { input ->
-        new JarInputStream(input).withCloseable { jarInput ->
-            for (def jarEntry = jarInput.nextJarEntry; jarEntry != null; jarEntry = jarInput.nextJarEntry) {
-                if (!allNames.add(jarEntry.name)) {
-                    duplicatedNames.add jarEntry.name
-                }
-            }
-        }
-    }
-    if (!duplicatedNames.empty) {
-        throw new GradleException("Duplicated entries in the jar: '${file.path}': ${duplicatedNames.join(', ')}")
-    }
-}

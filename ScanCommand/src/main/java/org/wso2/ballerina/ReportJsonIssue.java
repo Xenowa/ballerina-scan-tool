@@ -13,7 +13,7 @@ public abstract class ReportJsonIssue implements Issue {
 
     /**
      * For reporting custom rule violations consider using
-     * {@link org.wso2.ballerina.ReportJsonIssue#reportIssue(io.ballerina.tools.text.LineRange, String, String)}
+     * {@link ReportJsonIssue#reportIssue(io.ballerina.tools.text.LineRange, String)}
      */
     @Override
     public JsonObject reportJSONIssue(int startLine,
@@ -37,17 +37,14 @@ public abstract class ReportJsonIssue implements Issue {
         return jsonObject;
     }
 
-
-    public void reportIssue(LineRange issueLocation, String ruleID, String message) {
+    public void reportIssue(LineRange issueLocation, String message) {
         JsonObject jsonObject = reportJSONIssue(issueLocation.startLine().line(),
                 issueLocation.startLine().offset(),
                 issueLocation.endLine().line(),
                 issueLocation.endLine().offset(),
-                ruleID,
+                null,
                 message
         );
-
-        // add issue to external issues array
         externalIssues.add(jsonObject);
     }
 }

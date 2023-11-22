@@ -10,17 +10,6 @@ import java.util.ArrayList;
 
 public class CustomBallerinaPlugin implements ExternalRules {
     @Override
-    public void setCustomRules() {
-        // Adding rule to check for functions with empty body
-        CUSTOM_RULES.add("S109");
-    }
-
-    @Override
-    public ArrayList<String> getCustomRules() {
-        return CUSTOM_RULES;
-    }
-
-    @Override
     public JsonArray getExternalIssues() {
         return externalIssues;
     }
