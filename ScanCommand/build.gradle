@@ -56,9 +56,6 @@ dependencies {
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
-    // Required for creating a sonar scanner from ballerina side (To be removed)
-    implementation group: 'org.sonarsource.scanner.api', name: 'sonar-scanner-api', version: '2.16.3.1081'
-
     // Required for applying checkstyle & Spotbugs to the project
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
 }

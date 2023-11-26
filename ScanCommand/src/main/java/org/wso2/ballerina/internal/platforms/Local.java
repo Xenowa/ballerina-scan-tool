@@ -9,7 +9,6 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import org.wso2.ballerina.ExternalRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
-import org.wso2.ballerina.internal.miscellaneous.FunctionChecks;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -22,6 +21,36 @@ public class Local extends Platform {
 
     @Override
     public void scan(String userFile, PrintStream outputStream) {
+        // TODO: Remake all the below functionality to:
+        //  ===========================================
+        //  - User should pass the ballerina project absolute path to the parseBallerinaProject() function
+        //  - This should return back to the user a arraylist of BallerinaFiles named compiledBallerinaFiles
+        //  - Each BallerinaFile object should have the following properties:
+        //      - Absolute path of the Ballerina file
+        //      - syntax tree
+        //      - semantic model
+        //  - The analysisIssues JsonArray Structure should be remade as follows:
+        //      [
+        //          {
+        //              ballerinaFilePath: "Absolute path of ballerina file",
+        //              reportedIssues: [
+        //                  {
+        //                      rule violation information ...
+        //                  },
+        //                  {
+        //                      rule violation information ...
+        //                  },
+        //                  ...
+        //              ]
+        //          },
+        //          {},
+        //          ...
+        //      ]
+        //  - Next the BallerinaFiles should be iterated and the following should happen:
+        //      - It should create an object that holds the absolute path of the ballerina file being scanned
+        //      - The object should contain all issues related to the ballerina file being scanned
+        //      - Each object should be finally added to the analysisIssues array
+
         // Set up the issue reporter here so that external issues also can be included
         ReportLocalIssue issueReporter = new ReportLocalIssue(analysisIssues);
 

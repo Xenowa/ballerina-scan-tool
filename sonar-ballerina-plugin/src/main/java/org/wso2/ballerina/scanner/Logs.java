@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
+package org.wso2.ballerina.scanner;
 
 import java.io.PrintStream;
 import java.time.LocalTime;

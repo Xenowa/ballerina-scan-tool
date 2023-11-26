@@ -7,17 +7,23 @@ plugins {
 
     // Required plugin to create an executable jar which does not require external dependencies
     id "com.github.johnrengelman.shadow" version "7.1.0"
+
     // Required plugin for checks testing
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
+
     // Required to work with Java tests
     id 'java'
     id 'java-library'
+
     // For triggering the plugin through bal scan tool
     id 'application'
+
     // For checkstyle configurations
     id 'checkstyle'
+
     // For spotbugs configurations
     id "com.github.spotbugs" version "5.0.14"
+
     // For providing file download tasks functionality
     id "de.undercouch.download" version "5.4.0"
 }
@@ -59,6 +65,9 @@ dependencies {
     implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-regex-parsing', version: '2.1.0.1111'
     implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-performance-measure', version: '2.1.0.1111'
     implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-recognizers', version: '2.1.0.1111'
+
+    // Required for creating a custom sonar-scanner
+    implementation group: 'org.sonarsource.scanner.api', name: 'sonar-scanner-api', version: '2.16.3.1081'
 
     // Adding following dependencies to remove SL4J Errors during testing
     implementation 'org.slf4j:slf4j-api:1.7.32'
@@ -193,7 +202,7 @@ configurations {
 
 // class to trigger when the JAR is engaged
 application {
-    mainClass = 'org.wso2.ballerina.Main'
+    mainClass = 'org.wso2.ballerina.scanner.Main'
 }
 
 // ===========================

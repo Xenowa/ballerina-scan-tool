@@ -3,6 +3,3 @@ org = "tharana_wanigaratne"
 name = "tool_scan"
 version = "0.1.0"
 distribution = "2201.8.2"
-
-# To include the sonar-scanner-api batch to the resources of the final jar created
-include = ["resources/sonar-scanner-cli-5.0.1.3006.jar"]

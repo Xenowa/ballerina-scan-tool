@@ -1,4 +1,6 @@
-package org.wso2.ballerina.internal.miscellaneous.sonarqubeold;
+package org.wso2.ballerina.scanner;
+
+import org.sonarsource.scanner.api.Utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.sonarsource.scanner.api.Utils;
 
 class Conf {
     private static final String SCANNER_HOME = "scanner.home";

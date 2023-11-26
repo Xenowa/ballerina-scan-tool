@@ -12,7 +12,6 @@ import org.wso2.ballerina.internal.platforms.Local;
 import org.wso2.ballerina.internal.platforms.Platform;
 import org.wso2.ballerina.internal.platforms.SemGrep;
 import org.wso2.ballerina.internal.platforms.SonarQube;
-import org.wso2.ballerina.internal.miscellaneous.sonarqubeold.SonarQubeOld;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
@@ -114,7 +113,6 @@ public class ScanCommand implements BLauncherCmd {
         Platform triggerPlatform;
         switch (platform) {
             case "sonarqube" -> triggerPlatform = new SonarQube();
-            case "sonarqubeold" -> triggerPlatform = new SonarQubeOld();
             case "codeql" -> triggerPlatform = new CodeQL();
             case "semgrep" -> triggerPlatform = new SemGrep();
             case "local" -> triggerPlatform = new Local();

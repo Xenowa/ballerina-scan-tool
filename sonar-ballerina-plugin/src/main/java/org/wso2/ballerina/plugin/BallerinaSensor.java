@@ -4,6 +4,7 @@ package org.wso2.ballerina.plugin;
 
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputDir;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.rule.CheckFactory;
 import org.sonar.api.batch.rule.Severity;
@@ -14,10 +15,12 @@ import org.sonar.api.issue.NoSonarFilter;
 import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rules.RuleType;
+import org.sonar.api.scanner.fs.InputProject;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 // Other imports
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -59,6 +62,52 @@ class BallerinaSensor implements Sensor {
     // The place which the entire scan logic should be defined, this is the starting point of the scanner
     @Override
     public void execute(SensorContext sensorContext) {
+        // TODO: initiate "bal scan --platform=sonarqube" through here:
+        //  ===========================================================
+        //  - The sensor context already has the absolute path of the working directory
+        //  - Ideally this absolute path should be taken from the bal scan tool
+        //  - Next this should be sent to the bal scan command to perform analysis
+        //  - Next the analysis results, should be reported per file by matching the report absolute path
+        //  retrieved against the absolute path of the ballerina file in the sensor context
+        //  - It should be as follows:
+        /**
+         * TODO: bal scan triggering method:
+         *  ================================
+         *  FilePredicate mainFilePredicate = sensorContext.fileSystem().predicates()
+         *         .and(
+         *                 sensorContext.fileSystem().predicates().hasLanguage(language.getKey()),
+         *                 sensorContext.fileSystem().predicates().hasType(InputFile.Type.MAIN)
+         *         );
+         *  *
+         *  // Since we will be iterating through each input file more than once during the scan we are placing it to an arraylist
+         *  ArrayList<InputFile> inputFiles = new ArrayList<>();
+         *  sensorContext.fileSystem().inputFiles(mainFilePredicate).forEach(inputFiles::add);
+         *  *
+         *  // Iterating through all files and getting a list of all parent folder paths
+         *  Map<InputFile,Path> balFileAndFolders = new HashMap<>();
+         *  *
+         *  for(InputFile inputFile : inputFiles){
+         *        balFileAndFolders.put(inputFile, inputFile.path().getParent());
+         *  }
+         *  *
+         *  // Perform the bal scan for each folder
+         *  balFileAndFolders.forEach((inputFile, parentFolder) ->{
+         *     // perform the bal scan for each
+         *     ProcessBuilder balScan = new ProcessBuilder("cmd", "/c", "bal", "scan", parentFolder.toUri().toString());
+         *     Process process = balScan.start();
+         *     InputStream scanProcessInput = process.getInputStream();
+         *     Scanner scanner = new Scanner(scanProcessInput).useDelimiter("\\A");
+         *     String output = scanner.hasNext() ? scanner.next() : "";
+         *  *
+         *     // Only report issues of scans that were triggered successfully
+         *     if(!output.equals("not a ballerina project")){
+         *         // report the
+         *         reportIssue(inputFile, sensorContext,new JsonObject());
+         *     }
+         *  });
+         * */
+
+
         // Retrieve all .bal source files from a project
         FileSystem fileSystem = sensorContext.fileSystem();
         FilePredicate mainFilePredicate = fileSystem.predicates()
