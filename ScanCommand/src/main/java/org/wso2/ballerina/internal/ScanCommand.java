@@ -1,15 +1,19 @@
 package org.wso2.ballerina.internal;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import io.ballerina.cli.BLauncherCmd;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.wso2.ballerina.internal.platforms.CodeQL;
 import org.wso2.ballerina.internal.platforms.Local;
-import org.wso2.ballerina.internal.platforms.Platform;
+import org.wso2.ballerina.Platform;
 import org.wso2.ballerina.internal.platforms.SemGrep;
 import org.wso2.ballerina.internal.platforms.SonarQube;
 import picocli.CommandLine;
@@ -42,32 +46,44 @@ public class ScanCommand implements BLauncherCmd {
         this.errorStream = outputStream;
     }
 
+    public boolean isBuildProject = false;
+
     public String checkPath() {
         // if invalid number of arguments are passed to the bal scan command
         if (this.argList.size() != 1) {
-            this.outputStream.println("Invalid number of arguments received!\n try bal scan --help for more information.");
+            this.outputStream.println("Invalid number of arguments received!\n run bal scan --help for more information.");
             return "";
         }
 
         // retrieve the user passed argument
         String userFilePath = this.argList.get(0); // userFile
 
-        // check if the user passed file is a ballerina file or not
-        String[] userFileExtension = userFilePath.split("\\.(?=[^\\.]+$)"); // [userFile, bal]
-        if ((userFileExtension.length != 2) || !userFileExtension[1].equals("bal")) {
-            this.outputStream.println("Invalid file format received!\n file format should be of type '.bal'");
-            return "";
-        }
-
-        // check if such ballerina file exists in the working directory
+        // Check if the user provided path is a file or a directory
         File file = new File(userFilePath);
-        if (!file.exists()) {
-            this.outputStream.println("No such file exists!\n please check the file name and then re run the command");
+        if (file.exists()) {
+            if (file.isFile()) {
+                // Check if the file extension is '.bal'
+                if (!userFilePath.endsWith(".bal")) {
+                    this.outputStream.println("Invalid file format received!\n File format should be of type '.bal'");
+                    return "";
+                } else {
+                    return userFilePath;
+                }
+            } else {
+                // If it's a directory, validate it's a ballerina build project
+                File ballerinaTomlFile = new File(userFilePath, "Ballerina.toml");
+                if (!ballerinaTomlFile.exists() || !ballerinaTomlFile.isFile()) {
+                    this.outputStream.println("Missing 'ballerina.toml' file, not a ballerina build project!");
+                    return "";
+                } else {
+                    isBuildProject = true;
+                    return userFilePath;
+                }
+            }
+        } else {
+            this.outputStream.println("No such file or directory exists!\n Please check the file path and then re-run the command.");
             return "";
         }
-
-        // return name of user file if it exists
-        return userFilePath;
     }
 
     public String validateEmptyPath() {
@@ -110,39 +126,59 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         // Set the trigger platform depending on user input
-        Platform triggerPlatform;
+        Platform triggerPlatform = null;
         switch (platform) {
-            case "sonarqube" -> triggerPlatform = new SonarQube();
-            case "codeql" -> triggerPlatform = new CodeQL();
-            case "semgrep" -> triggerPlatform = new SemGrep();
-            case "local" -> triggerPlatform = new Local();
-            default -> triggerPlatform = null;
+            case "sonarqube" -> {
+                // TODO: platform here should be loaded using URLClassLoader
+                triggerPlatform = new SonarQube();
+            }
+            case "codeql" -> {
+                triggerPlatform = new CodeQL();
+                outputStream.println("Platform support is not available yet!");
+            }
+            case "semgrep" -> {
+                triggerPlatform = new SemGrep();
+                outputStream.println("Platform support is not available yet!");
+            }
+            case "local" -> {
+                Local localPlatform = new Local();
+                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+                String userPath;
+                userPath = checkPath();
+                if (userPath.equals("")) {
+                    return;
+                }
+
+                // check if the user given path is a ballerina file or a build project
+                if (isBuildProject) {
+                    // perform scan on ballerina build project
+                    JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
+                    // Convert the JSON analysis results to the console
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                    String jsonOutput = gson.toJson(scannedResults);
+                    outputStream.println(jsonOutput);
+                } else {
+                    // perform scan on single ballerina file
+                    localPlatform.scan(userPath, outputStream);
+                }
+            }
+            default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
         }
 
-        // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
-        String userFilePath;
-        if (platform.equals("local")) {
-            userFilePath = checkPath();
-            if (userFilePath.equals("")) {
-                return;
-            }
-
-            // execute local scanner
-            triggerPlatform.scan(userFilePath, outputStream);
-        } else if (triggerPlatform != null) {
+        // If the user has provided another platform initialize the scan through that platform
+        if (triggerPlatform != null) {
+            String userFilePath;
             userFilePath = validateEmptyPath();
             if (!userFilePath.equals("")) {
                 return;
             }
 
-            // execute relevant scanner if a valid platform is provided
-            triggerPlatform.scan(outputStream);
-        } else {
-            outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
+            // Initialize the platform if the user has given the correct command
+            triggerPlatform.initialize();
         }
     }
 
-    // INFO Methods
+    // bal help INFO Methods
     @Override
     public String getName() {
         return "scan";

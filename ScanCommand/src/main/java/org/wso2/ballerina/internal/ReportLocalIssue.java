@@ -6,15 +6,12 @@ import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerina.ReportJsonIssue;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
-import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
-import static org.wso2.ballerina.internal.platforms.Platform.CUSTOM_CHECK_VIOLATION;
-import static org.wso2.ballerina.internal.platforms.Platform.analysisIssues;
+import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.platforms.Local.CUSTOM_CHECK_VIOLATION;
 
 public class ReportLocalIssue extends ReportJsonIssue {
     // Parameters required for custom rules
@@ -39,7 +36,7 @@ public class ReportLocalIssue extends ReportJsonIssue {
 
             // set the type of issue, weather it's a parse issue or a rule violation
             jsonObject.addProperty("issueType", CHECK_VIOLATION);
-            analysisIssues.add(jsonObject);
+            issues.add(jsonObject);
         }
     }
 
@@ -79,7 +76,7 @@ public class ReportLocalIssue extends ReportJsonIssue {
                         newExternalIssue.addProperty("issueType", CUSTOM_CHECK_VIOLATION);
 
                         // add external issue as analysis issue
-                        analysisIssues.add(newExternalIssue);
+                        issues.add(newExternalIssue);
                     }
                 } catch (Exception e) {
                     externalIssuesAreValid = false;

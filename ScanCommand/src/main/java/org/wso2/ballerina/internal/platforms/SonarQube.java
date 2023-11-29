@@ -1,25 +1,28 @@
 package org.wso2.ballerina.internal.platforms;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.wso2.ballerina.Platform;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.wso2.ballerina.internal.ScanCommand.userRule;
 
+// TODO:
+//  - The following class file is to be removed and put into the sonar-ballerina plugin instead
 public class SonarQube extends Platform {
+    // TODO:
+    //  - There should be an initialize method here
+    //  - That method should trigger the sensor context from the sonar side
+    //  - Next it should retrieve the absolute paths from the sonar sensor context
+    //  - Next it should pass these absolute paths to the bal scan command
+    //  - which can run using a process builder
     @Override
-    public void scan(String userFile, PrintStream outputStream) {
-    }
-
-    // Temporary testing
-    @Override
-    public void scan(PrintStream outputStream) {
+    public void initialize() {
         List<String> arguments = new ArrayList<>();
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
@@ -48,7 +51,7 @@ public class SonarQube extends Platform {
 
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                outputStream.println(line);
+                System.out.println(line);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

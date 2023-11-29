@@ -5,10 +5,10 @@ import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
 
 public abstract class ReportJsonIssue implements Issue {
-    JsonArray externalIssues;
+    public JsonArray issues;
 
     public ReportJsonIssue(JsonArray externalIssues) {
-        this.externalIssues = externalIssues;
+        this.issues = externalIssues;
     }
 
     /**
@@ -42,9 +42,9 @@ public abstract class ReportJsonIssue implements Issue {
                 issueLocation.startLine().offset(),
                 issueLocation.endLine().line(),
                 issueLocation.endLine().offset(),
-                null,
+                null, // this should be assigned automatically by the bal scan tool hence null
                 message
         );
-        externalIssues.add(jsonObject);
+        issues.add(jsonObject);
     }
 }

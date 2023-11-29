@@ -4,7 +4,6 @@ package org.wso2.ballerina.plugin;
 
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.batch.fs.InputDir;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.rule.CheckFactory;
 import org.sonar.api.batch.rule.Severity;
@@ -15,22 +14,24 @@ import org.sonar.api.issue.NoSonarFilter;
 import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rules.RuleType;
-import org.sonar.api.scanner.fs.InputProject;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 // Other imports
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.wso2.ballerina.scanner.Main;
 
 import static org.wso2.ballerina.plugin.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
 
@@ -123,6 +124,104 @@ class BallerinaSensor implements Sensor {
         }
     }
 
+
+    // Create a common object and pass between both by casting to required format
+    public void performScan(SensorContext sensorContext) {
+        // Check where the scanner was triggered and accordingly perform the scan:
+        // -Dscanner=ballerina
+        String scannerName = sensorContext.config().get("scannerName").orElse(null);
+        if (scannerName.equals("ballerina")) {
+            FilePredicate mainFilePredicate = sensorContext.fileSystem().predicates()
+                    .and(
+                            sensorContext.fileSystem().predicates().hasLanguage(language.getKey()),
+                            sensorContext.fileSystem().predicates().hasType(InputFile.Type.MAIN)
+                    );
+
+            // Since we will be iterating through each input file more than once during the scan we are placing it to an arraylist
+            ArrayList<InputFile> inputFiles = new ArrayList<>();
+            sensorContext.fileSystem().inputFiles(mainFilePredicate).forEach(inputFiles::add);
+
+            // Iterate through all files and receive unique folder paths
+            Set<Path> balFolderPaths = new HashSet<>();
+            for (InputFile inputFile : inputFiles) {
+                balFolderPaths.add(inputFile.path().getParent());
+            }
+
+            // TODO: Check the method to do this:
+            //  - make the call to the onScan() method through here
+            // call the onScan method in the bal scan tool from the child and retrieve the scanned results
+            // JsonArray analyzedFiles = parentProcess.onScan(balFolderPaths);
+            JsonArray analyzedFiles = new JsonArray();
+
+            // Iterate through each file object in the array
+            analyzedFiles.forEach(analyzedFile -> {
+                // Retrieve it as a JSON Object
+                JsonObject reportedFile = analyzedFile.getAsJsonObject();
+
+                // Retrieve the absolute path of the file
+                String absolutePathOfReportedFile = reportedFile.get("ballerinaFilePath").getAsString();
+
+                // Retrieve the reported issues relevant to the file
+                JsonArray reportedIssues = reportedFile.getAsJsonArray("reportedIssues");
+
+                // Iterate through each issue object
+                reportedIssues.forEach(issue -> {
+                    // Retrieve the issue as a jsonObject
+                    JsonObject issueObject = issue.getAsJsonObject();
+
+                    // report the issue
+                    newreportIssue(inputFiles, sensorContext, absolutePathOfReportedFile, issueObject);
+                });
+
+            });
+        } else {
+            // Trigger the bal scanner
+
+        }
+    }
+
+    public void newreportIssue(ArrayList<InputFile> inputFiles, SensorContext context, String absoluteFilePath, JsonObject issue) {
+        // Retrieve the correct InputFile based on the absolute path of the issue and the absolute path of the inputfile
+        AtomicReference<InputFile> matchingInputFile = null;
+        inputFiles.forEach(inputFile -> {
+            if (inputFile.absolutePath().equals(absoluteFilePath)) {
+                matchingInputFile.set(inputFile);
+            }
+        });
+
+        // Only perform reporting if the file actually exist
+        if (matchingInputFile.get() != null) {
+            // parsing JSON issue outputs to the formats required to report via the Sonar Scanner
+            String ruleID = issue.get("ruleID").getAsString();
+            String message = issue.get("message").getAsString();
+            int startLine = issue.get("startLine").getAsInt();
+            int startLineOffset = issue.get("startLineOffset").getAsInt();
+            int endLine = issue.get("endLine").getAsInt();
+            int endLineOffset = issue.get("endLineOffset").getAsInt();
+            // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts from 1
+            int sonarScannerOffset = 1;
+
+            // Creating the initial rule
+            RuleKey ruleKey = RuleKey.of(BALLERINA_REPOSITORY_KEY, ruleID);
+
+            // reporting the issue to SonarQube
+            context.newIssue()
+                    .forRule(ruleKey)
+                    .at(context.newIssue()
+                            .newLocation()
+                            .on(matchingInputFile.get())
+                            .message(message)
+                            .at(matchingInputFile.get().newRange(
+                                    startLine + sonarScannerOffset,
+                                    startLineOffset,
+                                    endLine + +sonarScannerOffset,
+                                    endLineOffset
+                            ))
+                    )
+                    .save();
+        }
+    }
+
     public void analyzeFile(InputFile inputFile, SensorContext context) {
         String absolutePath = inputFile.path().toAbsolutePath().toString();
         LOG.info("analyzing File: " + absolutePath);
@@ -182,7 +281,6 @@ class BallerinaSensor implements Sensor {
     }
 
     public void reportIssue(InputFile inputFile, SensorContext context, JsonObject balScanOutput) {
-
         // parsing JSON issue outputs to the formats required to report via the Sonar Scanner
         String ruleID = balScanOutput.get("ruleID").getAsString();
         String message = balScanOutput.get("message").getAsString();

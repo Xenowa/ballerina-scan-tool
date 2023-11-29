@@ -85,6 +85,9 @@ dependencies {
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
+    // Adding dependency to the bal scan tool to retrieve the interface methods
+    implementation project(path: ':ScanCommand')
+
     // Required dependencies for testing the plugin before building and deploying
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.8.2'
@@ -259,6 +262,8 @@ tasks.shadowJar {
     exclude '**/*.properties'
     exclude '**/*.proto'
     exclude '**/*.txt'
+
+    // Bal Scan exclusion files to prevent classloader issues
 
     // The following command actually creates the final jar file if the build is between the size ranges given
     // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)

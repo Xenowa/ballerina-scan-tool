@@ -8,7 +8,7 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 
-import static org.wso2.ballerina.internal.platforms.Platform.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
