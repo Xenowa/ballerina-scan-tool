@@ -164,7 +164,7 @@ public class Local {
             // Scanned results will be empty if the rule does not exist
             JsonArray filteredIssues = new JsonArray();
 
-            if (!InbuiltRules.INBUILT_RULES.containsKey(userRule)) {
+            if (InbuiltRules.INBUILT_RULES.containsKey(userRule)) {
                 for (JsonElement reportedIssue : reportedIssues) {
                     JsonObject reportedIssueObject = reportedIssue.getAsJsonObject();
 
