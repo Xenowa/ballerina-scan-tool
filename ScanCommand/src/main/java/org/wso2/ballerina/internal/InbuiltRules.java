@@ -5,8 +5,17 @@ import java.util.Map;
 
 public class InbuiltRules {
     // Initializing the inbuilt rules
+    // Map for inbuilt rules
     public static final Map<String, Boolean> INBUILT_RULES = new HashMap<>();
 
+    /**
+     * Custom rules map is populated through
+     * {@link org.wso2.ballerina.internal.ReportLocalIssue#generateCustomRuleID(String customRuleMessage)}
+     */
+    // Map for custom rules
+    public static final Map<String, String> CUSTOM_RULES = new HashMap<>();
+
+    // Populating inbuilt rules
     static {
         INBUILT_RULES.put("S107", true);
         INBUILT_RULES.put("S108", true);

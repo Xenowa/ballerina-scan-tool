@@ -50,13 +50,17 @@ public class ScanCommand implements BLauncherCmd {
 
     public String checkPath() {
         // if invalid number of arguments are passed to the bal scan command
-        if (this.argList.size() != 1) {
+        boolean tooManyArguments = this.argList.size() > 1;
+        if (tooManyArguments) {
             this.outputStream.println("Invalid number of arguments received!\n run bal scan --help for more information.");
             return "";
         }
 
-        // retrieve the user passed argument
-        String userFilePath = this.argList.get(0); // userFile
+        // boolean to check if there are any arguments passed
+        boolean isPathProvided = this.argList.size() == 1;
+
+        // retrieve the user passed argument or the current working directory
+        String userFilePath = isPathProvided ? this.argList.get(0) : System.getProperty("user.dir");
 
         // Check if the user provided path is a file or a directory
         File file = new File(userFilePath);
@@ -73,7 +77,9 @@ public class ScanCommand implements BLauncherCmd {
                 // If it's a directory, validate it's a ballerina build project
                 File ballerinaTomlFile = new File(userFilePath, "Ballerina.toml");
                 if (!ballerinaTomlFile.exists() || !ballerinaTomlFile.isFile()) {
-                    this.outputStream.println("Missing 'ballerina.toml' file, not a ballerina build project!");
+                    this.outputStream.println("ballerina: Invalid Ballerina package directory: " +
+                            userFilePath +
+                            ", cannot find 'Ballerina.toml' file.");
                     return "";
                 } else {
                     isBuildProject = true;
@@ -108,20 +114,6 @@ public class ScanCommand implements BLauncherCmd {
             builder.append("\toption 3: semgrep\n\n");
             builder.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
             this.outputStream.println(builder);
-            return;
-        }
-
-        // if the rule to scan is passed by the user
-        boolean rulesAreActivated;
-        if (!userRule.equals("all")) {
-            rulesAreActivated = InbuiltRules.activateUserDefinedRule(userRule);
-        } else {
-            rulesAreActivated = true;
-        }
-
-        // proceed with the scanning only if all the rules are activated
-        if (!rulesAreActivated) {
-            outputStream.println("The provided rule is invalid, please run bal scan --help for more info!");
             return;
         }
 

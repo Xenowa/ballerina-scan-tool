@@ -16,13 +16,13 @@ import java.util.Properties;
 import java.util.Set;
 
 // main call should extend the abtract class AnalysisPlatform provided within the bal scan tool
-public class Main extends Platform {
+public class Main {
     // Initiating sonar-scanner through the plugin
     // =========
     // New Logic
     // =========
     // This attempts to trigger the scan within the same process instead of having a seperate scaner process
-    public void initialize() {
+    public static void main(String[] args) {
         // Initializing the required attributes
         Logs logs = new Logs(System.out, System.err);
         Cli cli = new Cli(logs).parse();

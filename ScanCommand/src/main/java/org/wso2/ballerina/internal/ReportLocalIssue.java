@@ -9,6 +9,7 @@ import org.wso2.ballerina.ReportJsonIssue;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
 import static org.wso2.ballerina.internal.platforms.Local.CUSTOM_CHECK_VIOLATION;
@@ -17,7 +18,6 @@ public class ReportLocalIssue extends ReportJsonIssue {
     // Parameters required for custom rules
     private final int SONARQUBE_RESERVED_RULES = 106;
     private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
-    private Map<String, String> customRules = new HashMap<>();
 
     public ReportLocalIssue(JsonArray externalIssues) {
         super(externalIssues);
@@ -95,8 +95,8 @@ public class ReportLocalIssue extends ReportJsonIssue {
         }
 
         // Check if the custom rule message already exists and if so return the rule assigned to the message
-        if (customRules.containsKey(customRuleMessage)) {
-            return customRules.get(customRuleMessage);
+        if (CUSTOM_RULES.containsKey(customRuleMessage)) {
+            return CUSTOM_RULES.get(customRuleMessage);
         }
 
         // Increment the last rule index
@@ -106,7 +106,7 @@ public class ReportLocalIssue extends ReportJsonIssue {
         String customRuleID = "S" + lastRuleIndex;
 
         // Put the message mapped with the custom rule ID
-        customRules.put(customRuleMessage, customRuleID);
+        CUSTOM_RULES.put(customRuleMessage, customRuleID);
 
         // Put the new rule ID to the inbuilt rules array
         INBUILT_RULES.put(customRuleID, true);

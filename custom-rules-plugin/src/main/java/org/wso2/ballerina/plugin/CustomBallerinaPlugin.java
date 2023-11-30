@@ -8,13 +8,7 @@ import org.wso2.ballerina.plugin.checks.CustomChecks;
 
 import java.util.ArrayList;
 
-public class CustomBallerinaPlugin implements ExternalRules {
-    @Override
-    public JsonArray getExternalIssues() {
-        return externalIssues;
-    }
-
-    @Override
+public class CustomBallerinaPlugin extends ExternalRules {
     public void initialize(SyntaxTree syntaxTree, SemanticModel semanticModel) {
         // Perform the check
         CustomChecks customChecks = new CustomChecks(syntaxTree);

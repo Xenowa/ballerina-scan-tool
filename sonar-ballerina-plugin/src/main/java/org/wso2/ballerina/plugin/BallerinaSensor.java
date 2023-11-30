@@ -63,52 +63,6 @@ class BallerinaSensor implements Sensor {
     // The place which the entire scan logic should be defined, this is the starting point of the scanner
     @Override
     public void execute(SensorContext sensorContext) {
-        // TODO: initiate "bal scan --platform=sonarqube" through here:
-        //  ===========================================================
-        //  - The sensor context already has the absolute path of the working directory
-        //  - Ideally this absolute path should be taken from the bal scan tool
-        //  - Next this should be sent to the bal scan command to perform analysis
-        //  - Next the analysis results, should be reported per file by matching the report absolute path
-        //  retrieved against the absolute path of the ballerina file in the sensor context
-        //  - It should be as follows:
-        /**
-         * TODO: bal scan triggering method:
-         *  ================================
-         *  FilePredicate mainFilePredicate = sensorContext.fileSystem().predicates()
-         *         .and(
-         *                 sensorContext.fileSystem().predicates().hasLanguage(language.getKey()),
-         *                 sensorContext.fileSystem().predicates().hasType(InputFile.Type.MAIN)
-         *         );
-         *  *
-         *  // Since we will be iterating through each input file more than once during the scan we are placing it to an arraylist
-         *  ArrayList<InputFile> inputFiles = new ArrayList<>();
-         *  sensorContext.fileSystem().inputFiles(mainFilePredicate).forEach(inputFiles::add);
-         *  *
-         *  // Iterating through all files and getting a list of all parent folder paths
-         *  Map<InputFile,Path> balFileAndFolders = new HashMap<>();
-         *  *
-         *  for(InputFile inputFile : inputFiles){
-         *        balFileAndFolders.put(inputFile, inputFile.path().getParent());
-         *  }
-         *  *
-         *  // Perform the bal scan for each folder
-         *  balFileAndFolders.forEach((inputFile, parentFolder) ->{
-         *     // perform the bal scan for each
-         *     ProcessBuilder balScan = new ProcessBuilder("cmd", "/c", "bal", "scan", parentFolder.toUri().toString());
-         *     Process process = balScan.start();
-         *     InputStream scanProcessInput = process.getInputStream();
-         *     Scanner scanner = new Scanner(scanProcessInput).useDelimiter("\\A");
-         *     String output = scanner.hasNext() ? scanner.next() : "";
-         *  *
-         *     // Only report issues of scans that were triggered successfully
-         *     if(!output.equals("not a ballerina project")){
-         *         // report the
-         *         reportIssue(inputFile, sensorContext,new JsonObject());
-         *     }
-         *  });
-         * */
-
-
         // Retrieve all .bal source files from a project
         FileSystem fileSystem = sensorContext.fileSystem();
         FilePredicate mainFilePredicate = fileSystem.predicates()
@@ -251,25 +205,39 @@ class BallerinaSensor implements Sensor {
 
                 // Perform the remaining operations if the output is not empty
                 if (!balScanOutput.isEmpty()) {
-                    // Iteratively perform reporting from SonarScanner
-                    for (JsonElement scanElement : balScanOutput) {
+                    // Iteratively perform per file reporting
+                    for (JsonElement scannedFileElement : balScanOutput) {
                         // first convert the element into an object
-                        JsonObject issue = scanElement.getAsJsonObject();
+                        JsonObject analyzedFile = scannedFileElement.getAsJsonObject();
 
-                        // Get the issue type from the output
-                        String issueType = issue.get("issueType").getAsString();
+                        // TODO: Retrieve the absolute path of the scanned file (required for determining the correct
+                        //  InputFile component before reporting)
+                        String absoluteFilePath = analyzedFile.get("ballerinaFilePath").getAsString();
 
-                        // Perform validations on the issueType and proceed
-                        switch (issueType) {
-                            case "CHECK_VIOLATION":
-                                reportIssue(inputFile, context, issue);
-                                break;
-                            case "CUSTOM_CHECK_VIOLATION":
-                                reportExternalIssue(inputFile, context, issue);
-                                break;
-                            case "SOURCE_INVALID":
-                                reportParseIssue(issue.get("message").getAsString());
-                                break;
+                        // perform the remaining operations if the output is not empty
+                        JsonArray issues = analyzedFile.get("reportedIssues").getAsJsonArray();
+                        if (!issues.isEmpty()) {
+                            // Iteratively perform reporting from SonarScanner
+                            for (JsonElement scannedIssueElement : issues) {
+                                // first convert the element into an object
+                                JsonObject issue = scannedIssueElement.getAsJsonObject();
+
+                                // Get the issue type from the output
+                                String issueType = issue.get("issueType").getAsString();
+
+                                // Perform validations on the issueType and proceed
+                                switch (issueType) {
+                                    case "CHECK_VIOLATION":
+                                        reportIssue(inputFile, context, issue);
+                                        break;
+                                    case "CUSTOM_CHECK_VIOLATION":
+                                        reportExternalIssue(inputFile, context, issue);
+                                        break;
+                                    case "SOURCE_INVALID":
+                                        reportParseIssue(issue.get("message").getAsString());
+                                        break;
+                                }
+                            }
                         }
                     }
                 }
