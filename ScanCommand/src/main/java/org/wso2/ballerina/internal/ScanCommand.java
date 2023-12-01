@@ -162,18 +162,33 @@ public class ScanCommand implements BLauncherCmd {
                     return;
                 }
 
-                // check if the user given path is a ballerina file or a build project
-                if (isBuildProject) {
-                    // perform scan on ballerina build project
-                    JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
-                    // Convert the JSON analysis results to the console
-                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                    String jsonOutput = gson.toJson(scannedResults);
-                    outputStream.println(jsonOutput);
-                } else {
-                    // perform scan on single ballerina file
-                    localPlatform.scan(userPath, outputStream);
+                // Perform scan on ballerina file/project
+                JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
+
+                // Stop reporting if there are no files analyzed
+                if (scannedResults.isEmpty()) {
+                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
+                    return;
                 }
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonOutput = gson.toJson(scannedResults);
+                outputStream.println(jsonOutput);
+
+
+//                // TODO: remove below logic
+//                // check if the user given path is a ballerina file or a build project
+//                if (isBuildProject) {
+//                    // perform scan on ballerina build project
+//                    JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
+//                    // Convert the JSON analysis results to the console
+//                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//                    String jsonOutput = gson.toJson(scannedResults);
+//                    outputStream.println(jsonOutput);
+//                } else {
+//                    // perform scan on single ballerina file
+//                    localPlatform.scan(userPath, outputStream);
+//                }
             }
             default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
         }

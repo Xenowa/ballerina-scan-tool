@@ -12,7 +12,6 @@ import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -24,9 +23,7 @@ import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
@@ -134,6 +131,11 @@ public class Local {
 
         // For single file inputs with bal scan
         if (!userPath.toFile().isDirectory()) {
+            // if the user provided file path belongs to a build project stop the analysis
+            if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
+                return analyzedFiles;
+            }
+
             Module tempModule = project.currentPackage().getDefaultModule();
             DocumentId documentId = project.documentId(userPath);
             JsonObject analyzedDocument = analyzeDocument(project, tempModule, documentId);
