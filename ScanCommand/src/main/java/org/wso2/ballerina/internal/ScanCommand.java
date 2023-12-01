@@ -71,6 +71,12 @@ public class ScanCommand implements BLauncherCmd {
                     this.outputStream.println("Invalid file format received!\n File format should be of type '.bal'");
                     return "";
                 } else {
+                    // Perform check if the user has provided the file in "./balFileName.bal" format and if so remove
+                    // the trailing slash
+                    if (userFilePath.startsWith("./") || userFilePath.startsWith(".\\")) {
+                        userFilePath = userFilePath.substring(2);
+                    }
+
                     return userFilePath;
                 }
             } else {
@@ -83,7 +89,12 @@ public class ScanCommand implements BLauncherCmd {
                     return "";
                 } else {
                     isBuildProject = true;
-                    return userFilePath;
+
+                    // Following is to mitigate the issue when "." is encountered in the scanning process
+                    return Path.of(userFilePath)
+                            .toAbsolutePath()
+                            .getParent()
+                            .toString();
                 }
             }
         } else {

@@ -37,74 +37,15 @@ public class Local {
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
     public static final String SOURCE_INVALID = "SOURCE_INVALID";
-
     public static final JsonArray analysisIssues = new JsonArray();
 
-    // TODO: To be removed
-    // For parsing individual ballerina files
-    public Map<String, Object> parseBallerinaFile(Path userFilePath) {
-        try {
-            // Map to store the parsed & Compiled outputs
-            Map<String, Object> compiledOutputs = new HashMap<>();
-
-            Project project = ProjectLoader.loadProject(userFilePath);
-
-            // Retrieve the main module of the Ballerina Project
-            Module currentModule = project.currentPackage().getDefaultModule();
-
-            // Get the document ID by considering if the project structure is relevant to Ballerina
-            DocumentId documentId;
-            if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
-                documentId = project.documentId(userFilePath);
-            } else {
-                Iterator<DocumentId> documentIterator = currentModule.documentIds().iterator();
-
-                // Block is used to prevent crashing
-                try {
-                    documentId = documentIterator.next();
-                } catch (NoSuchElementException exception) {
-                    handleParseIssue(userFilePath.getFileName().toString());
-                    return null;
-                }
-            }
-
-            // Get the the user file as a ballerina document
-            Document document = currentModule.document(documentId);
-
-            // Retrieve the syntax tree from the ballerina document
-            compiledOutputs.put("syntaxTree", document.syntaxTree());
-
-            // Compile the Ballerina source code file
-            PackageCompilation compilation = project.currentPackage().getCompilation();
-
-            // Get the blangPackage or the AST (will be deprecated in the future)
-            // compiledOutputs.put("blangPackage", compilation.defaultModuleBLangPackage());
-
-            // Retrieve the semantic model from the ballerina document compilation
-            compiledOutputs.put("semanticModel", compilation.getSemanticModel(documentId.moduleId()));
-
-            // Return back the compiled objects
-            return compiledOutputs;
-        } catch (Exception e) {
-            handleParseIssue(userFilePath.getFileName().toString());
-            return null;
-        }
-    }
-
-    /*
-     * TODO:
-     *  Method which parses the ballerina Projects and returns the per file analysis results triggered from
-     *  "bal scan --platform=sonarqube"
-     * */
     public JsonObject analyzeDocument(Project currentProject, Module currentModule, DocumentId documentId) {
         // Object to hold document scanned results
         JsonObject analyzedFile = new JsonObject();
+
         // Retrieve each document from the module
         Document document = currentModule.document(documentId);
 
-        // ==================================================
-        // Perform the static code analysis for each document
-        // ==================================================
         // Retrieve the absolute path of the document and put it to the file object
         Optional<Path> documentPath = currentProject.documentPath(documentId);
         analyzedFile.addProperty("ballerinaFilePath", documentPath.get().toAbsolutePath().toString());
