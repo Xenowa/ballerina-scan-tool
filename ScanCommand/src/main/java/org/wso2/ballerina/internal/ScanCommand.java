@@ -30,10 +30,14 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform"}, description = "static code analysis output platform", defaultValue = "local")
+    @CommandLine.Option(names = {"--platform"},
+            description = "static code analysis output platform",
+            defaultValue = "local")
     private String platform;
 
-    @CommandLine.Option(names = {"--rule"}, description = "single rule to be checked during the static code analysis", defaultValue = "all")
+    @CommandLine.Option(names = {"--rule"},
+            description = "single rule to be checked during the static code analysis",
+            defaultValue = "all")
     public static String userRule;
 
     public ScanCommand() {
@@ -52,7 +56,8 @@ public class ScanCommand implements BLauncherCmd {
         // if invalid number of arguments are passed to the bal scan command
         boolean tooManyArguments = this.argList.size() > 1;
         if (tooManyArguments) {
-            this.outputStream.println("Invalid number of arguments received!\n run bal scan --help for more information.");
+            this.outputStream.println("Invalid number of arguments received!\n" +
+                    "run bal scan --help for more information.");
             return "";
         }
 
@@ -91,14 +96,19 @@ public class ScanCommand implements BLauncherCmd {
                     isBuildProject = true;
 
                     // Following is to mitigate the issue when "." is encountered in the scanning process
-                    return Path.of(userFilePath)
-                            .toAbsolutePath()
-                            .getParent()
-                            .toString();
+                    if (userFilePath.equals(".")) {
+                        return Path.of(userFilePath)
+                                .toAbsolutePath()
+                                .getParent()
+                                .toString();
+                    }
+
+                    return userFilePath;
                 }
             }
         } else {
-            this.outputStream.println("No such file or directory exists!\n Please check the file path and then re-run the command.");
+            this.outputStream.println("No such file or directory exists!\n Please check the file path and" +
+                    "then re-run the command.");
             return "";
         }
     }
