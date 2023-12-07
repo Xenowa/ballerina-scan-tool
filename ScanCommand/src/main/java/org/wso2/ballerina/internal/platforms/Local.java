@@ -1,7 +1,5 @@
 package org.wso2.ballerina.internal.platforms;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -162,58 +160,6 @@ public class Local {
 
         // return the analyzed files
         return analyzedFiles;
-    }
-
-    public void scan(String userFile, PrintStream outputStream) {
-        // perform scan on ballerina build project
-        JsonArray scannedResults = analyzeProject(Path.of(userFile));
-        // Convert the JSON analysis results to the console
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(scannedResults);
-        outputStream.println(jsonOutput);
-
-        // ==================================
-        // Commented out for testing purposes
-        // ==================================
-//        // Set up the issue reporter here so that external issues also can be included
-//        ReportLocalIssue issueReporter = new ReportLocalIssue(analysisIssues);
-//
-//        // parse the ballerina file
-//        Map<String, Object> compilation = parseBallerinaFile(Path.of(userFile));
-//
-//        // perform the static code analysis if the file was successfully parsed
-//        // Load all JAR's that implement the external rules interface (Using Java SPI)
-//        // This will only load classes from the JAR files located in the directory where
-//        // the JAR that triggers it is in
-//        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
-//        // Iterate through the loaded interfaces
-//        for (ExternalRules externalRulesJar : externalRulesJars) {
-//            // Call the initialize method to trigger custom rule scans
-//            externalRulesJar.initialize(
-//                    (SyntaxTree) compilation.get("syntaxTree"),
-//                    (SemanticModel) compilation.get("semanticModel")
-//            );
-//
-//            // Retrieve the externalIssues created by each custom rules JAR
-//            JsonArray externalIssuesArray = externalRulesJar.getExternalIssues();
-//
-//            // Then report the external issues
-//            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssuesArray);
-//
-//            if (!successfullyReported) {
-//                handleParseIssue("Unable to load custom rules, issues reported are having invalid format!");
-//            }
-//        }
-//
-//        scanWithSyntaxTree((SyntaxTree) compilation.get("syntaxTree"), issueReporter);
-//
-//        // The semantic model will be used later when implementing complex rules
-//        // scanWithSemanticModel((SemanticModel) compilation.get("semanticModel"), outputStream);
-//
-//        // Convert the JSON analysis results to the console
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        String jsonOutput = gson.toJson(analysisIssues);
-//        outputStream.println(jsonOutput);
     }
 
     public void handleParseIssue(String userFile) {

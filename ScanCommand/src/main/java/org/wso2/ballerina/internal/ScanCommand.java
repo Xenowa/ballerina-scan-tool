@@ -11,16 +11,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.wso2.ballerina.internal.platforms.CodeQL;
 import org.wso2.ballerina.internal.platforms.Local;
-import org.wso2.ballerina.Platform;
-import org.wso2.ballerina.internal.platforms.SemGrep;
 import org.wso2.ballerina.internal.platforms.SonarQube;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
 public class ScanCommand implements BLauncherCmd {
-    // CMD Launcher Attributes
+    // =============================
+    // Ballerina Launcher Attributes
+    // =============================
     private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
 
@@ -50,8 +49,39 @@ public class ScanCommand implements BLauncherCmd {
         this.errorStream = outputStream;
     }
 
-    public boolean isBuildProject = false;
 
+    // =====================
+    // bal help INFO Methods
+    // =====================
+    @Override
+    public String getName() {
+        return "scan";
+    }
+
+    @Override
+    public void printLongDesc(StringBuilder out) {
+        out.append("Tool for providing static code analysis results for Ballerina projects\n\n");
+        out.append("bal scan --platform=<option> <ballerina-file>\n\n");
+        out.append("--option--\n");
+        out.append("\toption 1: sonarqube\n");
+        out.append("\toption 2: codeql\n");
+        out.append("\toption 3: semgrep\n\n");
+        out.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
+    }
+
+    @Override
+    public void printUsage(StringBuilder out) {
+        out.append("Tool for providing static code analysis results for Ballerina projects");
+    }
+
+    @Override
+    public void setParentCmdParser(CommandLine parentCmdParser) {
+    }
+
+
+    // ====================
+    // Main Program Methods
+    // ====================
     public String checkPath() {
         // if invalid number of arguments are passed to the bal scan command
         boolean tooManyArguments = this.argList.size() > 1;
@@ -93,8 +123,6 @@ public class ScanCommand implements BLauncherCmd {
                             ", cannot find 'Ballerina.toml' file.");
                     return "";
                 } else {
-                    isBuildProject = true;
-
                     // Following is to mitigate the issue when "." is encountered in the scanning process
                     if (userFilePath.equals(".")) {
                         return Path.of(userFilePath)
@@ -138,21 +166,8 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // Set the trigger platform depending on user input
-        Platform triggerPlatform = null;
+        // Trigger the relevant analysis platform
         switch (platform) {
-            case "sonarqube" -> {
-                // TODO: platform here should be loaded using URLClassLoader
-                triggerPlatform = new SonarQube();
-            }
-            case "codeql" -> {
-                triggerPlatform = new CodeQL();
-                outputStream.println("Platform support is not available yet!");
-            }
-            case "semgrep" -> {
-                triggerPlatform = new SemGrep();
-                outputStream.println("Platform support is not available yet!");
-            }
             case "local" -> {
                 Local localPlatform = new Local();
                 // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
@@ -174,61 +189,48 @@ public class ScanCommand implements BLauncherCmd {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String jsonOutput = gson.toJson(scannedResults);
                 outputStream.println(jsonOutput);
+            }
+            case "sonarqube-new" -> {
+                Local localPlatform = new Local();
+                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+                String userPath;
+                userPath = checkPath();
+                if (userPath.equals("")) {
+                    return;
+                }
 
+                // Perform scan on ballerina file/project
+                JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
 
-//                // TODO: remove below logic
-//                // check if the user given path is a ballerina file or a build project
-//                if (isBuildProject) {
-//                    // perform scan on ballerina build project
-//                    JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
-//                    // Convert the JSON analysis results to the console
-//                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//                    String jsonOutput = gson.toJson(scannedResults);
-//                    outputStream.println(jsonOutput);
-//                } else {
-//                    // perform scan on single ballerina file
-//                    localPlatform.scan(userPath, outputStream);
-//                }
+                // Stop reporting if there are no files analyzed
+                if (scannedResults.isEmpty()) {
+                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
+                    return;
+                }
+
+                // TODO: Platform here should be loaded using classLoaders
+                // Send the scanned results to the onScan method
+                SonarQube sonarQubePlatform = new SonarQube();
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonOutput = gson.toJson(scannedResults);
+                sonarQubePlatform.onScan(jsonOutput);
+            }
+            case "sonarqube" -> {
+                // Validate that there are no file paths provided by the user
+                String userFilePath;
+                userFilePath = validateEmptyPath();
+
+                if (!userFilePath.equals("")) {
+                    return;
+                }
+
+                SonarQube sonarQubePlatform = new SonarQube();
+                sonarQubePlatform.triggerSonarScan(null);
+            }
+            case "codeql", "semgrep" -> {
+                outputStream.println("Platform support is not available yet!");
             }
             default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
         }
-
-        // If the user has provided another platform initialize the scan through that platform
-        if (triggerPlatform != null) {
-            String userFilePath;
-            userFilePath = validateEmptyPath();
-            if (!userFilePath.equals("")) {
-                return;
-            }
-
-            // Initialize the platform if the user has given the correct command
-            triggerPlatform.initialize();
-        }
-    }
-
-    // bal help INFO Methods
-    @Override
-    public String getName() {
-        return "scan";
-    }
-
-    @Override
-    public void printLongDesc(StringBuilder out) {
-        out.append("Tool for providing static code analysis results for Ballerina projects\n\n");
-        out.append("bal scan --platform=<option> <ballerina-file>\n\n");
-        out.append("--option--\n");
-        out.append("\toption 1: sonarqube\n");
-        out.append("\toption 2: codeql\n");
-        out.append("\toption 3: semgrep\n\n");
-        out.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
-    }
-
-    @Override
-    public void printUsage(StringBuilder out) {
-        out.append("Tool for providing static code analysis results for Ballerina projects");
-    }
-
-    @Override
-    public void setParentCmdParser(CommandLine parentCmdParser) {
     }
 }

@@ -8,4 +8,9 @@ public class CodeQL extends Platform {
     public void initialize() {
 
     }
+
+    @Override
+    public void onScan(String scannedResults) {
+
+    }
 }

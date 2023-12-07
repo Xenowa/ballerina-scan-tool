@@ -86,7 +86,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
     // Adding dependency to the bal scan tool to retrieve the interface methods
-    implementation project(path: ':ScanCommand')
+    // implementation project(path: ':ScanCommand')
 
     // Required dependencies for testing the plugin before building and deploying
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
@@ -264,6 +264,21 @@ tasks.shadowJar {
     exclude '**/*.txt'
 
     // Bal Scan exclusion files to prevent classloader issues
+//    exclude 'ch/**'
+//    exclude 'cli-help/**'
+//    exclude 'com/**'
+//    exclude 'create_cmd_templates/**'
+//    exclude 'doc-ui/**'
+//    exclude 'io/**'
+//    exclude 'new_cmd_defaults/**'
+//    exclude 'org/ballerinalang/**'
+//    exclude 'org/wso2/ballerinalang**'
+//    exclude 'org/wso2/ballerina/internal/**'
+//    exclude 'org/wso2/ballerina/miscellaneous/**'
+//    exclude 'org/wso2/ballerina/ExternalRules.class'
+//    exclude 'org/wso2/ballerina/Issue.class'
+//    exclude 'org/wso2/ballerina/Platform.class'
+//    exclude 'org/wso2/ballerina/ReportJsonIssue.class'
 
     // The following command actually creates the final jar file if the build is between the size ranges given
     // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)

@@ -6,4 +6,9 @@ public class SemGrep extends Platform {
     @Override
     public void initialize() {
     }
+
+    @Override
+    public void onScan(String scannedResults) {
+
+    }
 }
