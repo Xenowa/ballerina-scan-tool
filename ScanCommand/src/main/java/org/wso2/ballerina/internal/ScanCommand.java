@@ -190,7 +190,7 @@ public class ScanCommand implements BLauncherCmd {
                 String jsonOutput = gson.toJson(scannedResults);
                 outputStream.println(jsonOutput);
             }
-            case "sonarqube-new" -> {
+            case "sonarqube" -> {
                 Local localPlatform = new Local();
                 // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
                 String userPath;
@@ -215,7 +215,7 @@ public class ScanCommand implements BLauncherCmd {
                 String jsonOutput = gson.toJson(scannedResults);
                 sonarQubePlatform.onScan(jsonOutput);
             }
-            case "sonarqube" -> {
+            case "sonarqube-old" -> {
                 // Validate that there are no file paths provided by the user
                 String userFilePath;
                 userFilePath = validateEmptyPath();

@@ -4,20 +4,20 @@
 
 - Using SSLR (SonarSource Language Recognizer)
 
-  - [SSLR documentation](https://github.com/SonarSource/sslr)
-  - [SonarQube Java Plugin](https://github.com/SonarSource/sonar-java)
-  - [SonarQube Python Plugin](https://github.com/SonarSource/sonar-python)
+    - [SSLR documentation](https://github.com/SonarSource/sslr)
+    - [SonarQube Java Plugin](https://github.com/SonarSource/sonar-java)
+    - [SonarQube Python Plugin](https://github.com/SonarSource/sonar-python)
 
 - Using SLang (Sonar Lang)
 
-  - [SLang documentation](https://github.com/SonarSource/slang)
-  - [SonarQube jProperties Plugin](https://github.com/pepaproch/slang-jproperties)
+    - [SLang documentation](https://github.com/SonarSource/slang)
+    - [SonarQube jProperties Plugin](https://github.com/pepaproch/slang-jproperties)
 
 - Using SonarQube Java Plugin API
 
-  - [SonarQube Java Plugin API documentation](https://docs.sonarsource.com/sonarqube/9.9/extension-guide/developing-a-plugin/plugin-basics/)
-  - [SonarQube Kotlin Plugin](https://github.com/SonarSource/SonarJS)
-  - [SonarQube JavaScript Plugin](https://github.com/SonarSource/SonarJS)
+    - [SonarQube Java Plugin API documentation](https://docs.sonarsource.com/sonarqube/9.9/extension-guide/developing-a-plugin/plugin-basics/)
+    - [SonarQube Kotlin Plugin](https://github.com/SonarSource/SonarJS)
+    - [SonarQube JavaScript Plugin](https://github.com/SonarSource/SonarJS)
 
 ## Plugin Creation steps
 
@@ -28,16 +28,19 @@ Steps will be added soon...
 1. Run the gradle command to build a jar of the plugin
 
 - With tests
+
 ```cmd
-gradlew clean build
+gradlew clean build -x check
 ```
 
 - Ignoring tests
+
 ```cmd
-gradlew clean build -x test
+gradlew clean build -x check -x test
 ```
 
 2. The generated jar file can be found in the libs directory as follows:
+
 ```
 📦sonar-ballerina-plugin
  ┣ 📂.gradle
@@ -51,6 +54,7 @@ gradlew clean build -x test
 ```
 
 3. Place the generated jar file in the plugins directory of SonarQube as follows:
+
 ```
 📦sonarqube-9.9.2.77730
  ┣ 📂bin
