@@ -39,8 +39,6 @@ class Conf {
         Properties result = new Properties();
         result.putAll(loadProjectProperties()); // To retrive required properties from a properties file
         result.putAll(System.getProperties());
-        // result.putAll(loadEnvironmentProperties());
-        // result.putAll(cli.properties());
         result = resolve(result);
 
         // root project base directory must be present and be absolute
@@ -54,6 +52,7 @@ class Conf {
         return resolver.resolve();
     }
 
+    // Not required as -Dsonar parameters are not given when triggered from bal scan
     private Properties loadEnvironmentProperties() {
         return Utils.loadEnvironmentProperties(env);
     }

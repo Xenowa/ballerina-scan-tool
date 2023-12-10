@@ -10,9 +10,10 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
 
+import org.wso2.ballerina.Platform;
 import org.wso2.ballerina.internal.platforms.Local;
-import org.wso2.ballerina.internal.platforms.SonarQube;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
@@ -208,24 +209,24 @@ public class ScanCommand implements BLauncherCmd {
                     return;
                 }
 
-                // TODO: Platform here should be loaded using classLoaders
-                // Send the scanned results to the onScan method
-                SonarQube sonarQubePlatform = new SonarQube();
+                // Convert the output to a string
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String jsonOutput = gson.toJson(scannedResults);
-                sonarQubePlatform.onScan(jsonOutput);
-            }
-            case "sonarqube-old" -> {
-                // Validate that there are no file paths provided by the user
-                String userFilePath;
-                userFilePath = validateEmptyPath();
 
-                if (!userFilePath.equals("")) {
-                    return;
+                // Platform plugins for reporting
+                ServiceLoader<Platform> platforms = ServiceLoader.load(Platform.class);
+                // Iterate through the loaded interfaces
+                for (Platform platform : platforms) {
+                    // Retrieve the platform name through initialize method
+                    String platformName = platform.initialize();
+
+                    // If a valid platform name is provided then trigger reporting
+                    // For now we will make the initialize return null in other platforms
+                    if (platformName != null) {
+                        // Pass the output and the streams to see the execution results
+                        platform.onScan(jsonOutput, outputStream, errorStream);
+                    }
                 }
-
-                SonarQube sonarQubePlatform = new SonarQube();
-                sonarQubePlatform.triggerSonarScan(null);
             }
             case "codeql", "semgrep" -> {
                 outputStream.println("Platform support is not available yet!");

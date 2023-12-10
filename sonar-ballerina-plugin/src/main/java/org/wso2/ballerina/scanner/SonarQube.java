@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal.platforms;
+package org.wso2.ballerina.scanner;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.wso2.ballerina.Platform;
@@ -9,29 +9,28 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.wso2.ballerina.internal.ScanCommand.userRule;
-
-// TODO: Merge this implementation with the sonar-ballerina plugin
 public class SonarQube extends Platform {
     @Override
-    public void initialize() {
+    public String initialize() {
+        return "SonarQube";
     }
 
     // =========================================
     // Method 1 (Decoupled Static Code Analysis)
     // =========================================
     @Override
-    public void onScan(String scannedResults) {
+    public void onScan(String scannedResults, PrintStream outputStream, PrintStream errorStream) {
         String resultsFilePath = saveResults(scannedResults);
-        triggerSonarScan(resultsFilePath);
+        triggerSonarScan(resultsFilePath, outputStream);
     }
 
     public String saveResults(String scannedResults) {
         // Save analysis results to file
-        File newTempFile = null;
+        File newTempFile;
         try {
             newTempFile = new File("ballerina-analysis-results.json");
 
@@ -53,8 +52,8 @@ public class SonarQube extends Platform {
     // ========================================
     // Method 2 (Embedded Static Code Analysis)
     // ========================================
-    public void triggerSonarScan(String resultsFilePath) {
-        // Call the sonar-scanner available in the sonar-ballerina plugin
+    public void triggerSonarScan(String resultsFilePath, PrintStream outputStream) {
+        // Executing sonar-scanner cli through process builder
         List<String> arguments = new ArrayList<>();
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
@@ -63,23 +62,30 @@ public class SonarQube extends Platform {
             arguments.add("sh");
             arguments.add("-c");
         }
+        arguments.add("sonar-scanner");
 
-        // Mandatory arguments to execute the analysis
-        arguments.add("java");
-        arguments.add("-jar");
-        arguments.add("C:/src/sonarqube-9.9.2.77730/extensions/plugins/sonar-ballerina-plugin-1.0-all.jar");
-
-        // Add the argument to tell the sonar-scanner that an analysis results file has been created
+        // Check if there is a results file and add to properties if it exists
         if (resultsFilePath != null) {
-            arguments.add("analysisResults=" + resultsFilePath);
+            arguments.add("-DanalyzedResultsPath=" + resultsFilePath);
         }
 
-        // if the user has passed the rule to be analyzed
-        if (!userRule.equals("all")) {
-            arguments.add("-Drule=" + userRule);
-        }
+        // Set the property to only scan ballerina files when the scan is triggered
+        arguments.add("-Dsonar.exclusions=" +
+                "'" +
+                "**/*.java," +
+                "**/*.xml," +
+                "**/*.yaml," +
+                "**/*.go," +
+                "**/*.kt," +
+                "**/*.js," +
+                "**/*.html," +
+                "**/*.YAML" +
+                ",**/*.rb," +
+                "**/*.scala," +
+                "**/*.py" +
+                "'");
 
-        // Execute the sonar-scanner through a sub process
+        // Execute the sonar-scanner through a sub, sub process
         ProcessBuilder processBuilder = new ProcessBuilder(arguments);
         try {
             Process process = processBuilder.start();
@@ -88,7 +94,7 @@ public class SonarQube extends Platform {
 
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
+                outputStream.println(line);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

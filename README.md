@@ -13,11 +13,14 @@ The following software should be installed locally
 
 - [Java version: 17](https://adoptium.net/temurin/releases/?version=17)
 - [SonarQube version: 9.9 (LTS)](https://www.sonarsource.com/products/sonarqube/downloads/lts/9-9-lts)
+- [Sonar scanner](https://docs.sonarsource.com/sonarqube/9.9/analyzing-source-code/scanners/sonarscanner/)
 - [Ballerina version: 2201.8.2](https://ballerina.io/downloads/archived/#swan-lake-archived-versions)
 
 ## Getting started
 
-1. Create the bal scan tool by following the instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/ScanCommand)
-2. Create the SonarQube Ballerina Plugin by following the instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/sonar-ballerina-plugin)
+1. Create the bal scan tool by following the
+   instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/ScanCommand)
+2. Create the SonarQube Ballerina Plugin by following the
+   instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/sonar-ballerina-plugin)
 3. Run SonarQube server instance
 4. Initialize a sonar scan in a project, [example](https://github.com/SonarDance/SonarQube-scans-testing)

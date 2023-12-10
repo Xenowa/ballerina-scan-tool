@@ -4,8 +4,6 @@ plugins {
     id 'application'
     // For using the ballerina java project API
     id 'java-library'
-    // For creating a fat jar
-    id "com.github.johnrengelman.shadow" version "7.1.0"
     // For checkstyle configurations
     id 'checkstyle'
     // For spotbugs configurations
@@ -155,74 +153,4 @@ spotbugsMain.finalizedBy validateSpotbugs
 // class to build when gradlew run is executed in there terminal
 application {
     mainClass = 'testing.balToolTester.Main'
-}
-
-// Required configurations to create a sonar scanner
-// Shadow JAR is not required as we will not be creating a sonar scanner CLI and instead depend on the
-// users system available sonar scanner
-// Creating a fat jar
-tasks.shadowJar {
-    minimize {}
-
-    // Removing all unwanted files and directories
-    // build related files, useless for the plugin
-    exclude '**/*.js'
-    exclude '**/*.properties'
-    exclude '**/*.proto'
-    exclude '**/*.txt'
-
-    // Removing unwanted directories and subdirectories in them
-    // Currently removing all files and folders and including only needed ones do not work for ShadowJAR
-    exclude "balToolTester/**"
-    exclude "cli-help/**"
-    exclude "com/**"
-    exclude "create_cmd_templates/**"
-    exclude "doc-ui/**"
-    exclude "io/**"
-    exclude "javax/**"
-    exclude "kotlin/**"
-    exclude "licenses/**"
-    exclude "me/**"
-    exclude "new_cmd_defaults/**"
-    exclude "okhttp3/**"
-    exclude "okio/**"
-    exclude "picocli/**"
-    exclude "about.html"
-    exclude "bal-tools-toml-schema.json"
-    exclude "ballerina-toml-schema.json"
-    exclude "dependencies-toml-schema.json"
-    exclude "jballerina-tools-2201.8.2.zip"
-    exclude "old-dependencies-toml-schema.json"
-    exclude "plugin.xml"
-    exclude "production.html"
-    exclude "release-description.md"
-    exclude "settings-toml-schema.json"
-    exclude "syntax_tree_descriptor.json"
-    exclude "template.declaration.mustache"
-    exclude "template.execution.mustache"
-    exclude "testng.css"
-    exclude "testng-1.0.dtd"
-    exclude "testngtasks"
-    exclude "org/apache/**"
-    exclude "org/slf4j/**"
-    exclude "org/sonatype/**"
-    exclude "org/ballerinalang/**"
-    exclude "org/codehaus/**"
-    exclude "org/eclipse/**"
-    exclude "org/jacoco/**"
-    exclude "org/jetbrains/**"
-    exclude "org/jline/**"
-    exclude "org/objectweb/**"
-    exclude "org/sl4j/**"
-    exclude "org/testng/**"
-    exclude "org/wso2/ballerinalang/**"
-
-    // The following command creates the FAT jar
-    doLast {
-        shadowJar.archiveFile.get().asFile
-    }
-}
-
-artifacts {
-    archives shadowJar
 }

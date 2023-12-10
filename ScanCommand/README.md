@@ -31,7 +31,7 @@ bal scan [--platform=<option>] [<ballerina-file/ballerina-build-project-folder>]
 1. Run and build jar file
 
 ```cmd
-gradlew clean build -x check -p custom-rules-plugin && gradlew clean build -x check -p ScanCommand
+gradlew clean build -x check
 ```
 
 2. Navigate to the tool-scan directory
@@ -120,7 +120,7 @@ option 3: semgrep
 1. Run and build jar file
 
 ```cmd
-gradlew clean build -x check -p custom-rules-plugin && gradlew clean build -x check -p ScanCommand
+gradlew clean build -x check
 ```
 
 2. Navigate to the tool-scan directory

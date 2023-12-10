@@ -3,8 +3,12 @@ id = “scan” # need to be same as picoclie name in java file
 
 [[dependency]]
 # Shadow jar is required as it contains dependencies needed to run the sonar scanner methods in the bal scanner
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\build\\libs\\ScanCommand-1.0.jar"
+path = "../build/libs/ScanCommand-1.0.jar"
 
 # For including the custom rules JAR
 [[dependency]]
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\custom-rules-plugin\\build\\libs\\custom-rules-plugin-1.0.jar"
+path = "../../custom-rules-plugin/build/libs/custom-rules-plugin-1.0.jar"
+
+# For including the SonarQube Platform JAR
+[[dependency]]
+path = "../../sonar-ballerina-plugin/build/libs/sonar-ballerina-plugin-1.0-all.jar"
