@@ -1,2 +1,50 @@
-<p>if the checking-keyword is checkpanic, then the check-expression completes abruptly with a panic with associated value.</p>
-<p>Consider using check keyword instead!</p>
+<p><b>Why is this an issue?</b></p>
+
+<p>
+    if the checking-keyword is checkpanic, then the check-expression completes abruptly with a panic with
+    associated value.
+</p>
+
+<pre>
+    // Noncompliant
+    public function checkResult() {
+        json result = checkpanic getResult();
+    }
+
+    public function getResult() returns json|error {
+        // ...
+    }
+</pre>
+
+<p>The solution can be to</p>
+
+<ul>
+    <li>Handle the error using the error keyword</li>
+    <pre>
+    // Compliant
+    public function checkResult() {
+        json|error result = getResult();
+        if (result is error) {
+            // handle error
+        }
+    }
+
+    public function getResult() returns json|error {
+        // ...
+    }
+    </pre>
+
+    <li>Make use of check keyword instead</li>
+    <pre>
+    // Compliant
+    public function checkResult() returns error?{
+        json result = check getResult();
+    }
+
+    public function getResult() returns json|error {
+        // ...
+    }
+    </pre>
+</ul>
+
+<p>This rule raises an issue when a function has checkpanic keyword usage</p>

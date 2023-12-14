@@ -4,9 +4,6 @@ import org.sonar.api.SonarRuntime;
 import org.sonar.api.server.rule.RulesDefinition;
 import org.sonarsource.analyzer.commons.RuleMetadataLoader;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BallerinaRulesDefinition implements RulesDefinition {
 
     private static final String RESOURCE_FOLDER = "org/sonar/l10n/ballerina/rules/ballerina";
@@ -23,18 +20,10 @@ public class BallerinaRulesDefinition implements RulesDefinition {
     public void define(Context context) {
         NewRepository repository = context.createRepository(BallerinaPlugin.BALLERINA_REPOSITORY_KEY, BallerinaPlugin.BALLERINA_LANGUAGE_KEY);
         repository.setName(BallerinaPlugin.REPOSITORY_NAME);
+
         RuleMetadataLoader ruleMetadataLoader = new RuleMetadataLoader(RESOURCE_FOLDER, BallerinaProfileDefinition.PATH_TO_JSON, runtime);
 
-        // Setting up adding the rules by keys instead of classes for testing purposes
-        // NOTE: Rule number 001 is not valid
-        List<String> BALLERINA_CHECKS = new ArrayList<>();
-        BALLERINA_CHECKS.add("S107");
-        BALLERINA_CHECKS.add("S108");
-
-        ruleMetadataLoader.addRulesByRuleKey(repository, BALLERINA_CHECKS);
-
-        // the meta data loading from the classes have been commented out for testing purposes
-        // ruleMetadataLoader.addRulesByAnnotatedClass(repository, BALLERINA_CHECKS);
+        ruleMetadataLoader.addRulesByRuleKey(repository, BallerinaChecks.DEFAULT_CHECKS);
         repository.done();
     }
 }

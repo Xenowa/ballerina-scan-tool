@@ -1,1 +1,45 @@
-<p>This is a custom Ballerina check test 💃</p>
+<p><b>Why is this an issue?</b></p>
+
+<p>
+    Functions with a long parameter list are difficult to use, as maintainers must figure out the role of each
+    parameter and keep track of their position.
+</p>
+
+<pre>
+    // Noncompliant
+    public function setCoordinates(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3) returns int {
+        // ...
+    }
+</pre>
+
+<p>The solution can be to</p>
+<ul>
+    <li>Split the function into smaller ones</li>
+    <pre>
+    // Each function does a part of what the original setCoordinates function was doing, so confusions are lower
+    public function setOrigin(int x, int y, int z){
+        // ...
+    }
+
+    public function setSize(int width, int height, int depth){
+        // ...
+    }
+    </pre>
+
+    <li>
+        Find a better data structure for the parameters that group data in a way that makes sense for the specific
+        application domain
+    </li>
+    <pre>
+    type Point record {
+        int x;
+        int y;
+    };
+
+    public function checkRecord(Point p1, Point p2){
+        // ...
+    }
+    </pre>
+</ul>
+
+<p>This rule raises an issue when a function has more parameters than the provided threshold.</p>

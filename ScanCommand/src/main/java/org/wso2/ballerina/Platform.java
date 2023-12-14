@@ -13,5 +13,5 @@ public abstract class Platform {
     public abstract String initialize();
 
     // Function to send scanned results to analysis platforms
-    public abstract void onScan(String scannedResults, PrintStream outputStream, PrintStream errorStream);
+    public abstract void onScan(String analyzedReportPath, PrintStream outputStream, PrintStream errorStream);
 }

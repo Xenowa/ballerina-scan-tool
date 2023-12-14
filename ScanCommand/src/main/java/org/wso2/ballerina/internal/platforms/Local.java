@@ -1,5 +1,7 @@
 package org.wso2.ballerina.internal.platforms;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,6 +20,9 @@ import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -183,5 +188,31 @@ public class Local {
     // For rules that can be implemented using the semantic model
     public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
         outputStream.println(semanticModel.toString());
+    }
+
+    // Save results to file
+    public String saveResults(JsonArray scannedResults) {
+        // Convert the output to a string
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(scannedResults);
+
+        // Save analysis results to file
+        File newTempFile;
+        try {
+            newTempFile = new File("ballerina-analysis-results.json");
+
+            // Create a new file to hold analysis results
+            newTempFile.createNewFile();
+
+            // write the analysis results to the new file
+            FileWriter writer = new FileWriter(newTempFile);
+            writer.write(jsonOutput);
+            writer.close();
+
+        } catch (IOException e) {
+            return null;
+        }
+
+        return newTempFile.getAbsolutePath();
     }
 }

@@ -23,35 +23,10 @@ public class SonarQube extends Platform {
     // Method 1 (Decoupled Static Code Analysis)
     // =========================================
     @Override
-    public void onScan(String scannedResults, PrintStream outputStream, PrintStream errorStream) {
-        String resultsFilePath = saveResults(scannedResults);
-        triggerSonarScan(resultsFilePath, outputStream);
+    public void onScan(String analyzedReportPath, PrintStream outputStream, PrintStream errorStream) {
+        triggerSonarScan(analyzedReportPath, outputStream);
     }
 
-    public String saveResults(String scannedResults) {
-        // Save analysis results to file
-        File newTempFile;
-        try {
-            newTempFile = new File("ballerina-analysis-results.json");
-
-            // Create a new file to hold analysis results
-            newTempFile.createNewFile();
-
-            // write the analysis results to the new file
-            FileWriter writer = new FileWriter(newTempFile);
-            writer.write(scannedResults);
-            writer.close();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return newTempFile.getAbsolutePath();
-    }
-
-    // ========================================
-    // Method 2 (Embedded Static Code Analysis)
-    // ========================================
     public void triggerSonarScan(String resultsFilePath, PrintStream outputStream) {
         // Executing sonar-scanner cli through process builder
         List<String> arguments = new ArrayList<>();

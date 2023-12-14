@@ -1,0 +1,74 @@
+[
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\credentialsNotHardCoded\\credentialsNotHardCoded.bal",
+    "reportedIssues": []
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal",
+    "reportedIssues": [
+      {
+        "startLine": 0,
+        "startLineOffset": 28,
+        "endLine": 2,
+        "endLineOffset": 1,
+        "ruleID": "S108",
+        "message": "This function has 1 occurrences of checkpanic keyword. Please consider using the check keyword instead!",
+        "issueType": "CHECK_VIOLATION"
+      }
+    ]
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\insecureEndpoint\\insecureEndpoint.bal",
+    "reportedIssues": []
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\main.bal",
+    "reportedIssues": [
+      {
+        "startLine": 16,
+        "startLineOffset": 23,
+        "endLine": 24,
+        "endLineOffset": 1,
+        "ruleID": "S109",
+        "message": "Add a nested comment explaining why this function is empty or complete the implementation.",
+        "issueType": "CUSTOM_CHECK_VIOLATION"
+      }
+    ]
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\emptyFunction\\emptyFunction.bal",
+    "reportedIssues": [
+      {
+        "startLine": 0,
+        "startLineOffset": 28,
+        "endLine": 1,
+        "endLineOffset": 1,
+        "ruleID": "S109",
+        "message": "Add a nested comment explaining why this function is empty or complete the implementation.",
+        "issueType": "CUSTOM_CHECK_VIOLATION"
+      }
+    ]
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal",
+    "reportedIssues": [
+      {
+        "startLine": 0,
+        "startLineOffset": 25,
+        "endLine": 0,
+        "endLineOffset": 93,
+        "ruleID": "S107",
+        "message": "This function has 8 parameters, which is greater than the 7 authorized.",
+        "issueType": "CHECK_VIOLATION"
+      }
+    ]
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\databaseInjection\\databaseInjection.bal",
+    "reportedIssues": []
+  },
+  {
+    "ballerinaFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonar-ballerina-plugin\\src\\test\\java\\org\\wso2\\ballerina\\plugin\\sonar_bal_testing\\modules\\functionPathInjection\\functionPathInjection.bal",
+    "reportedIssues": []
+  }
+]

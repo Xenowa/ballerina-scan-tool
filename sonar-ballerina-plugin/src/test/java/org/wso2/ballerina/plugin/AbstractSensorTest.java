@@ -41,14 +41,15 @@ public abstract class AbstractSensorTest {
 
         // Setting the context for the testing directory
         context = SensorContextTester.create(baseDir);
+
         FileLinesContext fileLinesContext = Mockito.mock(FileLinesContext.class);
         Mockito.when(
-            fileLinesContextFactory.createFor(
-                    ArgumentMatchers.any(
-                            InputFile.class
-                            )
-                    )
-            ).thenReturn(fileLinesContext);
+                fileLinesContextFactory.createFor(
+                        ArgumentMatchers.any(
+                                InputFile.class
+                        )
+                )
+        ).thenReturn(fileLinesContext);
     }
 
     protected CheckFactory checkFactory(String... ruleKeys) {
@@ -74,6 +75,7 @@ public abstract class AbstractSensorTest {
                 .setStatus(status)
                 .build();
     }
+
     protected InputFile createInputFileFromPath(String relativePath) {
         Path balFilePath = Path.of(baseDir.toString() + "/" + relativePath);
 

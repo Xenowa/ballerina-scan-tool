@@ -203,15 +203,20 @@ public class ScanCommand implements BLauncherCmd {
                 // Perform scan on ballerina file/project
                 JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
 
-                // Stop reporting if there are no files analyzed
+                // Stop reporting if there is no analysis results
                 if (scannedResults.isEmpty()) {
                     outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
                     return;
                 }
 
-                // Convert the output to a string
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String jsonOutput = gson.toJson(scannedResults);
+                // Save results to file and retrieve file path
+                String analyzedReportPath = localPlatform.saveResults(scannedResults);
+
+                // Stop reporting if there is no report file
+                if (analyzedReportPath == null) {
+                    outputStream.println("Unable to create an analysis report!");
+                    return;
+                }
 
                 // Platform plugins for reporting
                 ServiceLoader<Platform> platforms = ServiceLoader.load(Platform.class);
@@ -224,7 +229,7 @@ public class ScanCommand implements BLauncherCmd {
                     // For now we will make the initialize return null in other platforms
                     if (platformName != null) {
                         // Pass the output and the streams to see the execution results
-                        platform.onScan(jsonOutput, outputStream, errorStream);
+                        platform.onScan(analyzedReportPath, outputStream, errorStream);
                     }
                 }
             }

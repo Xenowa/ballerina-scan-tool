@@ -1,5 +1,5 @@
 {
-  "title": "This is a custom Ballerina check test 💃",
+  "title": "Functions should not have too many parameters",
   "type": "CODE_SMELL",
   "status": "ready",
   "remediation": {

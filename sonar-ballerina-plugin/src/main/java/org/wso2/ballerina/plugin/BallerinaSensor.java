@@ -92,7 +92,6 @@ class BallerinaSensor implements Sensor {
                                              Map<String, InputFile> pathAndInputFiles,
                                              String analyzedResultsFilePath) {
         LOG.info("Analyzing batch report: ", analyzedResultsFilePath);
-
         // Retrieve the JsonArray of analysis results from the analysis file
         // Read the file contents into a string
         String fileContent = "";
@@ -130,8 +129,11 @@ class BallerinaSensor implements Sensor {
         }
     }
 
+    // ========================================
+    // Method 2 (Embedded Static Code Analysis)
+    // ========================================
     public void performLibraryCall(SensorContext context, Map<String, InputFile> pathAndInputFiles) {
-        LOG.info("Analyzing Ballerina project: " + context.fileSystem().workDir().toString());
+        LOG.info("Analyzing Ballerina project");
         ProcessBuilder fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan");
 
         try {
