@@ -1,4 +1,4 @@
-package testing.balToolTester;
+package org.wso2.ballerina;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,7 +22,7 @@ public class Main {
         // Iterate through the list and find the first location where the jar can be found
         File jarFile = null;
         for (String pluginLocation : sonarBallerinaJARLocations) {
-            jarFile = new File(pluginLocation + "/" + "sonar-ballerina-plugin-1.0-SNAPSHOT-all.jar");
+            jarFile = new File(pluginLocation + "/" + "sonar-ballerina-plugin-1.0-all.jar");
             if (jarFile.exists()) {
                 outputStream.println("Using sonar ballerina plugin from: " + pluginLocation);
                 break;
