@@ -5,27 +5,46 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.ballerina.cli.task.CompileTask;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 
+import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.PackageResolution;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.plugins.CompilerPlugin;
+import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerina.ExternalRules;
 import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
+import org.wso2.ballerinalang.compiler.tree.BLangPackage;
+import org.wso2.ballerinalang.compiler.util.CompilerContext;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -73,32 +92,74 @@ public class Local {
         // in a proper format
         ReportLocalIssue issueReporter = new ReportLocalIssue(reportedIssues);
 
-        // External rule plugins analysis
-        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
-        // Iterate through the loaded interfaces
-        for (ExternalRules externalRulesJar : externalRulesJars) {
-            // Call the initialize method to trigger custom rule scans
-            externalRulesJar.initialize(
-                    (SyntaxTree) compiledOutputs.get("syntaxTree"),
-                    (SemanticModel) compiledOutputs.get("semanticModel")
-            );
-
-            // Retrieve the externalIssues created by each custom rules JAR
-            JsonArray externalIssuesArray = externalRulesJar.getExternalIssues();
-
-            // Then report the external issues
-            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssuesArray);
-
-            if (!successfullyReported) {
-                handleParseIssue("Unable to load custom rules, issues reported are having invalid format!");
-            }
-        }
-
         // pass the issue reporter to perform the analysis issue reporting through the analyzers
         scanWithSyntaxTree((SyntaxTree) compiledOutputs.get("syntaxTree"), issueReporter);
 
         // The semantic model will be used later when implementing complex rules
         // scanWithSemanticModel((SemanticModel) compiledOutputs.get("semanticModel"), outputStream);
+
+        // External rule plugins analysis
+        // ==================
+        // OLD IMPLEMENTATION (using tool plugins & ServiceLoaders)
+        // ==================
+        // - User has to move JAR's to be located in same directory where tool is located
+//        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
+//        // Iterate through the loaded interfaces
+//        for (ExternalRules externalRulesJar : externalRulesJars) {
+//            // Call the initialize method to trigger custom rule scans
+//            externalRulesJar.initialize(
+//                    (SyntaxTree) compiledOutputs.get("syntaxTree"),
+//                    (SemanticModel) compiledOutputs.get("semanticModel")
+//            );
+//
+//            // Retrieve the externalIssues created by each custom rules JAR
+//            JsonArray externalIssuesArray = externalRulesJar.getExternalIssues();
+//
+//            // Then report the external issues
+//            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssuesArray);
+//
+//            if (!successfullyReported) {
+//                handleParseIssue("Unable to load custom rules, issues reported are having invalid format!");
+//            }
+//        }
+
+        // TODO:
+        //  ==================
+        //  NEW IMPLEMENTATION (using compiler plugins)
+        //  ==================
+        //  - User does not have to manually move JAR's everywhere
+        // Running Compiler plugins through compiling imports of the project
+        PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
+
+        // We are able to access the diagnostics saved in the compiler plugins and next add them to the issues array
+        JsonArray externalIssues = new JsonArray();
+        engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
+            // Check the reported diagnostics issue type (THIS PLACE CHECKS FOR CUSTOM RULE PLUGINS REPORTED ISSUES)
+            if (diagnostic.diagnosticInfo().code().equals("CUSTOM_CHECK_VIOLATION")) {
+                LineRange lineRange = diagnostic.location().lineRange();
+                int startLine = diagnostic.location().lineRange().startLine().line();
+                int startLineOffset = diagnostic.location().lineRange().startLine().offset();
+                int endLine = diagnostic.location().lineRange().endLine().line();
+                int endLineOffset = diagnostic.location().lineRange().endLine().offset();
+                String message = diagnostic.message();
+
+                // Create a JSON object to hold the issue results
+                JsonObject jsonObject = new JsonObject();
+
+                // Populate the object with the mandatory fields
+                jsonObject.addProperty("startLine", startLine);
+                jsonObject.addProperty("startLineOffset", startLineOffset);
+                jsonObject.addProperty("endLine", endLine);
+                jsonObject.addProperty("endLineOffset", endLineOffset);
+                jsonObject.addProperty("message", message);
+
+                // Add to the external issues array (will be changed during later stages)
+                externalIssues.add(jsonObject);
+            }
+        });
+
+        // Report the external issues
+        issueReporter.reportExternalIssues(externalIssues);
 
         // Filter the reportedIssues and select only the issues relevant to the user provided rule if any
         if (!userRule.equals("all")) {

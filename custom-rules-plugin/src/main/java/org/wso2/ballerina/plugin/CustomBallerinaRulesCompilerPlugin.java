@@ -9,7 +9,7 @@ import java.util.List;
 public class CustomBallerinaRulesCompilerPlugin extends CodeAnalyzer {
     @Override
     public void init(CodeAnalysisContext codeAnalysisContext) {
-        // For rules to check function body (This task will only run for function bodies)
-        codeAnalysisContext.addSyntaxNodeAnalysisTask(new CustomCompilerPluginChecks(), SyntaxKind.FUNCTION_BODY_BLOCK);
+        // For rules to check function body (This task will only run when it detects module parts)
+        codeAnalysisContext.addSyntaxNodeAnalysisTask(new CustomCompilerPluginChecks(), SyntaxKind.MODULE_PART);
     }
 }
