@@ -1,11 +1,10 @@
-package org.wso2.ballerina.internal.platforms;
+package org.wso2.ballerina.internal.miscellaneous.platforms;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
@@ -15,7 +14,6 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
-import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
@@ -24,18 +22,16 @@ import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
-import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
-import static org.wso2.ballerina.CustomScanner.CUSTOM_RULE_ID;
 import static org.wso2.ballerina.internal.ScanCommand.userRule;
 
-public class Local {
+public class DeprecatedLocal {
     // Internal Issue type
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
 
@@ -94,6 +90,9 @@ public class Local {
         // Retrieve the compilation of the module
         ModuleCompilation compilation = currentModule.getCompilation();
 
+        // Get the blangPackage also known as AST (will be deprecated in the future)
+        // compiledOutputs.put("blangPackage", compilation.defaultModuleBLangPackage());
+
         // Retrieve the semantic model from the ballerina document compilation
         compiledOutputs.put("semanticModel", compilation.getSemanticModel());
 
@@ -106,13 +105,14 @@ public class Local {
         ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues);
 
         // pass the issue reporter to perform the analysis issue reporting through the analyzers
-        runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
-                (SemanticModel) compiledOutputs.get("semanticModel"),
-                issueReporter);
+        scanWithSyntaxTree((SyntaxTree) compiledOutputs.get("syntaxTree"), issueReporter);
+
+        // The semantic model will be used later when implementing complex rules
+        // scanWithSemanticModel((SemanticModel) compiledOutputs.get("semanticModel"), outputStream);
 
         // External rule plugins analysis
         // ========
-        // METHOD 1 (using tool plugins with ServiceLoaders) [DEPRECATED]
+        // METHOD 1 (using tool plugins with ServiceLoaders)
         // ========
         // - User has to move JAR's to be located in same directory where tool is located
 //        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
@@ -130,6 +130,9 @@ public class Local {
 //            // Then report the external issues
 //            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssuesArray);
 //
+//            if (!successfullyReported) {
+//                handleParseIssue("Unable to load custom rules, issues reported are having invalid format!");
+//            }
 //        }
 
         // ========
@@ -142,49 +145,24 @@ public class Local {
         // We are able to access the diagnostics saved in the compiler plugins and next add them to the issues array
         ArrayList<Issue> externalIssues = new ArrayList<>();
 
-        // Iterate through diagnostics and retrieve external issues
         engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
             String issueType = diagnostic.diagnosticInfo().code();
 
-            if (issueType.equals(CUSTOM_CHECK_VIOLATION)) {
+            if (issueType.equals("CUSTOM_CHECK_VIOLATION")) {
                 List<DiagnosticProperty<?>> properties = diagnostic.properties();
 
                 // Retrieve the Issue property and add it to the issues array
-                AtomicReference<String> externalIssueRuleID = new AtomicReference<>(null);
-                AtomicReference<String> externalFilePath = new AtomicReference<>(null);
                 properties.forEach(diagnosticProperty -> {
-                    if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
-                        if (diagnosticProperty.value().equals(CUSTOM_RULE_ID)) {
-                            externalIssueRuleID.set((String) diagnosticProperty.value());
-                        }
-
-                        if (Path.of((String) diagnosticProperty.value()).toFile().exists()) {
-                            externalFilePath.set((String) diagnosticProperty.value());
-                        }
+                    if (diagnosticProperty.value() instanceof Issue) {
+                        Issue externalIssue = (Issue) diagnosticProperty.value();
+                        externalIssues.add(externalIssue);
                     }
                 });
-
-                // If all properties are available create a new issue and add to the external issues array
-                if (externalIssueRuleID.get() != null && externalFilePath.get() != null) {
-                    Issue newExternalIssue = new Issue(diagnostic.location().lineRange().startLine().line(),
-                            diagnostic.location().lineRange().startLine().offset(),
-                            diagnostic.location().lineRange().endLine().line(),
-                            diagnostic.location().lineRange().endLine().offset(),
-                            externalIssueRuleID.get(),
-                            diagnostic.message(),
-                            issueType,
-                            externalFilePath.get());
-
-                    externalIssues.add(newExternalIssue);
-                }
             }
         });
 
         // Report the external issues
-        boolean successfullyReported = issueReporter.reportExternalIssues(externalIssues);
-        if (!successfullyReported) {
-            System.out.println("Unable to report external issues on: " + document.syntaxTree().filePath());
-        }
+        issueReporter.reportExternalIssues(externalIssues);
 
         // If there are user picked rules, then return a filtered issues array
         if (!userRule.equals("all")) {
@@ -207,9 +185,14 @@ public class Local {
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, ReportLocalIssue issueReporter) {
+    public void scanWithSyntaxTree(SyntaxTree syntaxTree, ReportLocalIssue issueReporter) {
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
         analyzer.initialize(issueReporter);
+    }
+
+    // For rules that can be implemented using the semantic model
+    public void scanWithSemanticModel(SemanticModel semanticModel, PrintStream outputStream) {
+        outputStream.println(semanticModel.toString());
     }
 
     // Save results to file

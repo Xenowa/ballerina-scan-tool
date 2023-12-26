@@ -2,11 +2,10 @@ package org.wso2.ballerina.internal.miscellaneous;
 
 import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
-import org.wso2.ballerina.Issue;
 
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 
-public abstract class ReportJsonIssueOld implements Issue {
+public abstract class ReportJsonIssueOld implements DeprecatedIssue {
     private String issueType;
     private final String ruleID;
     private boolean ruleIsActive;

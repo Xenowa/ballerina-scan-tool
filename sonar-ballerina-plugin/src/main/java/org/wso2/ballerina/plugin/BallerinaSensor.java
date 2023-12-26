@@ -359,9 +359,7 @@ class BallerinaSensor implements Sensor {
                     for (JsonElement scannedFileElement : balScanOutput) {
                         // first convert the element into an object
                         JsonObject analyzedFile = scannedFileElement.getAsJsonObject();
-
-                        // TODO: Retrieve the absolute path of the scanned file (required for determining the correct
-                        //  InputFile component before reporting)
+                        
                         String absoluteFilePath = analyzedFile.get("ballerinaFilePath").getAsString();
 
                         // perform the remaining operations if the output is not empty

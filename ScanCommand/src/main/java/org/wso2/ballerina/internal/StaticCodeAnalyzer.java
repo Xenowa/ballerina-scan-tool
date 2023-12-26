@@ -42,7 +42,8 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                     "S107",
                     "This function has "
                             + parameterCount
-                            + " parameters, which is greater than the 7 authorized."
+                            + " parameters, which is greater than the 7 authorized.",
+                    functionSignatureNode.syntaxTree().filePath()
             );
         }
 
@@ -75,7 +76,8 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                     "S108",
                     "This function has "
                             + checkPanicCounter.get()
-                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
+                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!",
+                    functionBodyBlockNode.syntaxTree().filePath()
             );
         }
 

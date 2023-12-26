@@ -54,6 +54,7 @@ public class SonarQube extends Platform {
     // =========================================
     // Method 1 (Decoupled Static Code Analysis)
     // =========================================
+    // TODO: The report generation should happen here with the array of issues passed from the Ballerina scan tool
     @Override
     public void onScan(String analyzedReportPath, PrintStream outputStream, PrintStream errorStream) {
         // Check if there is a results file and add to properties if it exists

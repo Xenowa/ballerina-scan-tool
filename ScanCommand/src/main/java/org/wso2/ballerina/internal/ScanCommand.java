@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.Platform;
 import org.wso2.ballerina.internal.platforms.Local;
 import picocli.CommandLine;
@@ -179,16 +180,17 @@ public class ScanCommand implements BLauncherCmd {
                 }
 
                 // Perform scan on ballerina file/project
-                JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
+                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
 
-                // Stop reporting if there are no files analyzed
-                if (scannedResults.isEmpty()) {
+                // Stop reporting if there is no issues array
+                if (issues == null) {
                     outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
                     return;
                 }
 
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String jsonOutput = gson.toJson(scannedResults);
+                JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
+                String jsonOutput = gson.toJson(issuesAsJson);
                 outputStream.println(jsonOutput);
             }
             case "sonarqube" -> {
@@ -201,16 +203,16 @@ public class ScanCommand implements BLauncherCmd {
                 }
 
                 // Perform scan on ballerina file/project
-                JsonArray scannedResults = localPlatform.analyzeProject(Path.of(userPath));
+                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
 
                 // Stop reporting if there is no analysis results
-                if (scannedResults.isEmpty()) {
+                if (issues == null) {
                     outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
                     return;
                 }
 
                 // Save results to file and retrieve file path
-                String analyzedReportPath = localPlatform.saveResults(scannedResults);
+                String analyzedReportPath = localPlatform.saveResults(issues);
 
                 // Stop reporting if there is no report file
                 if (analyzedReportPath == null) {

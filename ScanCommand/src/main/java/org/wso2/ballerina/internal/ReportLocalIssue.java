@@ -1,83 +1,89 @@
 package org.wso2.ballerina.internal;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.ballerina.tools.text.LineRange;
-import org.wso2.ballerina.ReportJsonIssue;
+import org.wso2.ballerina.Issue;
+import org.wso2.ballerina.ReportIssue;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.ArrayList;
 
+import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
+import static org.wso2.ballerina.CustomScanner.CUSTOM_RULE_ID;
 import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
-import static org.wso2.ballerina.internal.platforms.Local.CUSTOM_CHECK_VIOLATION;
 
-public class ReportLocalIssue extends ReportJsonIssue {
+public class ReportLocalIssue extends ReportIssue {
     // Parameters required for custom rules
     private final int SONARQUBE_RESERVED_RULES = 106;
     private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
 
-    public ReportLocalIssue(JsonArray externalIssues) {
-        super(externalIssues);
+    public ReportLocalIssue(ArrayList<Issue> internalIssues) {
+        super(internalIssues);
     }
 
-    public void reportIssue(LineRange issueLocation, String ruleID, String message) {
+    public void reportIssue(LineRange issueLocation, String ruleID, String message, String reportedFilePath) {
         // Only report the issues if it's present locally and activated
         if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
-            JsonObject jsonObject = reportJSONIssue(issueLocation.startLine().line(),
+            Issue inbuiltIssue = new Issue(issueLocation.startLine().line(),
                     issueLocation.startLine().offset(),
                     issueLocation.endLine().line(),
                     issueLocation.endLine().offset(),
                     ruleID,
-                    message
-            );
+                    message,
+                    CHECK_VIOLATION,
+                    Path.of(reportedFilePath).toAbsolutePath().toString());
 
-            // set the type of issue, weather it's a parse issue or a rule violation
-            jsonObject.addProperty("issueType", CHECK_VIOLATION);
-            issues.add(jsonObject);
+            // Add the issue to the issues array
+            reportIssue(inbuiltIssue);
         }
     }
 
-    public boolean reportExternalIssues(JsonArray externalIssues) {
+    public boolean reportExternalIssues(ArrayList<Issue> externalIssues) {
         // validate the external issues reported
         boolean externalIssuesAreValid = true;
-        for (JsonElement externalIssue : externalIssues) {
-            JsonObject issueObject = externalIssue.getAsJsonObject();
-            if (issueObject.isEmpty()) {
+
+        // Transfer external issues to the internal issues array
+        for (Issue externalIssue : externalIssues) {
+            if (externalIssue == null) {
                 externalIssuesAreValid = false;
                 break;
             } else {
                 try {
-                    // retrieve all object keys and validate if they are correct
-                    int startLine = issueObject.get("startLine").getAsInt();
-                    int startLineOffset = issueObject.get("startLineOffset").getAsInt();
-                    int endLine = issueObject.get("endLine").getAsInt();
-                    int endLineOffset = issueObject.get("endLineOffset").getAsInt();
-                    String message = issueObject.get("message").getAsString();
+                    // Check the validity of the issue reported
+                    String ruleID = externalIssue.getRuleID();
+                    String issueType = externalIssue.getIssueType();
+                    if (!(ruleID.equals(CUSTOM_RULE_ID) && issueType.equals(CUSTOM_CHECK_VIOLATION))) {
+                        externalIssuesAreValid = false;
+                        break;
+                    }
+
+                    int startLine = externalIssue.getStartLine();
+                    int startLineOffset = externalIssue.getStartLineOffset();
+                    int endLine = externalIssue.getEndLine();
+                    int endLineOffset = externalIssue.getEndLineOffset();
+                    String message = externalIssue.getMessage();
+                    String reportedFilePath = externalIssue.getReportedFilePath();
 
                     String customRuleID = generateCustomRuleID(message);
-
                     // verify if customRuleID generation was successful
                     if (customRuleID == null) {
                         externalIssuesAreValid = false;
-                    } else {
-                        // Since the issueObject may have multiple other parameters an internal one is created
-                        JsonObject newExternalIssue = new JsonObject();
-                        newExternalIssue.addProperty("startLine", startLine);
-                        newExternalIssue.addProperty("startLineOffset", startLineOffset);
-                        newExternalIssue.addProperty("endLine", endLine);
-                        newExternalIssue.addProperty("endLineOffset", endLineOffset);
-                        newExternalIssue.addProperty("ruleID", customRuleID);
-                        newExternalIssue.addProperty("message", message);
-
-                        // if all other checks passes, then add the property CUSTOM_CHECK_VIOLATION
-                        newExternalIssue.addProperty("issueType", CUSTOM_CHECK_VIOLATION);
-
-                        // add external issue as analysis issue
-                        issues.add(newExternalIssue);
+                        break;
                     }
+
+                    // Create a new external issue
+                    Issue newExternalIssue = new Issue(startLine,
+                            startLineOffset,
+                            endLine,
+                            endLineOffset,
+                            customRuleID,
+                            message,
+                            issueType,
+                            Path.of(reportedFilePath).toAbsolutePath().toString());
+
+                    // Add the external issue to the internal issues array
+                    reportIssue(newExternalIssue);
                 } catch (Exception e) {
                     externalIssuesAreValid = false;
                     break;
