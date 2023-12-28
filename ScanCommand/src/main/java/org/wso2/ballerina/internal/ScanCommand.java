@@ -9,11 +9,13 @@ import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.Platform;
+import org.wso2.ballerina.PlatformPlugin;
 import org.wso2.ballerina.internal.platforms.Local;
 import picocli.CommandLine;
 
@@ -35,6 +37,9 @@ public class ScanCommand implements BLauncherCmd {
             description = "static code analysis output platform",
             defaultValue = "local")
     private String platform;
+
+    @CommandLine.Option(names = {"-PARG"}, description = "platform plugin arguments")
+    private final Map<String, String> platformArgs = new HashMap<>();
 
     @CommandLine.Option(names = {"--rule"},
             description = "single rule to be checked during the static code analysis",
@@ -211,27 +216,18 @@ public class ScanCommand implements BLauncherCmd {
                     return;
                 }
 
-                // Save results to file and retrieve file path
-                String analyzedReportPath = localPlatform.saveResults(issues);
-
-                // Stop reporting if there is no report file
-                if (analyzedReportPath == null) {
-                    outputStream.println("Unable to create an analysis report!");
-                    return;
-                }
-
                 // Platform plugins for reporting
-                ServiceLoader<Platform> platforms = ServiceLoader.load(Platform.class);
+                ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class);
                 // Iterate through the loaded interfaces
-                for (Platform platform : platforms) {
+                for (PlatformPlugin platformPlugin : platformPlugins) {
                     // Retrieve the platform name through initialize method
-                    String platformName = platform.initialize();
+                    // platformArgs="-PfileName=fileName,-PsomethingElse=somethingelse"
+                    String platformName = platformPlugin.initialize(platformArgs);
 
                     // If a valid platform name is provided then trigger reporting
                     // For now we will make the initialize return null in other platforms
                     if (platformName != null) {
-                        // Pass the output and the streams to see the execution results
-                        platform.onScan(analyzedReportPath, outputStream, errorStream);
+                        platformPlugin.onScan(issues);
                     }
                 }
             }

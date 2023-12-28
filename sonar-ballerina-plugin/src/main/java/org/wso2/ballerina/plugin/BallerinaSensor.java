@@ -21,11 +21,9 @@ import org.sonar.api.utils.log.Loggers;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -65,7 +63,7 @@ class BallerinaSensor implements Sensor {
     // The place which the entire scan logic should be defined, this is the starting point of the scanner
     @Override
     public void execute(SensorContext sensorContext) {
-        // Seperate the InputFile components to a Map
+        // Separate the InputFile components to a Map
         FileSystem fileSystem = sensorContext.fileSystem();
         FilePredicate mainFilePredicate = sensorContext.fileSystem().predicates()
                 .and(
@@ -92,8 +90,41 @@ class BallerinaSensor implements Sensor {
                                              Map<String, InputFile> pathAndInputFiles,
                                              String analyzedResultsFilePath) {
         LOG.info("Analyzing batch report: ", analyzedResultsFilePath);
-        // Retrieve the JsonArray of analysis results from the analysis file
-        // Read the file contents into a string
+        String fileContent = getFileContent(analyzedResultsFilePath);
+        reportFileContent(context, pathAndInputFiles, fileContent);
+    }
+
+
+    public void performLibraryCall(SensorContext context, Map<String, InputFile> pathAndInputFiles) {
+        LOG.info("Analyzing Ballerina project");
+        String analyzedResultsFilePath = "ballerina-analysis-results.json";
+        ProcessBuilder fileScan = new ProcessBuilder("cmd",
+                "/c",
+                "bal",
+                "scan",
+                "--platform=sonarqube",
+                "-PARG=analyzedResultsFilePath=" + analyzedResultsFilePath);
+
+        try {
+            // Start the process
+            Process process = fileScan.start();
+
+            // Wait for results file creation
+            int exitCode = process.waitFor();
+
+            // If file creation was successful proceed reporting
+            if (exitCode == 0) {
+                String fileContent = getFileContent(analyzedResultsFilePath);
+                reportFileContent(context, pathAndInputFiles, fileContent);
+            } else {
+                LOG.info("Unable to analyze ballerina file batch!");
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getFileContent(String analyzedResultsFilePath) {
         String fileContent = "";
         try {
             // Read the file using FileReader and BufferedReader
@@ -112,7 +143,12 @@ class BallerinaSensor implements Sensor {
             fileReader.close();
         } catch (Exception ignored) {
         }
+        return fileContent;
+    }
 
+    private void reportFileContent(SensorContext context,
+                                   Map<String, InputFile> pathAndInputFiles,
+                                   String fileContent) {
         // Parse the string into a JsonArray
         JsonArray balScanOutput = null;
         try {
@@ -129,91 +165,40 @@ class BallerinaSensor implements Sensor {
         }
     }
 
-    // ========================================
-    // Method 2 (Embedded Static Code Analysis)
-    // ========================================
-    public void performLibraryCall(SensorContext context, Map<String, InputFile> pathAndInputFiles) {
-        LOG.info("Analyzing Ballerina project");
-        ProcessBuilder fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan");
-
-        try {
-            // Start the process
-            Process process = fileScan.start();
-
-            // Read the output of the process into a string
-            InputStream scanProcessInput = process.getInputStream();
-            Scanner scanner = new Scanner(scanProcessInput).useDelimiter("\\A");
-            String output = scanner.hasNext() ? scanner.next() : "";
-
-            try {
-                // Parse the object into a JSON Array
-                JsonArray balScanOutput = null;
-                try {
-                    balScanOutput = JsonParser.parseString(output).getAsJsonArray();
-                } catch (Exception ignored) {
-                }
-
-                // Report parsed issues
-                boolean reportingSuccessful = reportAnalysisIssues(context, balScanOutput, pathAndInputFiles);
-                if (reportingSuccessful) {
-                    LOG.info("Ballerina analysis successful!");
-                } else {
-                    LOG.info("Unable to report Ballerina analysis results!");
-                }
-            } catch (Exception ignored) {
-                LOG.info("Not a Ballerina project, ignoring ballerina static code analysis!");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public boolean reportAnalysisIssues(SensorContext context,
                                         JsonArray analysisIssues,
                                         Map<String, InputFile> pathAndInputFiles) {
         boolean reportingSuccessful = false;
         // Perform the remaining operations if the output is not empty
         if (analysisIssues != null) {
-            // Iteratively perform per file reporting
-            for (JsonElement scannedFileElement : analysisIssues) {
+            // Iteratively report issues
+            for (JsonElement issueElement : analysisIssues) {
                 // first convert the element into an object
-                JsonObject analyzedFile = scannedFileElement.getAsJsonObject();
+                JsonObject issue = issueElement.getAsJsonObject();
 
                 // Retrieve the absolute path of the scanned ballerina file
-                String absoluteFilePath = analyzedFile.get("ballerinaFilePath").getAsString();
+                String absoluteFilePath = issue.get("reportedFilePath").getAsString();
 
                 // retrieve the InputFile relevant to the path of the analyzed file
                 InputFile inputFile = pathAndInputFiles.get(absoluteFilePath);
 
-                // perform the remaining operations if there is an inputFile component
-                if (inputFile.isFile()) {
-                    // perform the remaining operations if the output is not empty
-                    JsonArray issues = analyzedFile.get("reportedIssues").getAsJsonArray();
-                    if (!issues.isEmpty()) {
-                        // Iteratively perform reporting from SonarScanner
-                        for (JsonElement scannedIssueElement : issues) {
-                            // first convert the element into an object
-                            JsonObject issue = scannedIssueElement.getAsJsonObject();
+                // Get the issue type from the output
+                String issueType = issue.get("issueType").getAsString();
 
-                            // Get the issue type from the output
-                            String issueType = issue.get("issueType").getAsString();
-
-                            // Perform validations on the issueType and proceed
-                            switch (issueType) {
-                                case "CHECK_VIOLATION":
-                                    reportIssue(inputFile, context, issue);
-                                    break;
-                                case "CUSTOM_CHECK_VIOLATION":
-                                    reportExternalIssue(inputFile, context, issue);
-                                    break;
-                                case "SOURCE_INVALID":
-                                    reportParseIssue(issue.get("message").getAsString());
-                                    break;
-                            }
-                        }
-                    }
+                // Perform validations on the issueType and proceed
+                switch (issueType) {
+                    case "CHECK_VIOLATION":
+                        reportIssue(inputFile, context, issue);
+                        break;
+                    case "CUSTOM_CHECK_VIOLATION":
+                        reportExternalIssue(inputFile, context, issue);
+                        break;
+                    case "SOURCE_INVALID":
+                        reportParseIssue(issue.get("message").getAsString());
+                        break;
                 }
             }
+
             reportingSuccessful = true;
         }
 
@@ -228,7 +213,8 @@ class BallerinaSensor implements Sensor {
         int startLineOffset = balScanOutput.get("startLineOffset").getAsInt();
         int endLine = balScanOutput.get("endLine").getAsInt();
         int endLineOffset = balScanOutput.get("endLineOffset").getAsInt();
-        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts from 1
+        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts
+        // from 1
         int sonarScannerOffset = 1;
 
         // Creating the initial rule
@@ -259,7 +245,8 @@ class BallerinaSensor implements Sensor {
         int startLineOffset = balScanOutput.get("startLineOffset").getAsInt();
         int endLine = balScanOutput.get("endLine").getAsInt();
         int endLineOffset = balScanOutput.get("endLineOffset").getAsInt();
-        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts from 1
+        // It's required to add the offset here as in Ballerina the start position starts from 0 but in here it starts
+        // from 1
         int sonarScannerOffset = 1;
 
         // Checking if the ruleID already exists in the externalIssues, if not create a new adhoc issue
@@ -307,92 +294,5 @@ class BallerinaSensor implements Sensor {
 
     public void reportParseIssue(String message) {
         LOG.error(message);
-    }
-
-
-    // Legacy method for performing Ballerina scans
-    public void executeOld(SensorContext sensorContext) {
-        // Retrieve all .bal source files from a project
-        FileSystem fileSystem = sensorContext.fileSystem();
-        FilePredicate mainFilePredicate = fileSystem.predicates()
-                .and(
-                        fileSystem.predicates().hasLanguage(language.getKey()),
-                        fileSystem.predicates().hasType(InputFile.Type.MAIN)
-                );
-        Iterable<InputFile> filesToAnalyze = fileSystem.inputFiles(mainFilePredicate);
-
-        // Iterate through all ballerina files and perform analysis
-        for (InputFile inputFile : filesToAnalyze) {
-            analyzeFile(inputFile, sensorContext);
-        }
-    }
-
-    public void analyzeFile(InputFile inputFile, SensorContext context) {
-        String absolutePath = inputFile.path().toAbsolutePath().toString();
-        LOG.info("analyzing File: " + absolutePath);
-
-        // Build a process to run the bal tool depending on user rule inputs
-        String userRule = context.config().get("rule").orElse(null);
-        ProcessBuilder fileScan;
-        if (userRule != null) {
-            fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath, "--rule=" + userRule);
-        } else {
-            fileScan = new ProcessBuilder("cmd", "/c", "bal", "scan", absolutePath);
-        }
-
-        try {
-            // Start the process
-            Process process = fileScan.start();
-
-            // Read the output of the process into a string
-            InputStream scanProcessInput = process.getInputStream();
-            Scanner scanner = new Scanner(scanProcessInput).useDelimiter("\\A");
-            String output = scanner.hasNext() ? scanner.next() : "";
-
-            try {
-                // Parse the object into a JSON Array
-                JsonArray balScanOutput = JsonParser.parseString(output).getAsJsonArray();
-
-                // Perform the remaining operations if the output is not empty
-                if (!balScanOutput.isEmpty()) {
-                    // Iteratively perform per file reporting
-                    for (JsonElement scannedFileElement : balScanOutput) {
-                        // first convert the element into an object
-                        JsonObject analyzedFile = scannedFileElement.getAsJsonObject();
-                        
-                        String absoluteFilePath = analyzedFile.get("ballerinaFilePath").getAsString();
-
-                        // perform the remaining operations if the output is not empty
-                        JsonArray issues = analyzedFile.get("reportedIssues").getAsJsonArray();
-                        if (!issues.isEmpty()) {
-                            // Iteratively perform reporting from SonarScanner
-                            for (JsonElement scannedIssueElement : issues) {
-                                // first convert the element into an object
-                                JsonObject issue = scannedIssueElement.getAsJsonObject();
-
-                                // Get the issue type from the output
-                                String issueType = issue.get("issueType").getAsString();
-
-                                // Perform validations on the issueType and proceed
-                                switch (issueType) {
-                                    case "CHECK_VIOLATION":
-                                        reportIssue(inputFile, context, issue);
-                                        break;
-                                    case "CUSTOM_CHECK_VIOLATION":
-                                        reportExternalIssue(inputFile, context, issue);
-                                        break;
-                                    case "SOURCE_INVALID":
-                                        reportParseIssue(issue.get("message").getAsString());
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

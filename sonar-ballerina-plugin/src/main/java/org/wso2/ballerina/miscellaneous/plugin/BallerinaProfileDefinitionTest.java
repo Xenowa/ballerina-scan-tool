@@ -1,4 +1,4 @@
-package org.wso2.ballerina.miscellaneous;
+package org.wso2.ballerina.miscellaneous.plugin;
 
 import org.sonar.api.server.profile.BuiltInQualityProfilesDefinition;
 import org.wso2.ballerina.plugin.BallerinaPlugin;

@@ -1,4 +1,4 @@
-package org.wso2.ballerina.miscellaneous;
+package org.wso2.ballerina.miscellaneous.plugin;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

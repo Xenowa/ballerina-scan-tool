@@ -11,9 +11,11 @@ import java.util.ArrayList;
 public class CustomChecks {
     // Initializing the function checks
     private final Node mainNode;
+    private String documentPath;
 
-    public CustomChecks(SyntaxTree syntaxTree) {
+    public CustomChecks(SyntaxTree syntaxTree, String documentPath) {
         this.mainNode = syntaxTree.rootNode();
+        this.documentPath = documentPath;
     }
 
     public void initialize(ArrayList<Issue> externalIssues) {
@@ -22,7 +24,7 @@ public class CustomChecks {
             @Override
             public void visit(FunctionBodyBlockNode functionBodyBlockNode) {
                 super.visit(functionBodyBlockNode);
-                new EmptyBodyFunctionCheck(functionBodyBlockNode, externalIssues).triggerCheck();
+                new EmptyBodyFunctionCheck(functionBodyBlockNode, externalIssues, documentPath).triggerCheck();
             }
         });
     }

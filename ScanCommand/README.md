@@ -13,7 +13,7 @@
 2. Next run the following command in the console:
 
 ```cmd
-bal scan [--platform=<option>] [<ballerina-file/ballerina-build-project-folder>]
+bal scan [--platformPlugin=<option>] [<ballerina-file/ballerina-build-project-folder>]
 ```
 
 3. The tool itself will determine if the file is in a ballerina project and perform the static code analysis
@@ -99,7 +99,7 @@ bal tool list
 10. Try out the tool
 
 ```cmd
-bal scan [--platform=<option>] [<ballerina-file/ballerina-build-project-folder>]
+bal scan [--platformPlugin=<option>] [<ballerina-file/ballerina-build-project-folder>]
 ```
 
 - --option--:
@@ -110,7 +110,7 @@ option 2: codeql
 option 3: semgrep
 ```
 
-- About ```bal scan --platform=sonarqube```:
+- About ```bal scan --platformPlugin=sonarqube```:
     - this command will perform analysis and report issues to SonarQube
     - this command will require a running instance of SonarQube
     - this command will require a properly configured sonar-project.properties file in the initializing directory

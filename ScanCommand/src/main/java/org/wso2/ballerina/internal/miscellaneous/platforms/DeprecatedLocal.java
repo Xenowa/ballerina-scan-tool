@@ -100,21 +100,25 @@ public class DeprecatedLocal {
         // Array to hold analysis issues for each document
         ArrayList<Issue> internalIssues = new ArrayList<>();
 
-        // Set up the issue reporter here so issues can be reported from the static code analyzers
-        // in a proper format
-        ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues);
+        // Retrieve the current document path
+        Path documentPath = currentProject.documentPath(documentId).orElse(null);
+        if (documentPath != null) {
+            // Set up the issue reporter here so issues can be reported from the static code analyzers
+            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
+                    documentPath.toAbsolutePath().toString());
 
-        // pass the issue reporter to perform the analysis issue reporting through the analyzers
-        scanWithSyntaxTree((SyntaxTree) compiledOutputs.get("syntaxTree"), issueReporter);
 
-        // The semantic model will be used later when implementing complex rules
-        // scanWithSemanticModel((SemanticModel) compiledOutputs.get("semanticModel"), outputStream);
+            // pass the issue reporter to perform the analysis issue reporting through the analyzers
+            scanWithSyntaxTree((SyntaxTree) compiledOutputs.get("syntaxTree"), issueReporter);
 
-        // External rule plugins analysis
-        // ========
-        // METHOD 1 (using tool plugins with ServiceLoaders)
-        // ========
-        // - User has to move JAR's to be located in same directory where tool is located
+            // The semantic model will be used later when implementing complex rules
+            // scanWithSemanticModel((SemanticModel) compiledOutputs.get("semanticModel"), outputStream);
+
+            // External rule plugins analysis
+            // ========
+            // METHOD 1 (using tool plugins with ServiceLoaders)
+            // ========
+            // - User has to move JAR's to be located in same directory where tool is located
 //        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
 //        // Iterate through the loaded interfaces
 //        for (ExternalRules externalRulesJar : externalRulesJars) {
@@ -135,34 +139,35 @@ public class DeprecatedLocal {
 //            }
 //        }
 
-        // ========
-        // METHOD 2 (using compiler plugins with diagnostics)
-        // ========
-        // - User does not have to manually move JAR's everywhere
-        // Running Compiler plugins through compiling imports of the project
-        PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
+            // ========
+            // METHOD 2 (using compiler plugins with diagnostics)
+            // ========
+            // - User does not have to manually move JAR's everywhere
+            // Running Compiler plugins through compiling imports of the project
+            PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
 
-        // We are able to access the diagnostics saved in the compiler plugins and next add them to the issues array
-        ArrayList<Issue> externalIssues = new ArrayList<>();
+            // We are able to access the diagnostics saved in the compiler plugins and next add them to the issues array
+            ArrayList<Issue> externalIssues = new ArrayList<>();
 
-        engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
-            String issueType = diagnostic.diagnosticInfo().code();
+            engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
+                String issueType = diagnostic.diagnosticInfo().code();
 
-            if (issueType.equals("CUSTOM_CHECK_VIOLATION")) {
-                List<DiagnosticProperty<?>> properties = diagnostic.properties();
+                if (issueType.equals("CUSTOM_CHECK_VIOLATION")) {
+                    List<DiagnosticProperty<?>> properties = diagnostic.properties();
 
-                // Retrieve the Issue property and add it to the issues array
-                properties.forEach(diagnosticProperty -> {
-                    if (diagnosticProperty.value() instanceof Issue) {
-                        Issue externalIssue = (Issue) diagnosticProperty.value();
-                        externalIssues.add(externalIssue);
-                    }
-                });
-            }
-        });
+                    // Retrieve the Issue property and add it to the issues array
+                    properties.forEach(diagnosticProperty -> {
+                        if (diagnosticProperty.value() instanceof Issue) {
+                            Issue externalIssue = (Issue) diagnosticProperty.value();
+                            externalIssues.add(externalIssue);
+                        }
+                    });
+                }
+            });
 
-        // Report the external issues
-        issueReporter.reportExternalIssues(externalIssues);
+            // Report the external issues
+            issueReporter.reportExternalIssues(externalIssues);
+        }
 
         // If there are user picked rules, then return a filtered issues array
         if (!userRule.equals("all")) {

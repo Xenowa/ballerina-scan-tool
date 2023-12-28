@@ -5,7 +5,7 @@ id = “scan” # need to be same as picoclie name in java file
 # Shadow jar is required as it contains dependencies needed to run the sonar scanner methods in the bal scanner
 path = "../build/libs/ScanCommand-1.0.jar"
 
-# For including the custom rules JAR (For now this will be not consided)
+# For including the custom rules JAR [Non-Compiler plugin approach]
 # [[dependency]]
 # path = "../../custom-rules-plugin/build/libs/custom-rules-plugin-1.0.jar"
 

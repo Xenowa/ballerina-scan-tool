@@ -1,6 +1,6 @@
 package org.wso2.ballerina;
 
-import io.ballerina.projects.plugins.SyntaxNodeAnalysisContext;
+import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
@@ -31,7 +31,7 @@ public abstract class CustomScanner {
      * This method should be used by custom tool plugins to report issues
      * To create custom rules the {@link io.ballerina.compiler.syntax.tree.NodeVisitor} can be extended
      */
-    public void reportIssues(SyntaxNodeAnalysisContext context) {
+    public void reportIssues(CompilationAnalysisContext context) {
         getIssues().forEach(issue -> {
             // Retrieve the location of the issue
             Location issueLocation = new BLangDiagnosticLocation(issue.getReportedFilePath(),

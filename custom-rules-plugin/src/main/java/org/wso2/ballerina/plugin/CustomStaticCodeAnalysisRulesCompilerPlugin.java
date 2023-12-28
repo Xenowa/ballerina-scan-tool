@@ -6,6 +6,7 @@ import io.ballerina.projects.plugins.CompilerPluginContext;
 public class CustomStaticCodeAnalysisRulesCompilerPlugin extends CompilerPlugin {
     @Override
     public void init(CompilerPluginContext pluginContext) {
+        // Compiler phase to run analyzer on
         pluginContext.addCodeAnalyzer(new CustomBallerinaRulesCompilerPlugin());
     }
 }

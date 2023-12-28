@@ -1,8 +1,5 @@
 package org.wso2.ballerina.internal.platforms;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 
@@ -21,9 +18,6 @@ import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -101,20 +95,24 @@ public class Local {
         // Array to hold analysis issues for each document
         ArrayList<Issue> internalIssues = new ArrayList<>();
 
-        // Set up the issue reporter here so issues can be reported from the static code analyzers
-        // in a proper format
-        ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues);
+        // Retrieve the current document path
+        Path documentPath = currentProject.documentPath(documentId).orElse(null);
+        if (documentPath != null) {
+            // Set up the issue reporter here so issues can be reported from the static code analyzers
+            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
+                    documentPath.toAbsolutePath().toString());
 
-        // pass the issue reporter to perform the analysis issue reporting through the analyzers
-        runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
-                (SemanticModel) compiledOutputs.get("semanticModel"),
-                issueReporter);
 
-        // External rule plugins analysis
-        // ========
-        // METHOD 1 (using tool plugins with ServiceLoaders) [DEPRECATED]
-        // ========
-        // - User has to move JAR's to be located in same directory where tool is located
+            // Perform internal static code analysis
+            runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
+                    (SemanticModel) compiledOutputs.get("semanticModel"),
+                    issueReporter);
+
+            // External rule plugins analysis
+            // ========
+            // METHOD 1 (using tool plugins with ServiceLoaders) [DEPRECATED]
+            // ========
+            // - User has to move JAR's to be located in same directory where tool is located
 //        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
 //        // Iterate through the loaded interfaces
 //        for (ExternalRules externalRulesJar : externalRulesJars) {
@@ -132,58 +130,13 @@ public class Local {
 //
 //        }
 
-        // ========
-        // METHOD 2 (using compiler plugins with diagnostics)
-        // ========
-        // - User does not have to manually move JAR's everywhere
-        // Running Compiler plugins through compiling imports of the project
-        PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
-
-        // We are able to access the diagnostics saved in the compiler plugins and next add them to the issues array
-        ArrayList<Issue> externalIssues = new ArrayList<>();
-
-        // Iterate through diagnostics and retrieve external issues
-        engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
-            String issueType = diagnostic.diagnosticInfo().code();
-
-            if (issueType.equals(CUSTOM_CHECK_VIOLATION)) {
-                List<DiagnosticProperty<?>> properties = diagnostic.properties();
-
-                // Retrieve the Issue property and add it to the issues array
-                AtomicReference<String> externalIssueRuleID = new AtomicReference<>(null);
-                AtomicReference<String> externalFilePath = new AtomicReference<>(null);
-                properties.forEach(diagnosticProperty -> {
-                    if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
-                        if (diagnosticProperty.value().equals(CUSTOM_RULE_ID)) {
-                            externalIssueRuleID.set((String) diagnosticProperty.value());
-                        }
-
-                        if (Path.of((String) diagnosticProperty.value()).toFile().exists()) {
-                            externalFilePath.set((String) diagnosticProperty.value());
-                        }
-                    }
-                });
-
-                // If all properties are available create a new issue and add to the external issues array
-                if (externalIssueRuleID.get() != null && externalFilePath.get() != null) {
-                    Issue newExternalIssue = new Issue(diagnostic.location().lineRange().startLine().line(),
-                            diagnostic.location().lineRange().startLine().offset(),
-                            diagnostic.location().lineRange().endLine().line(),
-                            diagnostic.location().lineRange().endLine().offset(),
-                            externalIssueRuleID.get(),
-                            diagnostic.message(),
-                            issueType,
-                            externalFilePath.get());
-
-                    externalIssues.add(newExternalIssue);
-                }
-            }
-        });
-
-        // Report the external issues
-        boolean successfullyReported = issueReporter.reportExternalIssues(externalIssues);
-        if (!successfullyReported) {
-            System.out.println("Unable to report external issues on: " + document.syntaxTree().filePath());
+            // ========
+            // METHOD 2 (using compiler plugins with diagnostics)
+            // ========
+            // - User does not have to manually move JAR's everywhere
+            // Running Compiler plugins through compiling imports of the project
+            // Step 1: Check if the module is the default module
+            runCustomScans(currentModule, currentProject, issueReporter);
         }
 
         // If there are user picked rules, then return a filtered issues array
@@ -212,30 +165,59 @@ public class Local {
         analyzer.initialize(issueReporter);
     }
 
-    // Save results to file
-    public String saveResults(ArrayList<Issue> issues) {
-        // Convert the output to a string
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
-        String jsonOutput = gson.toJson(issuesAsJson);
+    public void runCustomScans(Module currentModule, Project currentProject, ReportLocalIssue issueReporter) {
+        if (currentModule.isDefaultModule()) {
+            // Step 2: Get compilation of the whole package once
+            PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
 
-        // Save analysis results to file
-        File newTempFile;
-        try {
-            newTempFile = new File("ballerina-analysis-results.json");
+            // Step 3: Create an issues array to hold external issues
+            ArrayList<Issue> externalIssues = new ArrayList<>();
 
-            // Create a new file to hold analysis results
-            newTempFile.createNewFile();
 
-            // write the analysis results to the new file
-            FileWriter writer = new FileWriter(newTempFile);
-            writer.write(jsonOutput);
-            writer.close();
+            // Step 4: Iterate through diagnostics and retrieve external issues
+            engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
+                String issueType = diagnostic.diagnosticInfo().code();
 
-        } catch (IOException e) {
-            return null;
+                if (issueType.equals(CUSTOM_CHECK_VIOLATION)) {
+                    List<DiagnosticProperty<?>> properties = diagnostic.properties();
+
+                    // Retrieve the Issue property and add it to the issues array
+                    AtomicReference<String> externalIssueRuleID = new AtomicReference<>(null);
+                    AtomicReference<String> externalFilePath = new AtomicReference<>(null);
+                    properties.forEach(diagnosticProperty -> {
+                        if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
+                            if (diagnosticProperty.value().equals(CUSTOM_RULE_ID)) {
+                                externalIssueRuleID.set((String) diagnosticProperty.value());
+                            }
+
+                            if (Path.of((String) diagnosticProperty.value()).toFile().exists()) {
+                                externalFilePath.set((String) diagnosticProperty.value());
+                            }
+                        }
+                    });
+
+                    // If all properties are available create a new issue and add to the external issues array
+                    if (externalIssueRuleID.get() != null && externalFilePath.get() != null) {
+                        Issue newExternalIssue = new Issue(diagnostic.location().lineRange().startLine().line(),
+                                diagnostic.location().lineRange().startLine().offset(),
+                                diagnostic.location().lineRange().endLine().line(),
+                                diagnostic.location().lineRange().endLine().offset(),
+                                externalIssueRuleID.get(),
+                                diagnostic.message(),
+                                issueType,
+                                externalFilePath.get());
+
+                        externalIssues.add(newExternalIssue);
+                    }
+                }
+            });
+
+            // Report the external issues
+            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssues);
+            if (!successfullyReported) {
+                System.out.println("Unable to report external issues from: " +
+                        currentProject.currentPackage().packageName());
+            }
         }
-
-        return newTempFile.getAbsolutePath();
     }
 }
