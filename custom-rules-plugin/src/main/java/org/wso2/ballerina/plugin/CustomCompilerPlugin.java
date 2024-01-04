@@ -1,5 +1,6 @@
 package org.wso2.ballerina.plugin;
 
+import io.ballerina.projects.CodeActionManager;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.plugins.AnalysisTask;
@@ -7,11 +8,41 @@ import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import org.wso2.ballerina.CustomScanner;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.plugin.checks.CustomChecks;
+import org.wso2.ballerinalang.compiler.semantics.analyzer.CodeAnalyzer;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class CustomCompilerPlugin extends CustomScanner implements AnalysisTask<CompilationAnalysisContext> {
+    public void reporter() {
+
+    }
+    // ==================================
+    // reporter called from bal scan tool
+    // ==================================
+    // TODO:
+    //  IssueReporter issueReporter;
+    //  initialize(IssueReporter issueReporter){
+    //      this.issueReporter = issueReporter;
+    //  }
+    // - It's possible to use the reporter as follows, however the perform method does not get called on compiler plugin
+    // TODO:
+    //  reporter(IssueReporter issueReporter, SyntaxTree st, SemanticModel sm){
+    //      Issue customIssue = new Issue(...);
+    //      issueReporter.reportIssue(customIssue);
+    //  }
+
+    // ================================
+    // Compiler Plugin initiating point
+    // ================================
+    // - Method gets called only during package compilation
+    // - So there is no way to pass the reporter to it
+    // - As an alternative a custom diagnostic type can be introduced to report Issues from the reportDiagnostic()
+    // TODO:
+    //  Issue customIssue = new Issue(...);
+    //  IssueDiagnostic newIssueDiagnostic = new IssueDiagnostic(..., customIssue)
+    //  context.reportDiagnostic(newIssueDiagnostic);
+    // the tool without needing a reporter method from the bal scan tool
     // Implementation of analysis task to be run during the compilation
     @Override
     public void perform(CompilationAnalysisContext context) {
@@ -21,7 +52,6 @@ public class CustomCompilerPlugin extends CustomScanner implements AnalysisTask<
         // Array to hold all issues
         ArrayList<Issue> externalIssues = getIssues();
 
-        // However there is still a slight problem, there are 12 modules, so this runs 12 times in a single run
         context.currentPackage().moduleIds().forEach(moduleId -> {
             Module module = context.currentPackage().module(moduleId);
 

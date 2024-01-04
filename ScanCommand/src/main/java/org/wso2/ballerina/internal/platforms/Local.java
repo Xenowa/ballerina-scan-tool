@@ -11,18 +11,33 @@ import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.internal.plugins.CompilerPlugins;
+import io.ballerina.projects.plugins.CodeAnalyzer;
+import io.ballerina.projects.plugins.CodeGenerator;
+import io.ballerina.projects.plugins.CodeModifier;
+import io.ballerina.projects.plugins.CompilerLifecycleListener;
+import io.ballerina.projects.plugins.CompilerPlugin;
+import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.projects.plugins.codeaction.CodeAction;
+import io.ballerina.projects.plugins.completion.CompletionProvider;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
+import org.wso2.ballerina.CustomScanner;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
@@ -108,37 +123,55 @@ public class Local {
                     (SemanticModel) compiledOutputs.get("semanticModel"),
                     issueReporter);
 
-            // External rule plugins analysis
+            // External rules compiler plugins analysis
             // ========
-            // METHOD 1 (using tool plugins with ServiceLoaders) [DEPRECATED]
+            // METHOD 1 (using compiler plugins with diagnostics) [Currently Implemented]
             // ========
-            // - User has to move JAR's to be located in same directory where tool is located
-//        ServiceLoader<ExternalRules> externalRulesJars = ServiceLoader.load(ExternalRules.class);
-//        // Iterate through the loaded interfaces
-//        for (ExternalRules externalRulesJar : externalRulesJars) {
-//            // Call the initialize method to trigger custom rule scans
-//            externalRulesJar.initialize(
-//                    (SyntaxTree) compiledOutputs.get("syntaxTree"),
-//                    (SemanticModel) compiledOutputs.get("semanticModel")
-//            );
-//
-//            // Retrieve the externalIssues created by each custom rules JAR
-//            JsonArray externalIssuesArray = externalRulesJar.getExternalIssues();
-//
-//            // Then report the external issues
-//            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssuesArray);
-//
-//        }
-
-            // ========
-            // METHOD 2 (using compiler plugins with diagnostics)
-            // ========
-            // - User does not have to manually move JAR's everywhere
-            // Running Compiler plugins through compiling imports of the project
-            // Step 1: Check if the module is the default module
+            // - Runs when a package compilation is performed through project API
             runCustomScans(currentModule, currentProject, issueReporter);
+
+//            // ========
+//            // METHOD 2 (using compiler plugins with service loaders)
+//            // ========
+//            // ----------
+//            // Approach 1 (Using URLClassLoaders)
+//            // ----------
+//            // - The following issue occurs when bal scan is run
+//            // SEVERE {b7a.log.crash} - org.wso2.ballerina.CustomScanner: org.wso2.ballerina.plugin.CustomCompilerPlugin not a subtype
+//            // java.util.ServiceConfigurationError: org.wso2.ballerina.CustomScanner: org.wso2.ballerina.plugin.CustomCompilerPlugin not a subtype
+//            URL jarUrl = null;
+//            try {
+//                jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_customRules\\0.1.0\\java17\\compiler-plugin\\libs\\custom-rules-plugin-1.0-all.jar")
+//                        .toURI()
+//                        .toURL();
+//            } catch (MalformedURLException e) {
+//                throw new RuntimeException(e);
+//            }
+//            URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl});
+//
+//            ServiceLoader<CustomScanner> externalScannerJars = ServiceLoader.load(CustomScanner.class, externalJarClassLoader);
+//            // Iterate through the loaded interfaces
+//            for (CustomScanner externalScannerJar : externalScannerJars) {
+//                externalScannerJar.report(issueReporter);
+//            }
+
+            // ----------
+            // Approach 2 (Using CompilerPlugins static loading method)
+            // ----------
+            // Currently Attempting
+            Path compilerPluginPath = Path.of("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_customRules\\0.1.0\\java17\\compiler-plugin\\libs\\custom-rules-plugin-1.0-all.jar");
+            List<Path> compilerPluginPaths = List.of(compilerPluginPath);
+            CompilerPlugin customCompilerPlugins = CompilerPlugins.loadCompilerPlugin("CustomCompilerPlugin", compilerPluginPaths);
+
+            ServiceLoader<CustomScanner> externalScannerJars = ServiceLoader.load(CustomScanner.class, customCompilerPlugins.getClass().getClassLoader());
+            // Iterate through the loaded interfaces
+            for (CustomScanner externalScannerJar : externalScannerJars) {
+                externalScannerJar.report(issueReporter);
+            }
         }
 
+        // TODO: Change the logic below, so that if the scan tool detects a toml file, it reads it and only
+        //  allow rules mentioned in it to be generated as final scan results
         // If there are user picked rules, then return a filtered issues array
         if (!userRule.equals("all")) {
             // Scanned results will be empty if the rule does not exist
@@ -166,6 +199,7 @@ public class Local {
     }
 
     public void runCustomScans(Module currentModule, Project currentProject, ReportLocalIssue issueReporter) {
+        // Step 1: Check if the module is the default module
         if (currentModule.isDefaultModule()) {
             // Step 2: Get compilation of the whole package once
             PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
@@ -174,7 +208,8 @@ public class Local {
             ArrayList<Issue> externalIssues = new ArrayList<>();
 
 
-            // Step 4: Iterate through diagnostics and retrieve external issues
+            // Step 4: Iterate through diagnostics and retrieve external issues (Should not be performed with the
+            // diagnostics API)
             engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
                 String issueType = diagnostic.diagnosticInfo().code();
 

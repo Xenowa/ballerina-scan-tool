@@ -8,12 +8,14 @@ import io.ballerina.cli.BLauncherCmd;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import io.ballerina.projects.util.ProjectConstants;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
 import org.wso2.ballerina.internal.platforms.Local;
@@ -27,19 +29,20 @@ public class ScanCommand implements BLauncherCmd {
     private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
 
+    public static final String PLATFORM_ARGS_PATTERN = "-PARG[\\w\\W]+=([\\w\\W]+)";
+    private Map<String, String> platformArgs = new HashMap<>();
+    private String projectPath = null;
+
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
 
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform"},
+    @CommandLine.Option(names = {"--platforms"},
             description = "static code analysis output platform",
             defaultValue = "local")
-    private String platform;
-
-    @CommandLine.Option(names = {"-PARG"}, description = "platform plugin arguments")
-    private final Map<String, String> platformArgs = new HashMap<>();
+    private String platforms;
 
     @CommandLine.Option(names = {"--rule"},
             description = "single rule to be checked during the static code analysis",
@@ -85,31 +88,52 @@ public class ScanCommand implements BLauncherCmd {
     public void setParentCmdParser(CommandLine parentCmdParser) {
     }
 
-
     // ====================
     // Main Program Methods
     // ====================
+    public void populatePlatformArguments(int subListStartValue) {
+        String[] argumentsArray = argList.subList(subListStartValue, argList.size()).toArray(new String[0]);
+        // Iterate through the arguments and populate the HashMap
+        for (String argument : argumentsArray) {
+            // Check if the argument matches the -PARG pattern
+            if (argument.matches(PLATFORM_ARGS_PATTERN)) {
+                // Split each argument into key and value based on "="
+                String[] keyValue = argument.split("=");
+
+                // Check if the argument is in the correct format (contains "=")
+                if (keyValue.length == 2) {
+                    // Add the key-value pair to the HashMap
+                    this.platformArgs.put(keyValue[0].split("-PARG")[1], keyValue[1]);
+                } else {
+                    // Handle invalid arguments (optional)
+                    System.out.println("Invalid argument: " + argument);
+                }
+            }
+        }
+    }
+
     public String checkPath() {
-        // if invalid number of arguments are passed to the bal scan command
-        boolean tooManyArguments = this.argList.size() > 1;
-        if (tooManyArguments) {
-            this.outputStream.println("Invalid number of arguments received!\n" +
-                    "run bal scan --help for more information.");
-            return "";
+        if (!argList.isEmpty()) {
+            if (!argList.get(0).matches(PLATFORM_ARGS_PATTERN)) {
+                // Check if the first argument is not a platform argument and retrieve the file path
+                this.projectPath = String.valueOf(Paths.get(argList.get(0)));
+                if (argList.size() > 1) {
+                    populatePlatformArguments(1);
+                }
+            } else {
+                populatePlatformArguments(0);
+            }
         }
 
-        // boolean to check if there are any arguments passed
-        boolean isPathProvided = this.argList.size() == 1;
-
         // retrieve the user passed argument or the current working directory
-        String userFilePath = isPathProvided ? this.argList.get(0) : System.getProperty("user.dir");
+        String userFilePath = this.projectPath != null ? this.projectPath : System.getProperty("user.dir");
 
         // Check if the user provided path is a file or a directory
         File file = new File(userFilePath);
         if (file.exists()) {
             if (file.isFile()) {
                 // Check if the file extension is '.bal'
-                if (!userFilePath.endsWith(".bal")) {
+                if (!userFilePath.endsWith(ProjectConstants.BLANG_SOURCE_EXT)) {
                     this.outputStream.println("Invalid file format received!\n File format should be of type '.bal'");
                     return "";
                 } else {
@@ -174,7 +198,7 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         // Trigger the relevant analysis platform
-        switch (platform) {
+        switch (platforms) {
             case "local" -> {
                 Local localPlatform = new Local();
                 // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
@@ -221,7 +245,10 @@ public class ScanCommand implements BLauncherCmd {
                 // Iterate through the loaded interfaces
                 for (PlatformPlugin platformPlugin : platformPlugins) {
                     // Retrieve the platform name through initialize method
-                    // platformArgs="-PfileName=fileName,-PsomethingElse=somethingelse"
+                    // platformArgs=[
+                    // {"fileName",fileName},
+                    // {"somethingElse",somethingElse}
+                    // ]
                     String platformName = platformPlugin.initialize(platformArgs);
 
                     // If a valid platform name is provided then trigger reporting

@@ -20,6 +20,7 @@ import java.util.Map;
 public class SonarQube extends PlatformPlugin {
     private List<String> arguments;
     private ProcessBuilder processBuilder;
+    // private Map<String, String> platformArgs;
     private Map<String, String> platformArgs;
 
     @Override

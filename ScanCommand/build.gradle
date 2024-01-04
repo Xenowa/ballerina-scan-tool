@@ -50,6 +50,8 @@ dependencies {
     implementation group: 'org.ballerinalang', name: 'ballerina-cli', version: "${project.ballerinaVersion}"
     // Required Module to convert the AST to a JSON File
     implementation group: 'org.ballerinalang', name: 'diagram-util', version: "${project.ballerinaVersion}"
+    // Required for working with toml documents
+    implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${project.ballerinaVersion}"
 
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
