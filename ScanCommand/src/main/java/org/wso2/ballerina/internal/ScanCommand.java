@@ -256,10 +256,6 @@ public class ScanCommand implements BLauncherCmd {
                 // Iterate through the loaded interfaces
                 for (PlatformPlugin platformPlugin : platformPlugins) {
                     // Retrieve the platform name through initialize method
-                    // platformArgs=[
-                    // {"fileName",fileName},
-                    // {"somethingElse",somethingElse}
-                    // ]
                     String platformName = platformPlugin.initialize(platformArgs);
 
                     // If a valid platform name is provided then trigger reporting
@@ -287,59 +283,36 @@ public class ScanCommand implements BLauncherCmd {
                     // Get access to the project modules
                     Module module = project.currentPackage().module(moduleId);
 
-                    // Iterate through each document of the Main module/project + submodules
-                    module.documentIds().forEach(documentId -> {
-                        // Retrieve each document from the module
-                        Document document = module.document(documentId);
+                    // ========
+                    // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
+                    // ========
+                    // Load the compiler plugin
+                    URL jarUrl = null;
+                    try {
+                        jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
+                                .toURI()
+                                .toURL();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl});
 
-                        // Map to store the parsed & Compiled outputs
-                        Map<String, Object> compiledOutputs = new HashMap<>();
+                    ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
+                            ToolAndCompilerPluginConnector.class,
+                            externalJarClassLoader);
 
-                        // Retrieve the syntax tree from the parsed ballerina document
-                        compiledOutputs.put("syntaxTree", document.syntaxTree());
+                    // Iterate through the loaded interfaces
+                    String messageFromTool = "Sent from Ballerina Scan Tool";
+                    for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
+                        // Call the interface method and pass a context
+                        externalScannerJar.sendMessageFromTool(messageFromTool);
+                    }
 
-                        // Retrieve the compilation of the module
-                        ModuleCompilation compilation = module.getCompilation();
-
-                        // Retrieve the semantic model from the ballerina document compilation
-                        compiledOutputs.put("semanticModel", compilation.getSemanticModel());
-
-                        // Perform static code analysis
-                        // Array to hold analysis issues for each document
-                        ArrayList<Issue> internalIssues = new ArrayList<>();
-
-                        // Retrieve the current document path
-                        Path documentPath = project.documentPath(documentId).orElse(null);
-                        if (documentPath != null) {
-                            // Set up the issue reporter here so issues can be reported from the static code analyzers
-                            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
-                                    documentPath.toAbsolutePath().toString());
-
-                            // ========
-                            // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
-                            // ========
-                            URL jarUrl = null;
-                            try {
-                                jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
-                                        .toURI()
-                                        .toURL();
-                            } catch (MalformedURLException e) {
-                                throw new RuntimeException(e);
-                            }
-                            URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
-                                    CompilerPlugins.class.getClassLoader());
-
-                            ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
-                                    ToolAndCompilerPluginConnector.class,
-                                    externalJarClassLoader);
-
-                            // Iterate through the loaded interfaces
-                            String messageFromTool = "Sent from Ballerina Scan Tool";
-                            for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
-                                externalScannerJar.sendMessageFromTool(messageFromTool);
-                            }
-                        }
-                    });
+                    if (module.isDefaultModule()) {
+                        // Compile the project and engage the plugin once
+                        // If context has been passed correctly it will be displayed in the console
+                        project.currentPackage().getCompilation();
+                    }
                 });
             }
             default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
