@@ -2,4 +2,5 @@ rootProject.name = 'sonar-ballerina'
 include 'sonar-ballerina-plugin'
 include 'ScanCommand'
 include 'custom-rules-plugin'
+include 'issue-context-share-test-plugin'
 

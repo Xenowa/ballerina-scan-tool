@@ -1,6 +1,5 @@
 package org.wso2.ballerina.plugin;
 
-import io.ballerina.projects.CodeActionManager;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.plugins.AnalysisTask;
@@ -8,15 +7,11 @@ import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import org.wso2.ballerina.CustomScanner;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.plugin.checks.CustomChecks;
-import org.wso2.ballerinalang.compiler.semantics.analyzer.CodeAnalyzer;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-public class CustomCompilerPlugin extends CustomScanner implements AnalysisTask<CompilationAnalysisContext> {
-    public void reporter() {
-
-    }
+public class CustomBallerinaRulesAnalysisTask extends CustomScanner implements AnalysisTask<CompilationAnalysisContext> {
     // ==================================
     // reporter called from bal scan tool
     // ==================================

@@ -7,6 +7,9 @@ import io.ballerina.cli.BLauncherCmd;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -15,9 +18,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import io.ballerina.projects.Document;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.ModuleCompilation;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.internal.plugins.CompilerPlugins;
 import io.ballerina.projects.util.ProjectConstants;
+import org.wso2.ballerina.CustomScanner;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
+import org.wso2.ballerina.ToolAndCompilerPluginConnector;
 import org.wso2.ballerina.internal.platforms.Local;
 import picocli.CommandLine;
 
@@ -147,7 +158,7 @@ public class ScanCommand implements BLauncherCmd {
                 }
             } else {
                 // If it's a directory, validate it's a ballerina build project
-                File ballerinaTomlFile = new File(userFilePath, "Ballerina.toml");
+                File ballerinaTomlFile = new File(userFilePath, ProjectConstants.BALLERINA_TOML);
                 if (!ballerinaTomlFile.exists() || !ballerinaTomlFile.isFile()) {
                     this.outputStream.println("ballerina: Invalid Ballerina package directory: " +
                             userFilePath +
@@ -260,6 +271,76 @@ public class ScanCommand implements BLauncherCmd {
             }
             case "codeql", "semgrep" -> {
                 outputStream.println("Platform support is not available yet!");
+            }
+            case "debug" -> {
+                // Simulate loading a project and engaging a compiler plugin
+                String userPath;
+                userPath = checkPath();
+                // Array to hold all issues
+                ArrayList<Issue> issues = new ArrayList<>();
+
+                // Get access to the project API
+                Project project = ProjectLoader.loadProject(Path.of(userPath));
+
+                // Iterate through each module of the project
+                project.currentPackage().moduleIds().forEach(moduleId -> {
+                    // Get access to the project modules
+                    Module module = project.currentPackage().module(moduleId);
+
+                    // Iterate through each document of the Main module/project + submodules
+                    module.documentIds().forEach(documentId -> {
+                        // Retrieve each document from the module
+                        Document document = module.document(documentId);
+
+                        // Map to store the parsed & Compiled outputs
+                        Map<String, Object> compiledOutputs = new HashMap<>();
+
+                        // Retrieve the syntax tree from the parsed ballerina document
+                        compiledOutputs.put("syntaxTree", document.syntaxTree());
+
+                        // Retrieve the compilation of the module
+                        ModuleCompilation compilation = module.getCompilation();
+
+                        // Retrieve the semantic model from the ballerina document compilation
+                        compiledOutputs.put("semanticModel", compilation.getSemanticModel());
+
+                        // Perform static code analysis
+                        // Array to hold analysis issues for each document
+                        ArrayList<Issue> internalIssues = new ArrayList<>();
+
+                        // Retrieve the current document path
+                        Path documentPath = project.documentPath(documentId).orElse(null);
+                        if (documentPath != null) {
+                            // Set up the issue reporter here so issues can be reported from the static code analyzers
+                            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
+                                    documentPath.toAbsolutePath().toString());
+
+                            // ========
+                            // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
+                            // ========
+                            URL jarUrl = null;
+                            try {
+                                jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
+                                        .toURI()
+                                        .toURL();
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
+                                    CompilerPlugins.class.getClassLoader());
+
+                            ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
+                                    ToolAndCompilerPluginConnector.class,
+                                    externalJarClassLoader);
+
+                            // Iterate through the loaded interfaces
+                            String messageFromTool = "Sent from Ballerina Scan Tool";
+                            for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
+                                externalScannerJar.sendMessageFromTool(messageFromTool);
+                            }
+                        }
+                    });
+                });
             }
             default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
         }
