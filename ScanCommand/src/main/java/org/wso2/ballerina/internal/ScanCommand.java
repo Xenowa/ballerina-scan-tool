@@ -18,14 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import io.ballerina.projects.Document;
+import io.ballerina.cli.launcher.CustomToolClassLoader;
 import io.ballerina.projects.Module;
-import io.ballerina.projects.ModuleCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.projects.internal.plugins.CompilerPlugins;
 import io.ballerina.projects.util.ProjectConstants;
-import org.wso2.ballerina.CustomScanner;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
 import org.wso2.ballerina.ToolAndCompilerPluginConnector;
@@ -287,7 +284,8 @@ public class ScanCommand implements BLauncherCmd {
                     // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
                     // ========
                     // Load the compiler plugin
-                    URL jarUrl = null;
+                    URL jarUrl;
+
                     try {
                         jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
                                 .toURI()
@@ -295,7 +293,9 @@ public class ScanCommand implements BLauncherCmd {
                     } catch (MalformedURLException e) {
                         throw new RuntimeException(e);
                     }
-                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl});
+
+                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
+                            CustomToolClassLoader.getSystemClassLoader());
 
                     ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
                             ToolAndCompilerPluginConnector.class,

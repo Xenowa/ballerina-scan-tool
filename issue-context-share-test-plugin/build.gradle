@@ -109,12 +109,12 @@ tasks.withType(Checkstyle) {
 checkstyle {
     toolVersion "10.12.1"
     // As in the current implementation the project is as a sub module
-    configFile rootProject.file("custom-rules-plugin/build/checkstyle.xml")
-    configProperties = ["suppressionFile": file("${rootDir}/custom-rules-plugin/build/suppressions.xml")]
+    configFile rootProject.file("issue-context-share-test-plugin/build/checkstyle.xml")
+    configProperties = ["suppressionFile": file("${rootDir}/issue-context-share-test-plugin/build/suppressions.xml")]
 }
 
 // Run checkstyle only after downloading the custom checkstyle configurations
-checkstyleMain.dependsOn(":custom-rules-plugin:downloadCheckstyleRuleFiles")
+checkstyleMain.dependsOn(":issue-context-share-test-plugin:downloadCheckstyleRuleFiles")
 
 // ===================
 // Setting up spotbugs
