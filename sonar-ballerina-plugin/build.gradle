@@ -85,9 +85,6 @@ dependencies {
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
-    // Adding dependency to the bal scan tool to retrieve the interface methods
-    implementation project(path: ':ScanCommand')
-
     // Required dependencies for testing the plugin before building and deploying
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.8.2'
@@ -271,6 +268,32 @@ tasks.shadowJar {
     exclude 'io/**'
     exclude 'new_cmd_defaults/**'
     exclude 'org/wso2/ballerina/Platform.class'
+
+    // Other unnecessary files to be excluded
+    exclude 'sonar-scanner-api-batch.jar'
+    exclude 'javax/**'
+    exclude 'license/**'
+    exclude 'org/apache/**'
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/proguard/**'
+    exclude 'META-INF/versions/**'
+    exclude 'META-INF/services/com.ctc.wstx.shaded.msv.relaxng_datatype.DatatypeLibraryFactory'
+    exclude 'META-INF/services/javax.servlet.ServletContainerInitializer'
+    exclude 'META-INF/services/javax.xml.datatype.DatatypeFactory'
+    exclude 'META-INF/services/javax.xml.parsers.DocumentBuilderFactory'
+    exclude 'META-INF/services/javax.xml.parsers.SAXParserFactory'
+    exclude 'META-INF/services/javax.xml.stream.XMLEventFactory'
+    exclude 'META-INF/services/javax.xml.stream.XMLInputFactory'
+    exclude 'META-INF/services/javax.xml.stream.XMLOutputFactory'
+    exclude 'META-INF/services/javax.xml.validation.SchemaFactory'
+    exclude 'META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory'
+    exclude 'META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.dtd'
+    exclude 'META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.relaxng'
+    exclude 'META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.w3c'
+    exclude 'META-INF/services/org.w3c.dom.DOMImplementationSourceList'
+    exclude 'META-INF/services/org.xml.sax.driver'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/NOTICE'
 
     // The following command actually creates the final jar file if the build is between the size ranges given
     // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)

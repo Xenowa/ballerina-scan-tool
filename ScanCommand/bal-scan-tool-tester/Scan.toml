@@ -5,13 +5,13 @@
 # If the user has defined the sonar-projec.properties somewhere other than the working directory
 sonarProjectPropertiesPath = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\sonar-project.properties"
 # If the user wants to have the platform plugin in somewhere which is not bre/libs
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.2\\bre\\lib\\sonar-ballerina-plugin-1.0-all.jar"
+platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\sonar-ballerina-plugin-1.0-all.jar"
 
 [semgrep]
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.2\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
+platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
 
 [codeql]
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.2\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
+platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
 
 # =====
 # Notes

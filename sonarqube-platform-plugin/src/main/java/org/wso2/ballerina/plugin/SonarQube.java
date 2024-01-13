@@ -1,4 +1,4 @@
-package org.wso2.ballerina.scanner;
+package org.wso2.ballerina.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

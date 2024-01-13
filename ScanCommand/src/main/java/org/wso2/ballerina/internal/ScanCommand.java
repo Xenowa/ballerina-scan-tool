@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import io.ballerina.cli.launcher.CustomToolClassLoader;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -99,6 +98,144 @@ public class ScanCommand implements BLauncherCmd {
     // ====================
     // Main Program Methods
     // ====================
+    // MAIN method
+    @Override
+    public void execute() {
+        // if bal scan --help is passed
+        if (helpFlag) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Tool for providing static code analysis results for Ballerina projects\n\n");
+            builder.append("bal scan --platform=<option> <ballerina-file>\n\n");
+            builder.append("--option--\n");
+            builder.append("\toption 1: sonarqube\n");
+            builder.append("\toption 2: codeql\n");
+            builder.append("\toption 3: semgrep\n\n");
+            builder.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
+            this.outputStream.println(builder);
+            return;
+        }
+
+        // Trigger the relevant analysis platform
+        switch (platforms) {
+            case "local" -> {
+                Local localPlatform = new Local();
+                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+                String userPath;
+                userPath = checkPath();
+                if (userPath.equals("")) {
+                    return;
+                }
+
+                // Perform scan on ballerina file/project
+                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
+
+                // Stop reporting if there is no issues array
+                if (issues == null) {
+                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
+                    return;
+                }
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
+                String jsonOutput = gson.toJson(issuesAsJson);
+                outputStream.println(jsonOutput);
+            }
+            case "sonarqube" -> {
+                Local localPlatform = new Local();
+                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+                String userPath;
+                userPath = checkPath();
+                if (userPath.equals("")) {
+                    return;
+                }
+
+                // Perform scan on ballerina file/project
+                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
+
+                // Stop reporting if there is no analysis results
+                if (issues == null) {
+                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
+                    return;
+                }
+
+                // Report results to relevant platform plugins
+                ArrayList<String> externalJarFilePaths = new ArrayList<>();
+                externalJarFilePaths.add("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar");
+
+                URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
+
+                // Platform plugins for reporting
+                ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class, ucl);
+                // Iterate through the loaded interfaces
+                for (PlatformPlugin platformPlugin : platformPlugins) {
+                    // Retrieve the platform name through initialize method
+                    String platformName = platformPlugin.initialize(platformArgs);
+
+                    // If a valid platform name is provided then trigger reporting
+                    // For now we will make the initialize return null in other platforms
+                    if (platformName != null) {
+                        platformPlugin.onScan(issues);
+                    }
+                }
+            }
+            case "codeql", "semgrep" -> {
+                outputStream.println("Platform support is not available yet!");
+            }
+            case "debug" -> {
+                // Simulate loading a project and engaging a compiler plugin
+                String userPath;
+                userPath = checkPath();
+                // Array to hold all issues
+                ArrayList<Issue> issues = new ArrayList<>();
+
+                // Get access to the project API
+                Project project = ProjectLoader.loadProject(Path.of(userPath));
+
+                // Iterate through each module of the project
+                project.currentPackage().moduleIds().forEach(moduleId -> {
+                    // Get access to the project modules
+                    Module module = project.currentPackage().module(moduleId);
+
+                    // ========
+                    // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
+                    // ========
+                    // This method aims to pass Issues without using Ballerina compiler diagnostics
+                    // Load the compiler plugin
+                    URL jarUrl;
+
+                    try {
+                        jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
+                                .toURI()
+                                .toURL();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
+                            this.getClass().getClassLoader());
+
+                    ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
+                            ToolAndCompilerPluginConnector.class,
+                            externalJarClassLoader);
+
+                    // Iterate through the loaded interfaces
+                    String messageFromTool = "Sent from Ballerina Scan Tool";
+                    for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
+                        // Call the interface method and pass a context
+                        externalScannerJar.sendMessageFromTool(messageFromTool);
+                    }
+
+                    if (module.isDefaultModule()) {
+                        // Compile the project and engage the plugin once
+                        // If context has been passed correctly it will be displayed in the console
+                        project.currentPackage().getCompilation();
+                    }
+                });
+            }
+            default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
+        }
+    }
+
     public void populatePlatformArguments(int subListStartValue) {
         String[] argumentsArray = argList.subList(subListStartValue, argList.size()).toArray(new String[0]);
         // Iterate through the arguments and populate the HashMap
@@ -180,142 +317,18 @@ public class ScanCommand implements BLauncherCmd {
         }
     }
 
-    public String validateEmptyPath() {
-        if (!this.argList.isEmpty()) {
-            this.outputStream.println("arguments are invalid!,\n try bal scan --help for more information.");
-            return "invalidEntry";
-        }
-        return "";
-    }
+    private URLClassLoader loadExternalJars(ArrayList<String> jarPaths) {
+        ArrayList<URL> jarUrls = new ArrayList<>();
 
-    // MAIN method
-    @Override
-    public void execute() {
-        // if bal scan --help is passed
-        if (helpFlag) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Tool for providing static code analysis results for Ballerina projects\n\n");
-            builder.append("bal scan --platform=<option> <ballerina-file>\n\n");
-            builder.append("--option--\n");
-            builder.append("\toption 1: sonarqube\n");
-            builder.append("\toption 2: codeql\n");
-            builder.append("\toption 3: semgrep\n\n");
-            builder.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
-            this.outputStream.println(builder);
-            return;
-        }
-
-        // Trigger the relevant analysis platform
-        switch (platforms) {
-            case "local" -> {
-                Local localPlatform = new Local();
-                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
-                String userPath;
-                userPath = checkPath();
-                if (userPath.equals("")) {
-                    return;
-                }
-
-                // Perform scan on ballerina file/project
-                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
-
-                // Stop reporting if there is no issues array
-                if (issues == null) {
-                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
-                    return;
-                }
-
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
-                String jsonOutput = gson.toJson(issuesAsJson);
-                outputStream.println(jsonOutput);
+        jarPaths.forEach(jarPath -> {
+            try {
+                URL jarUrl = Path.of(jarPath).toUri().toURL();
+                jarUrls.add(jarUrl);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
             }
-            case "sonarqube" -> {
-                Local localPlatform = new Local();
-                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
-                String userPath;
-                userPath = checkPath();
-                if (userPath.equals("")) {
-                    return;
-                }
+        });
 
-                // Perform scan on ballerina file/project
-                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
-
-                // Stop reporting if there is no analysis results
-                if (issues == null) {
-                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
-                    return;
-                }
-
-                // Platform plugins for reporting
-                ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class);
-                // Iterate through the loaded interfaces
-                for (PlatformPlugin platformPlugin : platformPlugins) {
-                    // Retrieve the platform name through initialize method
-                    String platformName = platformPlugin.initialize(platformArgs);
-
-                    // If a valid platform name is provided then trigger reporting
-                    // For now we will make the initialize return null in other platforms
-                    if (platformName != null) {
-                        platformPlugin.onScan(issues);
-                    }
-                }
-            }
-            case "codeql", "semgrep" -> {
-                outputStream.println("Platform support is not available yet!");
-            }
-            case "debug" -> {
-                // Simulate loading a project and engaging a compiler plugin
-                String userPath;
-                userPath = checkPath();
-                // Array to hold all issues
-                ArrayList<Issue> issues = new ArrayList<>();
-
-                // Get access to the project API
-                Project project = ProjectLoader.loadProject(Path.of(userPath));
-
-                // Iterate through each module of the project
-                project.currentPackage().moduleIds().forEach(moduleId -> {
-                    // Get access to the project modules
-                    Module module = project.currentPackage().module(moduleId);
-
-                    // ========
-                    // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
-                    // ========
-                    // Load the compiler plugin
-                    URL jarUrl;
-
-                    try {
-                        jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
-                                .toURI()
-                                .toURL();
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
-                            CustomToolClassLoader.getSystemClassLoader());
-
-                    ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
-                            ToolAndCompilerPluginConnector.class,
-                            externalJarClassLoader);
-
-                    // Iterate through the loaded interfaces
-                    String messageFromTool = "Sent from Ballerina Scan Tool";
-                    for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
-                        // Call the interface method and pass a context
-                        externalScannerJar.sendMessageFromTool(messageFromTool);
-                    }
-
-                    if (module.isDefaultModule()) {
-                        // Compile the project and engage the plugin once
-                        // If context has been passed correctly it will be displayed in the console
-                        project.currentPackage().getCompilation();
-                    }
-                });
-            }
-            default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
-        }
+        return new URLClassLoader(jarUrls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
 }

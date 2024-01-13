@@ -1,14 +1,12 @@
 plugins {
     id 'java'
-    // For running the main class of the ballerina tool tester package
-    id 'application'
     // For using the ballerina java project API
     id 'java-library'
     // For checkstyle configurations
     id 'checkstyle'
     // For spotbugs configurations
     id "com.github.spotbugs" version "5.0.14"
-    // For providing file download tasks functionality
+    // For providing file download tasks functionality of checkstyle files
     id "de.undercouch.download" version "5.4.0"
 }
 
@@ -18,6 +16,15 @@ version = '1.0'
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        url = 'https://repox.jfrog.io/repox/plugins.gradle.org/'
+    }
+
+    // Required repository for testing
+    maven {
+        url = uri("https://plugins.gradle.org/m2/")
+    }
+
     maven {
         url = uri('https://repo.maven.apache.org/maven2/')
     }
@@ -33,38 +40,21 @@ repositories {
 }
 
 dependencies {
-    // Required dependency for developing ballerina cli applications
-    implementation group: 'info.picocli', name: 'picocli', version: '4.7.5'
-
-    // set the correct gson version
-    implementation "com.google.code.gson:gson:${project.gsonVersion}"
-
-    // Required dependencies for accessing the ballerina java project API
-    // The version should match the version you have in the local machine
-    implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${project.ballerinaVersion}"
-    implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${project.ballerinaVersion}"
-    implementation group: 'org.ballerinalang', name: 'ballerina-runtime', version: "${project.ballerinaVersion}"
-    implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${project.ballerinaVersion}"
-    implementation group: 'org.ballerinalang', name: 'jballerina-tools', version: "${project.ballerinaVersion}"
-    // Required dependencies for building a ballerina cli application
-    implementation group: 'org.ballerinalang', name: 'ballerina-cli', version: "${project.ballerinaVersion}"
-    // Required Module to convert the AST to a JSON File
-    implementation group: 'org.ballerinalang', name: 'diagram-util', version: "${project.ballerinaVersion}"
-    // Required for working with toml documents
-    implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${project.ballerinaVersion}"
-
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
     // Required for applying checkstyle & Spotbugs to the project
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
+
+    // set the correct gson version
+    implementation "com.google.code.gson:gson:${project.gsonVersion}"
+
+    // Adding dependency to the bal scan tool to retrieve the interface methods
+    implementation project(path: ':ScanCommand')
 }
 
 // Setting up the ballerina home property for the project
 tasks.withType(JavaExec).configureEach {
-    // From the local ballerina distribution
-    // Following code is the same as:
-    // systemProperty 'ballerina.home', System.getProperty('C:/Program Files/Ballerina/distributions/ballerina-2201.8.5')
     systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
 }
 
@@ -102,12 +92,12 @@ tasks.withType(Checkstyle) {
 checkstyle {
     toolVersion "10.12.1"
     // As in the current implementation the project is as a sub module
-    configFile rootProject.file("ScanCommand/build/checkstyle.xml")
-    configProperties = ["suppressionFile": file("${rootDir}/ScanCommand/build/suppressions.xml")]
+    configFile rootProject.file("sonarqube-platform-plugin/build/checkstyle.xml")
+    configProperties = ["suppressionFile": file("sonarqube-platform-plugin/build/suppressions.xml")]
 }
 
 // Run checkstyle only after downloading the custom checkstyle configurations
-checkstyleMain.dependsOn(":ScanCommand:downloadCheckstyleRuleFiles")
+checkstyleMain.dependsOn(":sonarqube-platform-plugin:downloadCheckstyleRuleFiles")
 
 // ===================
 // Setting up spotbugs
@@ -151,8 +141,3 @@ task validateSpotbugs() {
 }
 
 spotbugsMain.finalizedBy validateSpotbugs
-
-// class to build when gradlew run is executed in there terminal
-application {
-    mainClass = 'testing.balToolTester.Main'
-}

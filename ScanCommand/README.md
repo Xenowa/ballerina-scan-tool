@@ -13,7 +13,7 @@
 2. Next run the following command in the console:
 
 ```cmd
-bal scan [--platformPlugin=<option>] [<ballerina-file/ballerina-build-project-folder>]
+bal scan [--platforms=<option>] [<ballerina-file/ballerina-build-project-folder>]
 ```
 
 3. The tool itself will determine if the file is in a ballerina project and perform the static code analysis
@@ -68,7 +68,7 @@ bal push --repository=local
 📦<USER_HOME>/.ballerina
  ┗ 📦.config
     ┗**📜bal-tools.toml**
-    ┗**📜dist-2201.8.2.toml**
+    ┗**📜dist-2201.8.4.toml**
 ```
 
 7. Include the tool details in them as follows
@@ -82,7 +82,7 @@ name = "tool_scan"
 ```
 
 ```
-# (dist-2201.8.2.toml)
+# (dist-2201.8.4.toml)
 [[tool]]
 id = "scan"
 org = "tharana_wanigaratne"
@@ -99,7 +99,7 @@ bal tool list
 10. Try out the tool
 
 ```cmd
-bal scan [--platformPlugin=<option>] [<ballerina-file/ballerina-build-project-folder>]
+bal scan [--platforms=<option>] [<ballerina-file/ballerina-build-project-folder>]
 ```
 
 - --option--:
@@ -110,7 +110,7 @@ option 2: codeql
 option 3: semgrep
 ```
 
-- About ```bal scan --platformPlugin=sonarqube```:
+- About ```bal scan --platforms=sonarqube```:
     - this command will perform analysis and report issues to SonarQube
     - this command will require a running instance of SonarQube
     - this command will require a properly configured sonar-project.properties file in the initializing directory
@@ -159,7 +159,7 @@ accesstoken="TOKEN_FROM_CENTRAL"
 org = "DEV_CENTRAL_ORGANIZATION_NAME"
 name = "tool_scan"
 version = "0.1.0"
-distribution = "2201.8.2"
+distribution = "2201.8.4"
 ```
 
 8. Set the ballerina dev central environment variable to true

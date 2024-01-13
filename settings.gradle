@@ -1,6 +1,12 @@
 rootProject.name = 'sonar-ballerina'
-include 'sonar-ballerina-plugin'
+// Ballerina Scan Tool Extension Plugins
 include 'ScanCommand'
 include 'custom-rules-plugin'
+include 'sonarqube-platform-plugin'
+
+// Platform specific plugins
+include 'sonar-ballerina-plugin'
+
+// TODO: To be removed test plugins
 include 'issue-context-share-test-plugin'
 

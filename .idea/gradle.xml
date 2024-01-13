@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/custom-rules-plugin" />
             <option value="$PROJECT_DIR$/issue-context-share-test-plugin" />
             <option value="$PROJECT_DIR$/sonar-ballerina-plugin" />
+            <option value="$PROJECT_DIR$/sonarqube-platform-plugin" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -3,7 +3,3 @@ id = “scan” # need to be same as picoclie name in java file
 
 [[dependency]]
 path = "../build/libs/ScanCommand-1.0.jar"
-
-# For including the SonarQube Platform JAR
-[[dependency]]
-path = "../../sonar-ballerina-plugin/build/libs/sonar-ballerina-plugin-1.0-all.jar"

@@ -14,7 +14,7 @@ The following software should be installed locally
 - [Java version: 17](https://adoptium.net/temurin/releases/?version=17)
 - [SonarQube version: 9.9 (LTS)](https://www.sonarsource.com/products/sonarqube/downloads/lts/9-9-lts)
 - [Sonar scanner](https://docs.sonarsource.com/sonarqube/9.9/analyzing-source-code/scanners/sonarscanner/)
-- [Ballerina version: 2201.8.2](https://ballerina.io/downloads/archived/#swan-lake-archived-versions)
+- [Ballerina version: 2201.8.4](https://ballerina.io/downloads/archived/#swan-lake-archived-versions)
 
 ## Getting started
 
