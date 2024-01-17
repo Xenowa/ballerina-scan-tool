@@ -14,7 +14,6 @@ import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
@@ -27,7 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
 import static org.wso2.ballerina.CustomScanner.CUSTOM_RULE_ID;
-import static org.wso2.ballerina.internal.ScanCommand.userRule;
 
 public class Local {
     // Internal Issue type
@@ -114,24 +112,6 @@ public class Local {
             // ========
             // - Runs when a package compilation is performed through project API
             runCustomScans(currentModule, currentProject, issueReporter);
-        }
-
-        // TODO: Change the logic below, so that if the scan tool detects a toml file, it reads it and only
-        //  allow rules mentioned in it to be generated as final scan results
-        // If there are user picked rules, then return a filtered issues array
-        if (!userRule.equals("all")) {
-            // Scanned results will be empty if the rule does not exist
-            ArrayList<Issue> filteredInternalIssues = new ArrayList<>();
-
-            if (InbuiltRules.INBUILT_RULES.containsKey(userRule)) {
-                for (Issue internalIssue : internalIssues) {
-                    if (internalIssue.getRuleID().equals(userRule)) {
-                        filteredInternalIssues.add(internalIssue);
-                    }
-                }
-            }
-
-            return filteredInternalIssues;
         }
 
         // Return the analyzed file results

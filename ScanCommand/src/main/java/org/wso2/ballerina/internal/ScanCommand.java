@@ -1,8 +1,5 @@
 package org.wso2.ballerina.internal;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import io.ballerina.cli.BLauncherCmd;
 
 import java.io.File;
@@ -36,7 +33,7 @@ public class ScanCommand implements BLauncherCmd {
     private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
 
-    public static final String PLATFORM_ARGS_PATTERN = "-PARG[\\w\\W]+=([\\w\\W]+)";
+    public final String PLATFORM_ARGS_PATTERN = "-PARG[\\w\\W]+=([\\w\\W]+)";
     private Map<String, String> platformArgs = new HashMap<>();
     private String projectPath = null;
 
@@ -46,15 +43,26 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
+    @CommandLine.Option(names = "--target-dir", description = "target directory path")
+    private Path targetDir;
+
+    @CommandLine.Option(names = {"--scan-report"}, description = "enable scan report generation")
+    private boolean scanReport;
+
+    // TODO: To be removed once functionality added to Scan.toml
+    @CommandLine.Option(names = {"--rules"},
+            description = "Specify the rules to filter out specific issues from the analyzed results.",
+            defaultValue = "all")
+    private String userRule;
+
+    @CommandLine.Option(names = {"--list-rules"},
+            description = "List the internal rules available in the Ballerina scan tool.")
+    private boolean listAllRules;
+
     @CommandLine.Option(names = {"--platforms"},
             description = "static code analysis output platform",
             defaultValue = "local")
     private String platforms;
-
-    @CommandLine.Option(names = {"--rule"},
-            description = "single rule to be checked during the static code analysis",
-            defaultValue = "all")
-    public static String userRule;
 
     public ScanCommand() {
         this.outputStream = System.out;
@@ -77,18 +85,69 @@ public class ScanCommand implements BLauncherCmd {
 
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Tool for providing static code analysis results for Ballerina projects\n\n");
-        out.append("bal scan --platform=<option> <ballerina-file>\n\n");
-        out.append("--option--\n");
-        out.append("\toption 1: sonarqube\n");
-        out.append("\toption 2: codeql\n");
-        out.append("\toption 3: semgrep\n\n");
-        out.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
+        StringBuilder builder = helpMessage();
+        out.append(builder);
     }
 
     @Override
     public void printUsage(StringBuilder out) {
         out.append("Tool for providing static code analysis results for Ballerina projects");
+    }
+
+    public StringBuilder helpMessage() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("NAME\n");
+        builder.append("\t" + "ballerina-scan - Static code analyzer" + "\n" + "\n\n");
+
+        builder.append("SYNOPSIS\n");
+        builder.append("\t" + "bal scan [OPTIONS] [<package>|<source-file>] [(-PARGkey=value)...]" + "\n " + "\n\n");
+
+        builder.append("DESCRIPTION\n");
+        builder.append("\t" + "Compiles and performs static code analysis and reports the analysis issues.\n" + "\t"
+                + "Analyze source code defined in each module of a package when compiling the current package.\n" + "\t"
+                + "It analyzes the given source file when compiling a single '.bal' file.\n" + "\n" + "\t"
+                + "Note: Analyzing individual '.bal' files of a package is not allowed.\n" + "\n\n");
+
+        builder.append("OPTIONS\n");
+        builder.append("\t" + "--target-dir=<path>\n" + "\t" + "\t"
+                + "Target directory path.\n\n");
+        builder.append("\t" + "--scan-report\n" + "\t" + "\t"
+                + "Generates an HTML report containing the analysis results.\n\n");
+        builder.append("\t" + "--rules=<rule1, ...>\n" + "\t" + "\t"
+                + "Specify internal rules to be enabled to extract specific issues from the analyzed results.\n\n");
+        builder.append("\t" + "--list-rules\n" + "\t" + "\t"
+                + "List the internal rules available in the Ballerina scan tool.\n\n");
+        builder.append("\t" + "--platforms=<platformName1, ...>\n" + "\t" + "\t"
+                + "Define platform plugin to report analysis results to. Before defining a platform,\n" + "\t" + "\t"
+                + "the relevant plugin should be placed in the 'bre/libs' folder of the Ballerina distribution.\n" + "\t" + "\t"
+                + "The user is able to define more than one platform.\n" + "\n\n");
+
+        builder.append("ARGUMENTS\n");
+        builder.append("\t" + "(-PARGkey=value)...\n" + "\t" + "\t"
+                + "The list of platform arguments to be passed to the platform plugins when a scan is initiated\n" + "\n\n");
+
+        builder.append("EXAMPLES\n");
+        builder.append("\t" + "Run analysis against all Ballerina documents in the current package\n" + "\t" + "\t"
+                + "$ bal scan\n\n");
+        builder.append("\t" + "Run analysis against a standalone Ballerina file. The file path can be\n" + "\t"
+                + "relative or absolute.\n" + "\t" + "\t"
+                + "$ bal scan main.bal\n\n");
+        builder.append("\t" + "Run analysis and save analysis results in specified directory.\n" + "\t" + "\t"
+                + "$ bal scan --target-dir='results'\n\n");
+        builder.append("\t" + "Run analysis and generate an analysis report.\n" + "\t" + "\t"
+                + "$ bal scan --scan-report\n\n");
+        builder.append("\t" + "Run analysis and filter out issues related to the specified rule.\n" + "\t" + "\t"
+                + "$ bal scan --rules=S107\n\n");
+        builder.append("\t" + "Run analysis and filter out issues related to multiple specified rules.\n" + "\t" + "\t"
+                + "$ bal scan --rules='rule1, rule2, rule3'\n\n");
+        builder.append("\t" + "Run analysis and report to sonarqube\n" + "\t" + "\t"
+                + "$ bal scan --platforms=sonarqube\n\n");
+        builder.append("\t" + "Run analysis and report to multiple platforms\n" + "\t" + "\t"
+                + "$ bal scan --platforms='platformName1, platformName2, platformName3'\n\n");
+        builder.append("\t" + "Run analysis and report to a platform with platform specific arguments\n" + "\t" + "\t"
+                + "$ bal scan --platforms=platformName1 -PARGkey1=value1 -PARGkey2=val2\n");
+
+        return builder;
     }
 
     @Override
@@ -101,17 +160,23 @@ public class ScanCommand implements BLauncherCmd {
     // MAIN method
     @Override
     public void execute() {
-        // if bal scan --help is passed
         if (helpFlag) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Tool for providing static code analysis results for Ballerina projects\n\n");
-            builder.append("bal scan --platform=<option> <ballerina-file>\n\n");
-            builder.append("--option--\n");
-            builder.append("\toption 1: sonarqube\n");
-            builder.append("\toption 2: codeql\n");
-            builder.append("\toption 3: semgrep\n\n");
-            builder.append("i.e: bal scan --platform=sonarqube balFileName.bal\n");
-            this.outputStream.println(builder);
+            StringBuilder builder = helpMessage();
+            outputStream.println(builder);
+            return;
+        }
+
+        if (!userRule.equals("all")) {
+            boolean userDefinedRulesActivated = ScanUtils.activateUserDefinedRule(InbuiltRules.INBUILT_RULES, userRule);
+            if (!userDefinedRulesActivated) {
+                outputStream.println("Invalid rule: " + userRule);
+                return;
+            }
+            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES, outputStream);
+        }
+
+        if (listAllRules) {
+            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES, outputStream);
             return;
         }
 
@@ -126,6 +191,8 @@ public class ScanCommand implements BLauncherCmd {
                     return;
                 }
 
+                outputStream.println("Running Scans");
+
                 // Perform scan on ballerina file/project
                 ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
 
@@ -135,10 +202,30 @@ public class ScanCommand implements BLauncherCmd {
                     return;
                 }
 
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
-                String jsonOutput = gson.toJson(issuesAsJson);
-                outputStream.println(jsonOutput);
+                // TODO: Create logic filter out issues to only the rule IDs defined by the user in a Scan.toml file
+
+                // Print results to console
+                ScanUtils.printToConsole(issues, outputStream);
+
+                outputStream.println();
+                outputStream.println("Generating scan report...");
+
+                // Save results to directory
+                Path reportPath;
+                if (targetDir != null) {
+                    reportPath = ScanUtils.saveToDirectory(issues,
+                            userPath,
+                            targetDir.toString()
+                    );
+                } else {
+                    reportPath = ScanUtils.saveToDirectory(issues,
+                            userPath,
+                            null);
+                }
+
+                outputStream.println();
+                outputStream.println("View scan results at:");
+                outputStream.println("\t" + reportPath + "\n");
             }
             case "sonarqube" -> {
                 Local localPlatform = new Local();
@@ -236,7 +323,7 @@ public class ScanCommand implements BLauncherCmd {
         }
     }
 
-    public void populatePlatformArguments(int subListStartValue) {
+    private void populatePlatformArguments(int subListStartValue) {
         String[] argumentsArray = argList.subList(subListStartValue, argList.size()).toArray(new String[0]);
         // Iterate through the arguments and populate the HashMap
         for (String argument : argumentsArray) {
@@ -257,7 +344,7 @@ public class ScanCommand implements BLauncherCmd {
         }
     }
 
-    public String checkPath() {
+    private String checkPath() {
         if (!argList.isEmpty()) {
             if (!argList.get(0).matches(PLATFORM_ARGS_PATTERN)) {
                 // Check if the first argument is not a platform argument and retrieve the file path

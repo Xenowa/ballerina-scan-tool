@@ -15,7 +15,6 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.internal.InbuiltRules;
 import org.wso2.ballerina.internal.ReportLocalIssue;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
@@ -28,8 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.wso2.ballerina.internal.ScanCommand.userRule;
 
 public class DeprecatedLocal {
     // Internal Issue type
@@ -170,20 +167,20 @@ public class DeprecatedLocal {
         }
 
         // If there are user picked rules, then return a filtered issues array
-        if (!userRule.equals("all")) {
-            // Scanned results will be empty if the rule does not exist
-            ArrayList<Issue> filteredInternalIssues = new ArrayList<>();
-
-            if (InbuiltRules.INBUILT_RULES.containsKey(userRule)) {
-                for (Issue internalIssue : internalIssues) {
-                    if (internalIssue.getRuleID().equals(userRule)) {
-                        filteredInternalIssues.add(internalIssue);
-                    }
-                }
-            }
-
-            return filteredInternalIssues;
-        }
+//        if (!userRule.equals("all")) {
+//            // Scanned results will be empty if the rule does not exist
+//            ArrayList<Issue> filteredInternalIssues = new ArrayList<>();
+//
+//            if (InbuiltRules.INBUILT_RULES.containsKey(userRule)) {
+//                for (Issue internalIssue : internalIssues) {
+//                    if (internalIssue.getRuleID().equals(userRule)) {
+//                        filteredInternalIssues.add(internalIssue);
+//                    }
+//                }
+//            }
+//
+//            return filteredInternalIssues;
+//        }
 
         // Return the analyzed file results
         return internalIssues;

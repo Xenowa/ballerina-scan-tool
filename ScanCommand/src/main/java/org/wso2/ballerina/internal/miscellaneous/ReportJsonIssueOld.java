@@ -19,7 +19,7 @@ public abstract class ReportJsonIssueOld implements DeprecatedIssue {
 
     // Only trigger the implemented check if it's available in the active ruleset and is active
     protected void activateRule() {
-        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
+        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID).ruleIsActivated()) {
             ruleIsActive = true;
             triggerCheck();
         }

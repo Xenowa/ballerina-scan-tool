@@ -25,7 +25,7 @@ public class ReportLocalIssue {
 
     public void reportIssue(LineRange issueLocation, String ruleID, String message) {
         // Only report the issues if it's present locally and activated
-        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID)) {
+        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID).ruleIsActivated()) {
             reportIssue(issueLocation.startLine().line(),
                     issueLocation.startLine().offset(),
                     issueLocation.endLine().line(),
@@ -120,7 +120,7 @@ public class ReportLocalIssue {
 
         // Check if the custom rule message already exists and if so return the rule assigned to the message
         if (CUSTOM_RULES.containsKey(customRuleMessage)) {
-            return CUSTOM_RULES.get(customRuleMessage);
+            return CUSTOM_RULES.get(customRuleMessage).getRuleID();
         }
 
         // Increment the last rule index
@@ -130,10 +130,10 @@ public class ReportLocalIssue {
         String customRuleID = "S" + lastRuleIndex;
 
         // Put the message mapped with the custom rule ID
-        CUSTOM_RULES.put(customRuleMessage, customRuleID);
+        CUSTOM_RULES.put(customRuleMessage, new Rule(customRuleID, customRuleMessage, true));
 
         // Put the new rule ID to the inbuilt rules array
-        INBUILT_RULES.put(customRuleID, true);
+        INBUILT_RULES.put(customRuleID, new Rule(customRuleID, customRuleMessage, true));
 
         // return the ruleID
         return customRuleID;
