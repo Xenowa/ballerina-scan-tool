@@ -24,7 +24,12 @@ public class SonarQube extends PlatformPlugin {
     private Map<String, String> platformArgs;
 
     @Override
-    public String initialize(Map<String, String> platformArgs) {
+    public String platformName() {
+        return "sonarqube";
+    }
+
+    @Override
+    public void initialize(Map<String, String> platformArgs) {
         this.platformArgs = platformArgs;
 
         arguments = new ArrayList<>();
@@ -57,8 +62,6 @@ public class SonarQube extends PlatformPlugin {
 
         // Initialize the process builder
         processBuilder = new ProcessBuilder();
-
-        return "SonarQube";
     }
 
     @Override

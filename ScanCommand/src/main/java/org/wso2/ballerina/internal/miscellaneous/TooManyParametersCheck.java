@@ -4,8 +4,7 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.ParameterNode;
-
-import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
+import org.wso2.ballerina.internal.ScanToolConstants;
 
 public class TooManyParametersCheck extends ReportJsonIssueOld {
     FunctionDefinitionNode startingNode;
@@ -31,7 +30,7 @@ public class TooManyParametersCheck extends ReportJsonIssueOld {
         // Apply the check for too Many Parameters
         if (parameterCount > 7) {
             reportIssue(
-                    CHECK_VIOLATION,
+                    ScanToolConstants.CHECK_VIOLATION,
                     startingNode.lineRange(),
                     "This function has " + parameterCount + " parameters, which is greater than the 7 authorized."
             );

@@ -15,6 +15,7 @@ import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.ReportLocalIssue;
+import org.wso2.ballerina.internal.ScanToolConstants;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
 import java.nio.file.Path;
@@ -24,13 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
-import static org.wso2.ballerina.CustomScanner.CUSTOM_RULE_ID;
-
 public class Local {
-    // Internal Issue type
-    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
-
     public ArrayList<Issue> analyzeProject(Path userPath) {
         // Array to hold all issues
         ArrayList<Issue> issues = new ArrayList<>();
@@ -139,7 +134,7 @@ public class Local {
             engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
                 String issueType = diagnostic.diagnosticInfo().code();
 
-                if (issueType.equals(CUSTOM_CHECK_VIOLATION)) {
+                if (issueType.equals(ScanToolConstants.CUSTOM_CHECK_VIOLATION)) {
                     List<DiagnosticProperty<?>> properties = diagnostic.properties();
 
                     // Retrieve the Issue property and add it to the issues array
@@ -147,7 +142,7 @@ public class Local {
                     AtomicReference<String> externalFilePath = new AtomicReference<>(null);
                     properties.forEach(diagnosticProperty -> {
                         if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
-                            if (diagnosticProperty.value().equals(CUSTOM_RULE_ID)) {
+                            if (diagnosticProperty.value().equals(ScanToolConstants.CUSTOM_RULE_ID)) {
                                 externalIssueRuleID.set((String) diagnosticProperty.value());
                             }
 

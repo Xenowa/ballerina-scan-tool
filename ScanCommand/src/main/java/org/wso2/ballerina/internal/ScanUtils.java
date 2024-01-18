@@ -20,7 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ScanUtils {
     public static void printToConsole(ArrayList<Issue> issues, PrintStream outputStream) {
@@ -106,25 +108,23 @@ public class ScanUtils {
         outputStream.println();
     }
 
+    public static boolean activateUserDefinedRule(Map<String, Rule> rules, List<String> userDefinedRules) {
+        AtomicBoolean userDefinedRulesActivated = new AtomicBoolean(true);
 
-    // Filter issues according to user defined rules
-    // Disable all except user defined rule
-    // EX:- bal scan --rule=S107
-    public static boolean activateUserDefinedRule(Map<String, Rule> rules, String userDefinedRule) {
-        if (rules.containsKey(userDefinedRule)) {
-            rules.values().forEach(rule -> {
-                rule.setRuleIsActivated(
-                        rule.getRuleID().equals(userDefinedRule)
-                );
-            });
+        // Disable all inbuilt rules
+        rules.values().forEach(inbuiltRule -> {
+            inbuiltRule.setRuleIsActivated(false);
+        });
 
-            return true;
-        } else {
-            return false;
-        }
-    }
+        userDefinedRules.forEach(userDefinedRule -> {
+            // If even a single user defined rule does not exist in the inbuilt rules return false
+            if (!rules.containsKey(userDefinedRule)) {
+                userDefinedRulesActivated.set(false);
+            } else {
+                rules.get(userDefinedRule).setRuleIsActivated(true);
+            }
+        });
 
-    public static ArrayList<Issue> filterIssues(String[] ruleIDs) {
-        return null;
+        return userDefinedRulesActivated.get();
     }
 }

@@ -10,6 +10,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,6 @@ public class ScanCommand implements BLauncherCmd {
     // =============================
     private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
-
-    public final String PLATFORM_ARGS_PATTERN = "-PARG[\\w\\W]+=([\\w\\W]+)";
     private Map<String, String> platformArgs = new HashMap<>();
     private String projectPath = null;
 
@@ -43,26 +42,27 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = "--target-dir", description = "target directory path")
+    @CommandLine.Option(names = "--target-dir", description = "Target directory path")
     private Path targetDir;
 
-    @CommandLine.Option(names = {"--scan-report"}, description = "enable scan report generation")
+    @CommandLine.Option(names = {"--scan-report"}, description = "Enable scan report generation")
     private boolean scanReport;
 
     // TODO: To be removed once functionality added to Scan.toml
     @CommandLine.Option(names = {"--rules"},
-            description = "Specify the rules to filter out specific issues from the analyzed results.",
-            defaultValue = "all")
-    private String userRule;
+            converter = StringToListConverter.class,
+            description = "Specify the comma separated list of rules to filter specific analysis issues")
+    private List<String> userRules = new ArrayList<>();
 
     @CommandLine.Option(names = {"--list-rules"},
             description = "List the internal rules available in the Ballerina scan tool.")
     private boolean listAllRules;
 
     @CommandLine.Option(names = {"--platforms"},
+            converter = StringToListConverter.class,
             description = "static code analysis output platform",
             defaultValue = "local")
-    private String platforms;
+    private List<String> platforms = new ArrayList<>();
 
     public ScanCommand() {
         this.outputStream = System.out;
@@ -166,10 +166,11 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        if (!userRule.equals("all")) {
-            boolean userDefinedRulesActivated = ScanUtils.activateUserDefinedRule(InbuiltRules.INBUILT_RULES, userRule);
+        if (!userRules.isEmpty()) {
+            boolean userDefinedRulesActivated = ScanUtils.activateUserDefinedRule(InbuiltRules.INBUILT_RULES,
+                    userRules);
             if (!userDefinedRulesActivated) {
-                outputStream.println("Invalid rule: " + userRule);
+                outputStream.println("Invalid rules list: " + userRules);
                 return;
             }
             ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES, outputStream);
@@ -180,147 +181,140 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // Trigger the relevant analysis platform
-        switch (platforms) {
-            case "local" -> {
-                Local localPlatform = new Local();
-                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
-                String userPath;
-                userPath = checkPath();
-                if (userPath.equals("")) {
-                    return;
-                }
-
-                outputStream.println("Running Scans");
-
-                // Perform scan on ballerina file/project
-                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
-
-                // Stop reporting if there is no issues array
-                if (issues == null) {
-                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
-                    return;
-                }
-
-                // TODO: Create logic filter out issues to only the rule IDs defined by the user in a Scan.toml file
-
-                // Print results to console
-                ScanUtils.printToConsole(issues, outputStream);
-
-                outputStream.println();
-                outputStream.println("Generating scan report...");
-
-                // Save results to directory
-                Path reportPath;
-                if (targetDir != null) {
-                    reportPath = ScanUtils.saveToDirectory(issues,
-                            userPath,
-                            targetDir.toString()
-                    );
-                } else {
-                    reportPath = ScanUtils.saveToDirectory(issues,
-                            userPath,
-                            null);
-                }
-
-                outputStream.println();
-                outputStream.println("View scan results at:");
-                outputStream.println("\t" + reportPath + "\n");
-            }
-            case "sonarqube" -> {
-                Local localPlatform = new Local();
-                // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
-                String userPath;
-                userPath = checkPath();
-                if (userPath.equals("")) {
-                    return;
-                }
-
-                // Perform scan on ballerina file/project
-                ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
-
-                // Stop reporting if there is no analysis results
-                if (issues == null) {
-                    outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
-                    return;
-                }
-
-                // Report results to relevant platform plugins
-                ArrayList<String> externalJarFilePaths = new ArrayList<>();
-                externalJarFilePaths.add("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar");
-
-                URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
-
-                // Platform plugins for reporting
-                ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class, ucl);
-                // Iterate through the loaded interfaces
-                for (PlatformPlugin platformPlugin : platformPlugins) {
-                    // Retrieve the platform name through initialize method
-                    String platformName = platformPlugin.initialize(platformArgs);
-
-                    // If a valid platform name is provided then trigger reporting
-                    // For now we will make the initialize return null in other platforms
-                    if (platformName != null) {
-                        platformPlugin.onScan(issues);
-                    }
-                }
-            }
-            case "codeql", "semgrep" -> {
-                outputStream.println("Platform support is not available yet!");
-            }
-            case "debug" -> {
-                // Simulate loading a project and engaging a compiler plugin
-                String userPath;
-                userPath = checkPath();
-                // Array to hold all issues
-                ArrayList<Issue> issues = new ArrayList<>();
-
-                // Get access to the project API
-                Project project = ProjectLoader.loadProject(Path.of(userPath));
-
-                // Iterate through each module of the project
-                project.currentPackage().moduleIds().forEach(moduleId -> {
-                    // Get access to the project modules
-                    Module module = project.currentPackage().module(moduleId);
-
-                    // ========
-                    // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
-                    // ========
-                    // This method aims to pass Issues without using Ballerina compiler diagnostics
-                    // Load the compiler plugin
-                    URL jarUrl;
-
-                    try {
-                        jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
-                                .toURI()
-                                .toURL();
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
-                            this.getClass().getClassLoader());
-
-                    ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
-                            ToolAndCompilerPluginConnector.class,
-                            externalJarClassLoader);
-
-                    // Iterate through the loaded interfaces
-                    String messageFromTool = "Sent from Ballerina Scan Tool";
-                    for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
-                        // Call the interface method and pass a context
-                        externalScannerJar.sendMessageFromTool(messageFromTool);
-                    }
-
-                    if (module.isDefaultModule()) {
-                        // Compile the project and engage the plugin once
-                        // If context has been passed correctly it will be displayed in the console
-                        project.currentPackage().getCompilation();
-                    }
-                });
-            }
-            default -> outputStream.println("Platform provided is invalid, run bal scan --help for more info!");
+        // Perform static code analysis
+        Local localPlatform = new Local();
+        // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+        String userPath;
+        userPath = checkPath();
+        if (userPath.equals("")) {
+            return;
         }
+
+        outputStream.println();
+        outputStream.println("Running Scans");
+
+        // Perform scan on ballerina file/project
+        ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
+
+        // Stop reporting if there is no issues array
+        if (issues == null) {
+            outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
+            return;
+        }
+
+        // Run local analysis if local platform is given
+        if (platforms.contains("local")) {
+            // TODO: Create logic to retrieve user defined rules and filter out issues from a Scan.toml file
+
+            // Print results to console
+            ScanUtils.printToConsole(issues, outputStream);
+
+            outputStream.println();
+            outputStream.println("Generating scan report...");
+
+            // Save results to directory
+            Path reportPath;
+            if (targetDir != null) {
+                reportPath = ScanUtils.saveToDirectory(issues,
+                        userPath,
+                        targetDir.toString()
+                );
+            } else {
+                reportPath = ScanUtils.saveToDirectory(issues,
+                        userPath,
+                        null);
+            }
+
+            outputStream.println();
+            outputStream.println("View scan results at:");
+            outputStream.println("\t" + reportPath + "\n");
+
+            platforms.removeAll(Collections.singleton("local"));
+        }
+
+        // TODO: Create logic to retrieve the platform JAR file paths from a Scan.toml file
+        ArrayList<String> externalJarFilePaths = new ArrayList<>();
+        externalJarFilePaths.add("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar");
+
+        URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
+
+        ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class, ucl);
+
+        // Proceed reporting to platforms if plugins exists
+        if (platformPlugins.stream().findAny().isPresent()) {
+            platformPlugins.forEach(platformPlugin -> {
+                if (platforms.contains(platformPlugin.platformName())) {
+                    platformPlugin.initialize(platformArgs);
+                    platformPlugin.onScan(issues);
+
+                    platforms.removeAll(Collections.singleton(platformPlugin.platformName()));
+                }
+            });
+        }
+
+        // If there are any platforms remaining which were not found in platform plugin JARs
+        platforms.forEach(remainingPlatform -> {
+            switch (remainingPlatform) {
+                case "semgrep", "codeql" -> {
+                    outputStream.println();
+                    outputStream.println(remainingPlatform + " platform support is not available yet!");
+                }
+                case "debug" -> {
+                    // Simulate loading a project and engaging a compiler plugin
+                    String debugUserPath;
+                    debugUserPath = checkPath();
+
+                    // Get access to the project API
+                    Project project = ProjectLoader.loadProject(Path.of(debugUserPath));
+
+                    // Iterate through each module of the project
+                    project.currentPackage().moduleIds().forEach(moduleId -> {
+                        // Get access to the project modules
+                        Module module = project.currentPackage().module(moduleId);
+
+                        // ========
+                        // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
+                        // ========
+                        // This method aims to pass Issues without using Ballerina compiler diagnostics
+                        // Load the compiler plugin
+                        URL jarUrl;
+
+                        try {
+                            jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
+                                    .toURI()
+                                    .toURL();
+                        } catch (MalformedURLException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
+                                this.getClass().getClassLoader());
+
+                        ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
+                                ToolAndCompilerPluginConnector.class,
+                                externalJarClassLoader);
+
+                        // Iterate through the loaded interfaces
+                        String messageFromTool = "Sent from Ballerina Scan Tool";
+                        for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
+                            // Call the interface method and pass a context
+                            externalScannerJar.sendMessageFromTool(messageFromTool);
+                        }
+
+                        if (module.isDefaultModule()) {
+                            // Compile the project and engage the plugin once
+                            // If context has been passed correctly it will be displayed in the console
+                            project.currentPackage().getCompilation();
+                        }
+                    });
+                }
+                default -> {
+                    outputStream.println();
+                    outputStream.println("Platform: '" + remainingPlatform + "' is invalid, "
+                            + "run bal scan --help for more info");
+                }
+            }
+        });
     }
 
     private void populatePlatformArguments(int subListStartValue) {
@@ -328,7 +322,7 @@ public class ScanCommand implements BLauncherCmd {
         // Iterate through the arguments and populate the HashMap
         for (String argument : argumentsArray) {
             // Check if the argument matches the -PARG pattern
-            if (argument.matches(PLATFORM_ARGS_PATTERN)) {
+            if (argument.matches(ScanToolConstants.PLATFORM_ARGS_PATTERN)) {
                 // Split each argument into key and value based on "="
                 String[] keyValue = argument.split("=");
 
@@ -346,7 +340,7 @@ public class ScanCommand implements BLauncherCmd {
 
     private String checkPath() {
         if (!argList.isEmpty()) {
-            if (!argList.get(0).matches(PLATFORM_ARGS_PATTERN)) {
+            if (!argList.get(0).matches(ScanToolConstants.PLATFORM_ARGS_PATTERN)) {
                 // Check if the first argument is not a platform argument and retrieve the file path
                 this.projectPath = String.valueOf(Paths.get(argList.get(0)));
                 if (argList.size() > 1) {

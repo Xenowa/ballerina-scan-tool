@@ -7,8 +7,7 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-
-import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
+import org.wso2.ballerina.internal.ScanToolConstants;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +48,7 @@ public class CheckPanicCountCheck extends ReportJsonIssueOld {
 
         if (checkPanicCounter.get() > 0) {
             reportIssue(
-                    CHECK_VIOLATION,
+                    ScanToolConstants.CHECK_VIOLATION,
                     functionBody.lineRange(),
                     "This function has "
                             + checkPanicCounter.get()

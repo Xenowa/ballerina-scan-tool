@@ -10,6 +10,7 @@ import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.ballerina.tools.diagnostics.Location;
 import org.wso2.ballerina.internal.ReportLocalIssue;
+import org.wso2.ballerina.internal.ScanToolConstants;
 import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 import org.wso2.ballerinalang.compiler.diagnostic.properties.BStringProperty;
 
@@ -18,8 +19,6 @@ import java.util.List;
 
 // Custom rules extension point for bal scan tool
 public abstract class CustomScanner {
-    public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
-    public static final String CUSTOM_RULE_ID = "CUSTOM_RULE_ID";
     private final ArrayList<Issue> issues = new ArrayList<>(); // checking if static solves concurrency issues
 
     public void setIssue(Issue issue) {
@@ -49,7 +48,7 @@ public abstract class CustomScanner {
 
             // Create Diagnostics information
             DiagnosticInfo issueInfo = new DiagnosticInfo(
-                    CUSTOM_CHECK_VIOLATION,
+                    ScanToolConstants.CUSTOM_CHECK_VIOLATION,
                     issue.getMessage(),
                     DiagnosticSeverity.INTERNAL);
 

@@ -5,11 +5,8 @@ import org.wso2.ballerina.Issue;
 
 import java.util.ArrayList;
 
-import static org.wso2.ballerina.CustomScanner.CUSTOM_CHECK_VIOLATION;
-import static org.wso2.ballerina.CustomScanner.CUSTOM_RULE_ID;
 import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
-import static org.wso2.ballerina.internal.platforms.Local.CHECK_VIOLATION;
 
 public class ReportLocalIssue {
     // Parameters required for custom rules
@@ -32,7 +29,7 @@ public class ReportLocalIssue {
                     issueLocation.endLine().offset(),
                     ruleID,
                     message,
-                    CHECK_VIOLATION,
+                    ScanToolConstants.CHECK_VIOLATION,
                     issuesFilePath);
         }
     }
@@ -74,7 +71,8 @@ public class ReportLocalIssue {
                     // Check the validity of the issue reported
                     String ruleID = externalIssue.getRuleID();
                     String issueType = externalIssue.getIssueType();
-                    if (!(ruleID.equals(CUSTOM_RULE_ID) && issueType.equals(CUSTOM_CHECK_VIOLATION))) {
+                    if (!(ruleID.equals(ScanToolConstants.CUSTOM_RULE_ID) &&
+                            issueType.equals(ScanToolConstants.CUSTOM_CHECK_VIOLATION))) {
                         externalIssuesAreValid = false;
                         break;
                     }

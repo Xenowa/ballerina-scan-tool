@@ -1,5 +1,7 @@
 package org.wso2.ballerina;
 
+import org.wso2.ballerina.internal.ScanToolConstants;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +10,6 @@ public abstract class IssueReporter {
     private ArrayList<Issue> issues;
     private final int SONARQUBE_RESERVED_RULES = 106;
     private static int lastRuleIndex;
-    private final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
     public static final Map<String, String> CUSTOM_RULES = new HashMap<>();
 
     public IssueReporter(ArrayList<Issue> issues, int lastRuleIndex) {
@@ -34,7 +35,7 @@ public abstract class IssueReporter {
                     endLineOffset,
                     ruleID,
                     message,
-                    CUSTOM_CHECK_VIOLATION,
+                    ScanToolConstants.CUSTOM_CHECK_VIOLATION,
                     issuesFilePath);
 
             // Add a new issue
