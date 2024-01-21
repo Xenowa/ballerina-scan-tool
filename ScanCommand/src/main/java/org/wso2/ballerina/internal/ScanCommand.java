@@ -209,8 +209,23 @@ public class ScanCommand implements BLauncherCmd {
             // Print results to console
             ScanUtils.printToConsole(issues, outputStream);
 
-            outputStream.println();
-            outputStream.println("Generating scan report...");
+            if (scanReport) {
+                Path scanReportPath;
+                outputStream.println();
+                outputStream.println("Generating scan report...");
+                if (targetDir != null) {
+                    scanReportPath = ScanUtils.generateScanReport(issues,
+                            userPath,
+                            targetDir.toString());
+                } else {
+                    scanReportPath = ScanUtils.generateScanReport(issues,
+                            userPath,
+                            null);
+                }
+                outputStream.println();
+                outputStream.println("View scan report at:");
+                outputStream.println("\t" + ScanToolConstants.FILE_PROTOCOL + scanReportPath + "\n");
+            }
 
             // Save results to directory
             Path reportPath;

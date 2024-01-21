@@ -12,8 +12,10 @@ public class ScanToolConstants {
     public static final String CUSTOM_RULE_ID = "CUSTOM_RULE_ID";
 
     // Report generation constants
+    public static final String RESULTS_HTML_FILE = "index.html";
     public static final String PATH_SEPARATOR = "/";
     public static final String TARGET_DIR_NAME = "target";
     public static final String RESULTS_JSON_FILE = "scan_results.json";
+    public static final String FILE_PROTOCOL = "file://";
     public static final String REPORT_DATA_PLACEHOLDER = "__data__";
 }

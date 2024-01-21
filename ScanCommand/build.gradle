@@ -58,6 +58,9 @@ dependencies {
 
     // Required for applying checkstyle & Spotbugs to the project
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
+
+    // For including the scan report JAR
+    implementation files('C:/Users/Tharana Wanigaratne/Desktop/sonar-ballerina/ScanCommand/src/main/resources/report.zip')
 }
 
 // Setting up the ballerina home property for the project
