@@ -15,7 +15,6 @@ public class Main {
         scanTomlPropertiesManifest.execute();
     }
 
-    // TODO
     public static void executeCompilerPluginsThroughClassLoaders() {
         // Retrieving values from Ballerina.toml
         Path ballerinaProjectPath = Path.of("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester");

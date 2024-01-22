@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -270,5 +271,10 @@ public class ScanUtils {
         });
 
         return userDefinedRulesActivated.get();
+    }
+
+    public static void testing() {
+        Project project = ProjectLoader.loadProject(Path.of("main.bal"));
+        PackageCompilation compilation = project.currentPackage().getCompilation();
     }
 }

@@ -128,24 +128,7 @@ public class Main {
 //        embeddedScanner.execute((Map) p);
     }
 
-    // TODO:
-    //  ==========================================================
-    //  Methods to report bal file issues within a single bal scan
-    //  ==========================================================
-    //  Engaging the plugin directly
     public void onScan(String scannedResults) {
-        // TODO:
-        //  - Method 1 of reporting Analysis issues to SonarQube
-        //      - bal scan tool performs all static code analysis
-        //      - it calls the Main class of the sonar-ballerina plugin
-        //      - it calls the onScan() method in the Main class
-        //      - it passes the scannedResults as a property to the SensorContext
-        //      - the embedded scanner will delegate creation of the context to the sonarqube server JAR
-        //      - the server jar will call the execute method in the BallerinaSensor class of the sonar-ballerina plugin
-        //      - the sonar-ballerina plugin will determine the correct inputFile with the absolute paths
-        //      provided in the scannedResults
-        //      - finally it will report all issues relevant to the specific input file to SonarQube
-
         // Initializing the required attributes
         Logs logs = new Logs(System.out, System.err);
         Cli cli = new Cli(logs).parse();
