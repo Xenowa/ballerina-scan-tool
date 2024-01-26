@@ -67,7 +67,7 @@ dependencies {
 tasks.withType(JavaExec).configureEach {
     // From the local ballerina distribution
     // Following code is the same as:
-    // systemProperty 'ballerina.home', System.getProperty('C:/Program Files/Ballerina/distributions/ballerina-2201.8.5')
+    // systemProperty 'ballerina.home', System.getProperty('C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.2\\bin')
     systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
 }
 
@@ -157,5 +157,5 @@ spotbugsMain.finalizedBy validateSpotbugs
 
 // class to build when gradlew run is executed in there terminal
 application {
-    mainClass = 'testing.balToolTester.Main'
+    mainClass = 'org.wso2.ballerina.Main'
 }

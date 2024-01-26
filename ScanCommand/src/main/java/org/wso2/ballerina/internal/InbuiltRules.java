@@ -1,5 +1,7 @@
 package org.wso2.ballerina.internal;
 
+import org.wso2.ballerina.internal.utilities.Rule;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +12,7 @@ public class InbuiltRules {
 
     /**
      * Custom rules map is populated through
-     * {@link org.wso2.ballerina.internal.ReportLocalIssue#generateCustomRuleID(String customRuleMessage)}
+     * {@link Reporter#generateCustomRuleID(String customRuleMessage)}
      */
     // Map for custom rules
     public static final Map<String, Rule> CUSTOM_RULES = new HashMap<>();

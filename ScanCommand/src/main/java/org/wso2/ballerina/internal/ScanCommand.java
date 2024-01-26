@@ -23,7 +23,10 @@ import io.ballerina.projects.util.ProjectConstants;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
 import org.wso2.ballerina.ToolAndCompilerPluginConnector;
-import org.wso2.ballerina.internal.platforms.Local;
+import org.wso2.ballerina.internal.utilities.ScanTomlFile;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanUtils;
+import org.wso2.ballerina.internal.utilities.StringToListConverter;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
@@ -35,6 +38,7 @@ public class ScanCommand implements BLauncherCmd {
     private final PrintStream errorStream; // for error outputs
     private Map<String, String> platformArgs = new HashMap<>();
     private String projectPath = null;
+    private ScanTomlFile scanTomlFile;
 
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
@@ -181,9 +185,7 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // Perform static code analysis
-        Local localPlatform = new Local();
-        // proceed to retrieve the user provided filepath to perform a scan on if the platform was local
+        // Retrieve project location
         String userPath;
         userPath = checkPath();
         if (userPath.equals("")) {
@@ -193,8 +195,12 @@ public class ScanCommand implements BLauncherCmd {
         outputStream.println();
         outputStream.println("Running Scans");
 
+        // Retrieve scan.toml file configurations
+        scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(userPath);
+
         // Perform scan on ballerina file/project
-        ArrayList<Issue> issues = localPlatform.analyzeProject(Path.of(userPath));
+        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer();
+        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
 
         // Stop reporting if there is no issues array
         if (issues == null) {

@@ -1,7 +1,5 @@
 package org.wso2.ballerina;
 
-import io.ballerina.compiler.api.SemanticModel;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
@@ -9,8 +7,7 @@ import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.ballerina.tools.diagnostics.Location;
-import org.wso2.ballerina.internal.ReportLocalIssue;
-import org.wso2.ballerina.internal.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 import org.wso2.ballerinalang.compiler.diagnostic.properties.BStringProperty;
 
@@ -29,14 +26,6 @@ public abstract class CustomScanner {
         return new ArrayList<>(issues);
     }
 
-    /**
-     * This method should be used by custom tool plugins to report issues
-     * To create custom rules the {@link io.ballerina.compiler.syntax.tree.NodeVisitor} can be extended
-     */
-
-    // Method 1: Reporting issues as diagnostics [Current Implementation]
-    // - This method gets called from the compiler plugin itself during package compilation
-    // - This method is NOT used by serviceloaders in the Ballerina scan tool
     public void reportIssues(CompilationAnalysisContext context) {
         getIssues().forEach(issue -> {
             // Retrieve the location of the issue
@@ -71,23 +60,5 @@ public abstract class CustomScanner {
             // Report the diagnostic
             context.reportDiagnostic(diagnosticIssue);
         });
-    }
-
-    // Method 2: sending an issue reporter and retrieving issues through that
-    // - In this case how to connect CompilationAnalysisContext?
-    // - This method is called from serviceloaders in the Ballerina scan tool
-    public void report(ReportLocalIssue issueReporter) {
-        issueReporter.reportExternalIssues(issues);
-        System.out.println("Using report method with issue reporter!");
-    }
-
-    // Method 3: Passing arguments to perform analysis and report
-    // - The syntax tree and semantic model and reporter are passed from the Ballerina Scan Tool
-    // - In this case the CompilationAnalysisContext is not required
-    // - Therefore the perform(CompilationAnalysisContext context){} method of compiler plugin is not used
-    // - This method is called from serviceloaders in the Ballerina scan tool
-    public void report(ReportLocalIssue issueReporter, SyntaxTree syntaxTree, SemanticModel semanticModel) {
-        issueReporter.reportExternalIssues(issues);
-        System.out.println("Using Ballerina Scan Tool for analysis and reporting!");
     }
 }

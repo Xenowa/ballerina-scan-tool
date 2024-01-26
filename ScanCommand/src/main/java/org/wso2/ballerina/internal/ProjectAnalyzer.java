@@ -1,8 +1,7 @@
-package org.wso2.ballerina.internal.platforms;
+package org.wso2.ballerina.internal;
 
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
@@ -14,9 +13,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.internal.ReportLocalIssue;
-import org.wso2.ballerina.internal.ScanToolConstants;
-import org.wso2.ballerina.internal.StaticCodeAnalyzer;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Local {
+public class ProjectAnalyzer {
     public ArrayList<Issue> analyzeProject(Path userPath) {
         // Array to hold all issues
         ArrayList<Issue> issues = new ArrayList<>();
@@ -92,7 +89,7 @@ public class Local {
         Path documentPath = currentProject.documentPath(documentId).orElse(null);
         if (documentPath != null) {
             // Set up the issue reporter here so issues can be reported from the static code analyzers
-            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
+            Reporter issueReporter = new Reporter(internalIssues,
                     documentPath.toAbsolutePath().toString());
 
 
@@ -114,12 +111,12 @@ public class Local {
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, ReportLocalIssue issueReporter) {
+    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, Reporter issueReporter) {
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
         analyzer.initialize(issueReporter);
     }
 
-    public void runCustomScans(Module currentModule, Project currentProject, ReportLocalIssue issueReporter) {
+    public void runCustomScans(Module currentModule, Project currentProject, Reporter issueReporter) {
         // Step 1: Check if the module is the default module
         if (currentModule.isDefaultModule()) {
             // Step 2: Get compilation of the whole package once

@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina.internal.utilities;
 
 public class ScanToolConstants {
     // CommandLine constants

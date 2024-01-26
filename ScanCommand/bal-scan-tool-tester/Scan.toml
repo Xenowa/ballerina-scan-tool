@@ -1,20 +1,40 @@
 # =========================================================
 # all following are optional (populated with defaul values)
 # =========================================================
-[sonarqube]
-# If the user has defined the sonar-projec.properties somewhere other than the working directory
-sonarProjectPropertiesPath = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\sonar-project.properties"
-# If the user wants to have the platform plugin in somewhere which is not bre/libs
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\sonar-ballerina-plugin-1.0-all.jar"
+[[platform]]
+name = "sonarqube"
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
 
-[semgrep]
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
+[[platform]]
+name = "semgrep"
+path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
 
-[codeql]
-platformPluginPath = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
+[[platform]]
+name = "codeql"
+path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
 
-# =====
-# Notes
-# =====
-# The user can report to multiple platforms by running "bal scan --platform='sonarqube, semgrep, codeql'"
-# or by mentioning the platforms as in this file and running "bal scan" only
+
+[[plugin]]
+org = "org1"
+name = "name1"
+version = "version"
+
+[[plugin]]
+org = "org2"
+name = "name2"
+version = "version"
+
+[[plugin]]
+org = "org3"
+name = "name3"
+version = "version"
+
+
+[[rule]]
+id = "S107"
+
+[[rule]]
+id = "S108"
+
+[[rule]]
+id = "S109"

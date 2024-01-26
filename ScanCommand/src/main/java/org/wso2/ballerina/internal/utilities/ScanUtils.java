@@ -1,21 +1,21 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina.internal.utilities;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import io.ballerina.projects.BallerinaToml;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.internal.model.Target;
+import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.semantic.ast.TomlValueNode;
 import org.wso2.ballerina.Issue;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,22 +23,14 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -273,8 +265,89 @@ public class ScanUtils {
         return userDefinedRulesActivated.get();
     }
 
-    public static void testing() {
-        Project project = ProjectLoader.loadProject(Path.of("main.bal"));
-        PackageCompilation compilation = project.currentPackage().getCompilation();
+    public static ScanTomlFile retrieveScanTomlConfigurations(String projectPath) {
+        Path ballerinaProjectPath = Path.of(projectPath);
+        Project project = ProjectLoader.loadProject(ballerinaProjectPath);
+
+        if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
+            // Retrieve the Ballerina.toml from the Ballerina project
+            BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().get();
+
+            // Retrieve it as a document
+            TomlDocument ballerinaTomlDocument = ballerinaToml.tomlDocument();
+
+            // Parse the toml document
+            Toml ballerinaTomlDocumentContent = ballerinaTomlDocument.toml();
+
+            // Retrieve only the [Scan] Table values
+            Toml scanTable = ballerinaTomlDocumentContent.getTable("scan").orElse(null);
+
+            if (scanTable != null) {
+                // Retrieve the Scan.toml file path
+                TomlValueNode tomlValue = scanTable.get("configPath").orElse(null);
+
+                if (tomlValue != null) {
+                    Path scanTomlFilePath = Path.of((String) tomlValue.toNativeValue());
+
+                    if (Files.exists(scanTomlFilePath)) {
+                        // Parse the toml document
+                        Toml scanTomlDocumentContent;
+                        try {
+                            scanTomlDocumentContent = Toml.read(scanTomlFilePath);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        // Start creating the Scan.toml object
+                        ScanTomlFile scanTomlFile = new ScanTomlFile();
+
+                        // Retrieve all platform tables
+                        List<Toml> platformsTable = scanTomlDocumentContent.getTables("platform");
+                        platformsTable.forEach(platformTable -> {
+                            Map<String, Object> properties = platformTable.toMap();
+                            String name = (String) properties.remove("name");
+                            String path = (String) properties.remove("path");
+
+                            if (name != null && Files.exists(Path.of(path))) {
+                                ScanTomlFile.Platform platform = new ScanTomlFile.Platform(name, path, properties);
+                                scanTomlFile.setPlatform(platform);
+                            }
+                        });
+
+                        // Retrieve all custom rule compiler plugin tables
+                        List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables("plugin");
+                        compilerPluginsTable.forEach(compilerPluginTable -> {
+                            Map<String, Object> properties = compilerPluginTable.toMap();
+                            String org = (String) properties.get("org");
+                            String name = (String) properties.get("name");
+                            String version = (String) properties.get("version");
+
+                            if (org != null && name != null && version != null) {
+                                ScanTomlFile.Plugin plugin = new ScanTomlFile.Plugin(org, name, version);
+                                scanTomlFile.setPlugin(plugin);
+                            }
+                        });
+
+                        // Retrieve all filter rule tables
+                        List<Toml> filterRulesTable = scanTomlDocumentContent.getTables("rule");
+                        filterRulesTable.forEach(filterRuleTable -> {
+                            Map<String, Object> properties = filterRuleTable.toMap();
+                            String id = (String) properties.get("id");
+                            if (id != null) {
+                                ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(id);
+                                scanTomlFile.setRuleToFilter(ruleToFilter);
+                            }
+                        });
+
+                        // Return the populated map
+                        return scanTomlFile;
+                    }
+                    return null;
+                }
+                return null;
+            }
+            return null;
+        }
+        return null;
     }
 }

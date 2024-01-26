@@ -15,7 +15,7 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.internal.ReportLocalIssue;
+import org.wso2.ballerina.internal.Reporter;
 import org.wso2.ballerina.internal.StaticCodeAnalyzer;
 
 import java.io.File;
@@ -101,7 +101,7 @@ public class DeprecatedLocal {
         Path documentPath = currentProject.documentPath(documentId).orElse(null);
         if (documentPath != null) {
             // Set up the issue reporter here so issues can be reported from the static code analyzers
-            ReportLocalIssue issueReporter = new ReportLocalIssue(internalIssues,
+            Reporter issueReporter = new Reporter(internalIssues,
                     documentPath.toAbsolutePath().toString());
 
 
@@ -187,7 +187,7 @@ public class DeprecatedLocal {
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void scanWithSyntaxTree(SyntaxTree syntaxTree, ReportLocalIssue issueReporter) {
+    public void scanWithSyntaxTree(SyntaxTree syntaxTree, Reporter issueReporter) {
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
         analyzer.initialize(issueReporter);
     }

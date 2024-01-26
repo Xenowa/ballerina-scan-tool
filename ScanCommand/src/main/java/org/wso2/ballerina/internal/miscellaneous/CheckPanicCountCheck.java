@@ -7,7 +7,7 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import org.wso2.ballerina.internal.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -3,7 +3,7 @@ package org.wso2.ballerina.plugin.checks;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.ReportExternalIssue;
-import org.wso2.ballerina.internal.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.util.ArrayList;
 

@@ -1,6 +1,6 @@
 package org.wso2.ballerina;
 
-import org.wso2.ballerina.internal.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;

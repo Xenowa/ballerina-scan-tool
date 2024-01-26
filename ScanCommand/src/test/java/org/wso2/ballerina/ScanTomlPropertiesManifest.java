@@ -7,30 +7,17 @@ import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
+import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ScanTomlPropertiesManifest {
-    public void execute() {
-        Map<String, Map<String, Object>> scanToolConfigs = retrieveScanToolConfigs();
-        Set<String> platformNames = scanToolConfigs != null ? scanToolConfigs.keySet() : null;
-        if (platformNames != null) {
-            platformNames.forEach(platformName -> {
-                scanToolConfigs.get(platformName).forEach((propertyName, propertyValue) -> {
-                    System.out.println(propertyName);
-                    System.out.println(propertyValue);
-                    System.out.println();
-                });
-            });
-        }
-    }
-
-    private Map<String, Map<String, Object>> retrieveScanToolConfigs() {
-        Path ballerinaProjectPath = Path.of("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester");
+    ScanTomlFile retrieveScanToolConfigs(String projectPath) {
+        Path ballerinaProjectPath = Path.of(projectPath);
         Project project = ProjectLoader.loadProject(ballerinaProjectPath);
 
         if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
@@ -61,26 +48,49 @@ public class ScanTomlPropertiesManifest {
                         throw new RuntimeException(e);
                     }
 
-                    // Retrieve the platform table contents
-                    Toml sonarqubeTable = scanTomlDocumentContent.getTable("sonarqube").orElse(null);
-                    Toml semgrepTable = scanTomlDocumentContent.getTable("semgrep").orElse(null);
-                    Toml codeqlTable = scanTomlDocumentContent.getTable("codeql").orElse(null);
-                    Map<String, Map<String, Object>> platformProperties = new HashMap<>();
+                    // Start creating the Scan.toml object
+                    ScanTomlFile scanTomlFile = new ScanTomlFile();
 
+                    // Retrieve all platform tables
+                    List<Toml> platformsTable = scanTomlDocumentContent.getTables("platform");
+                    platformsTable.forEach(platformTable -> {
+                        Map<String, Object> properties = platformTable.toMap();
+                        String name = (String) properties.remove("name");
+                        String path = (String) properties.remove("path");
 
-                    // Populate the platform properties if exists
-                    if (sonarqubeTable != null) {
-                        platformProperties.put("sonarqube", sonarqubeTable.toMap());
-                    }
-                    if (semgrepTable != null) {
-                        platformProperties.put("semgrep", semgrepTable.toMap());
-                    }
-                    if (codeqlTable != null) {
-                        platformProperties.put("codeql", codeqlTable.toMap());
-                    }
+                        if (name != null && Files.exists(Path.of(path))) {
+                            ScanTomlFile.Platform platform = new ScanTomlFile.Platform(name, path, properties);
+                            scanTomlFile.setPlatform(platform);
+                        }
+                    });
+
+                    // Retrieve all custom rule compiler plugin tables
+                    List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables("plugin");
+                    compilerPluginsTable.forEach(compilerPluginTable -> {
+                        Map<String, Object> properties = compilerPluginTable.toMap();
+                        String org = (String) properties.get("org");
+                        String name = (String) properties.get("name");
+                        String version = (String) properties.get("version");
+
+                        if (org != null && name != null && version != null) {
+                            ScanTomlFile.Plugin plugin = new ScanTomlFile.Plugin(org, name, version);
+                            scanTomlFile.setPlugin(plugin);
+                        }
+                    });
+
+                    // Retrieve all filter rule tables
+                    List<Toml> filterRulesTable = scanTomlDocumentContent.getTables("rule");
+                    filterRulesTable.forEach(filterRuleTable -> {
+                        Map<String, Object> properties = filterRuleTable.toMap();
+                        String id = (String) properties.get("id");
+                        if (id != null) {
+                            ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(id);
+                            scanTomlFile.setRuleToFilter(ruleToFilter);
+                        }
+                    });
 
                     // Return the populated map
-                    return platformProperties;
+                    return scanTomlFile;
                 }
                 return null;
             }

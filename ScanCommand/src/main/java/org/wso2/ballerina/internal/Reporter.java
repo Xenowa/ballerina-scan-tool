@@ -2,20 +2,22 @@ package org.wso2.ballerina.internal;
 
 import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerina.Issue;
+import org.wso2.ballerina.internal.utilities.Rule;
+import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.util.ArrayList;
 
 import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
 
-public class ReportLocalIssue {
+public class Reporter {
     // Parameters required for custom rules
     private final int SONARQUBE_RESERVED_RULES = 106;
     private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
     private ArrayList<Issue> internalIssues;
     private String issuesFilePath;
 
-    public ReportLocalIssue(ArrayList<Issue> internalIssues, String issuesFilePath) {
+    public Reporter(ArrayList<Issue> internalIssues, String issuesFilePath) {
         this.internalIssues = internalIssues;
         this.issuesFilePath = issuesFilePath;
     }
