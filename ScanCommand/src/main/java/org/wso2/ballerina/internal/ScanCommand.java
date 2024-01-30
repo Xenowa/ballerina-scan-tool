@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
@@ -36,7 +38,7 @@ public class ScanCommand implements BLauncherCmd {
     // =============================
     private final PrintStream outputStream; // for success outputs
     private final PrintStream errorStream; // for error outputs
-    private Map<String, String> platformArgs = new HashMap<>();
+    private Map<String, String> commandlinePlatformArgs = new HashMap<>();
     private String projectPath = null;
     private ScanTomlFile scanTomlFile;
 
@@ -200,7 +202,7 @@ public class ScanCommand implements BLauncherCmd {
 
         // Perform scan on ballerina file/project
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer();
-        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
+        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath), scanTomlFile);
 
         // Stop reporting if there is no issues array
         if (issues == null) {
@@ -208,10 +210,16 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
+        // filter user defined rules if present in Scan.toml file
+        Set<ScanTomlFile.RuleToFilter> rulesToFilter = scanTomlFile.getRulesToFilter();
+        if (!rulesToFilter.isEmpty()) {
+            issues.removeIf(issue -> rulesToFilter.stream()
+                    .noneMatch(ruleToFilter -> ruleToFilter.getId()
+                            .equals(issue.getRuleID())));
+        }
+
         // Run local analysis if local platform is given
         if (platforms.contains("local")) {
-            // TODO: Create logic to retrieve user defined rules and filter out issues from a Scan.toml file
-
             // Print results to console
             ScanUtils.printToConsole(issues, outputStream);
 
@@ -253,9 +261,21 @@ public class ScanCommand implements BLauncherCmd {
             platforms.removeAll(Collections.singleton("local"));
         }
 
-        // TODO: Create logic to retrieve the platform JAR file paths from a Scan.toml file
+        // Retrieve the platform JAR file paths and arguments from Scan.toml
         ArrayList<String> externalJarFilePaths = new ArrayList<>();
-        externalJarFilePaths.add("C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar");
+        Map<String, Map<String, String>> platformArgs = new HashMap<>();
+        scanTomlFile.getPlatforms().forEach(platform -> {
+            if (platforms.contains(platform.getName())) {
+                externalJarFilePaths.add(platform.getPath());
+
+                // Map object map to string properties map
+                platformArgs.put(platform.getName(),
+                        platform.getArguments()
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey, value -> value.getValue().toString())));
+            }
+        });
 
         URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
 
@@ -265,7 +285,12 @@ public class ScanCommand implements BLauncherCmd {
         if (platformPlugins.stream().findAny().isPresent()) {
             platformPlugins.forEach(platformPlugin -> {
                 if (platforms.contains(platformPlugin.platformName())) {
-                    platformPlugin.initialize(platformArgs);
+                    Map<String, String> platformSpecificArgs = platformArgs.get(platformPlugin.platformName());
+                    if (!commandlinePlatformArgs.isEmpty()) {
+                        platformSpecificArgs.putAll(commandlinePlatformArgs);
+                    }
+
+                    platformPlugin.initialize(platformSpecificArgs);
                     platformPlugin.onScan(issues);
 
                     platforms.removeAll(Collections.singleton(platformPlugin.platformName()));
@@ -331,8 +356,9 @@ public class ScanCommand implements BLauncherCmd {
                 }
                 default -> {
                     outputStream.println();
-                    outputStream.println("Platform: '" + remainingPlatform + "' is invalid, "
-                            + "run bal scan --help for more info");
+                    outputStream.println("Error: The specified platform '" + remainingPlatform + "' is not available.");
+                    outputStream.println("Please ensure that the required platform plugin is installed and its path" +
+                            " is correctly specified in Scan.toml.");
                 }
             }
         });
@@ -350,7 +376,7 @@ public class ScanCommand implements BLauncherCmd {
                 // Check if the argument is in the correct format (contains "=")
                 if (keyValue.length == 2) {
                     // Add the key-value pair to the HashMap
-                    this.platformArgs.put(keyValue[0].split("-PARG")[1], keyValue[1]);
+                    this.commandlinePlatformArgs.put(keyValue[0].split("-PARG")[1], keyValue[1]);
                 } else {
                     // Handle invalid arguments (optional)
                     System.out.println("Invalid argument: " + argument);

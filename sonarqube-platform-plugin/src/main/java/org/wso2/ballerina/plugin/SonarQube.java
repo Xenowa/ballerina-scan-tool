@@ -74,10 +74,14 @@ public class SonarQube extends PlatformPlugin {
             System.out.println("Issues saved at: " + analyzedReportPath);
         } else {
             String analyzedReportPath = saveIssues(issues, "ballerina-analysis-results.json");
-
-            // Check if there is a results file and add to properties if it exists
             if (analyzedReportPath != null) {
                 arguments.add("-DanalyzedResultsPath=" + analyzedReportPath);
+            }
+
+            String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
+                    null);
+            if (sonarProjectPropertiesPath != null) {
+                arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
             }
 
             // Add all arguments to the process

@@ -12,33 +12,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class CustomBallerinaRulesAnalysisTask extends CustomScanner implements AnalysisTask<CompilationAnalysisContext> {
-    // ==================================
-    // reporter called from bal scan tool
-    // ==================================
-    // TODO:
-    //  IssueReporter issueReporter;
-    //  initialize(IssueReporter issueReporter){
-    //      this.issueReporter = issueReporter;
-    //  }
-    // - It's possible to use the reporter as follows, however the perform method does not get called on compiler plugin
-    // TODO:
-    //  reporter(IssueReporter issueReporter, SyntaxTree st, SemanticModel sm){
-    //      Issue customIssue = new Issue(...);
-    //      issueReporter.reportIssue(customIssue);
-    //  }
-
-    // ================================
-    // Compiler Plugin initiating point
-    // ================================
-    // - Method gets called only during package compilation
-    // - So there is no way to pass the reporter to it
-    // - As an alternative a custom diagnostic type can be introduced to report Issues from the reportDiagnostic()
-    // TODO:
-    //  Issue customIssue = new Issue(...);
-    //  IssueDiagnostic newIssueDiagnostic = new IssueDiagnostic(..., customIssue)
-    //  context.reportDiagnostic(newIssueDiagnostic);
-    // the tool without needing a reporter method from the bal scan tool
-    // Implementation of analysis task to be run during the compilation
     @Override
     public void perform(CompilationAnalysisContext context) {
         // This is the correct approach (There is only a single run)
@@ -78,9 +51,7 @@ public class CustomBallerinaRulesAnalysisTask extends CustomScanner implements A
         });
 
         // Set all issues to the issues array
-        externalIssues.forEach(issue -> {
-            setIssue(issue);
-        });
+        externalIssues.forEach(this::setIssue);
 
         // Report all issues
         reportIssues(context);

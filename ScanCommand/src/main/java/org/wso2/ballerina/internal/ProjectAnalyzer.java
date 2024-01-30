@@ -13,6 +13,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.DiagnosticProperty;
 import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
+import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
 import java.nio.file.Path;
@@ -23,7 +24,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ProjectAnalyzer {
-    public ArrayList<Issue> analyzeProject(Path userPath) {
+    private ScanTomlFile scanTomlFile = null;
+
+    public ArrayList<Issue> analyzeProject(Path userPath, ScanTomlFile scanTomlFile) {
+        // Set the scan toml file received
+        this.scanTomlFile = scanTomlFile;
+
         // Array to hold all issues
         ArrayList<Issue> issues = new ArrayList<>();
 
@@ -119,6 +125,8 @@ public class ProjectAnalyzer {
     public void runCustomScans(Module currentModule, Project currentProject, Reporter issueReporter) {
         // Step 1: Check if the module is the default module
         if (currentModule.isDefaultModule()) {
+            // TODO: Code generate custom compiler plugins from the information available in the scan.toml file
+
             // Step 2: Get compilation of the whole package once
             PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
 

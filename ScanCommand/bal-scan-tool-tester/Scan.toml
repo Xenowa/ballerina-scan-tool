@@ -1,9 +1,11 @@
 # =========================================================
 # all following are optional (populated with defaul values)
 # =========================================================
+# For platform specific properties to get picked up, the path should be valid
 [[platform]]
 name = "sonarqube"
 path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+sonarProjectPropertiesPath = "sonar-project.properties"
 
 [[platform]]
 name = "semgrep"
@@ -15,9 +17,9 @@ path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\li
 
 
 [[plugin]]
-org = "org1"
-name = "name1"
-version = "version"
+org = "tharana_wanigaratne"
+name = "compiler_plugin_customRules"
+version = "0.1.0"
 
 [[plugin]]
 org = "org2"
@@ -30,11 +32,11 @@ name = "name3"
 version = "version"
 
 
-[[rule]]
-id = "S107"
-
-[[rule]]
-id = "S108"
-
-[[rule]]
-id = "S109"
+#[[rule]]
+#id = "S107"
+#
+#[[rule]]
+#id = "S108"
+#
+#[[rule]]
+#id = "S109"

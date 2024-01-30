@@ -271,83 +271,86 @@ public class ScanUtils {
 
         if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
             // Retrieve the Ballerina.toml from the Ballerina project
-            BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().get();
+            if (project.currentPackage().ballerinaToml().isPresent()) {
+                BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().get();
 
-            // Retrieve it as a document
-            TomlDocument ballerinaTomlDocument = ballerinaToml.tomlDocument();
+                // Retrieve it as a document
+                TomlDocument ballerinaTomlDocument = ballerinaToml.tomlDocument();
 
-            // Parse the toml document
-            Toml ballerinaTomlDocumentContent = ballerinaTomlDocument.toml();
+                // Parse the toml document
+                Toml ballerinaTomlDocumentContent = ballerinaTomlDocument.toml();
 
-            // Retrieve only the [Scan] Table values
-            Toml scanTable = ballerinaTomlDocumentContent.getTable("scan").orElse(null);
+                // Retrieve only the [Scan] Table values
+                Toml scanTable = ballerinaTomlDocumentContent.getTable("scan").orElse(null);
 
-            if (scanTable != null) {
-                // Retrieve the Scan.toml file path
-                TomlValueNode tomlValue = scanTable.get("configPath").orElse(null);
+                if (scanTable != null) {
+                    // Retrieve the Scan.toml file path
+                    TomlValueNode configPath = scanTable.get("configPath").orElse(null);
 
-                if (tomlValue != null) {
-                    Path scanTomlFilePath = Path.of((String) tomlValue.toNativeValue());
+                    if (configPath != null) {
+                        Path scanTomlFilePath = Path.of((String) configPath.toNativeValue());
 
-                    if (Files.exists(scanTomlFilePath)) {
-                        // Parse the toml document
-                        Toml scanTomlDocumentContent;
-                        try {
-                            scanTomlDocumentContent = Toml.read(scanTomlFilePath);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                        if (Files.exists(scanTomlFilePath)) {
+                            // Parse the toml document
+                            Toml scanTomlDocumentContent;
+                            try {
+                                scanTomlDocumentContent = Toml.read(scanTomlFilePath);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            // Start creating the Scan.toml object
+                            ScanTomlFile scanTomlFile = new ScanTomlFile();
+
+                            // Retrieve all platform tables
+                            List<Toml> platformsTable = scanTomlDocumentContent.getTables("platform");
+                            platformsTable.forEach(platformTable -> {
+                                Map<String, Object> properties = platformTable.toMap();
+                                String name = (String) properties.remove("name");
+                                String path = (String) properties.remove("path");
+
+                                if (name != null && path != null && Files.exists(Path.of(path))) {
+                                    ScanTomlFile.Platform platform = new ScanTomlFile.Platform(name, path, properties);
+                                    scanTomlFile.setPlatform(platform);
+                                }
+                            });
+
+                            // Retrieve all custom rule compiler plugin tables
+                            List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables("plugin");
+                            compilerPluginsTable.forEach(compilerPluginTable -> {
+                                Map<String, Object> properties = compilerPluginTable.toMap();
+                                String org = (String) properties.get("org");
+                                String name = (String) properties.get("name");
+                                String version = (String) properties.get("version");
+
+                                if (org != null && name != null && version != null) {
+                                    ScanTomlFile.Plugin plugin = new ScanTomlFile.Plugin(org, name, version);
+                                    scanTomlFile.setPlugin(plugin);
+                                }
+                            });
+
+                            // Retrieve all filter rule tables
+                            List<Toml> filterRulesTable = scanTomlDocumentContent.getTables("rule");
+                            filterRulesTable.forEach(filterRuleTable -> {
+                                Map<String, Object> properties = filterRuleTable.toMap();
+                                String id = (String) properties.get("id");
+                                if (id != null) {
+                                    ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(id);
+                                    scanTomlFile.setRuleToFilter(ruleToFilter);
+                                }
+                            });
+
+                            // Return the populated map
+                            return scanTomlFile;
                         }
-
-                        // Start creating the Scan.toml object
-                        ScanTomlFile scanTomlFile = new ScanTomlFile();
-
-                        // Retrieve all platform tables
-                        List<Toml> platformsTable = scanTomlDocumentContent.getTables("platform");
-                        platformsTable.forEach(platformTable -> {
-                            Map<String, Object> properties = platformTable.toMap();
-                            String name = (String) properties.remove("name");
-                            String path = (String) properties.remove("path");
-
-                            if (name != null && Files.exists(Path.of(path))) {
-                                ScanTomlFile.Platform platform = new ScanTomlFile.Platform(name, path, properties);
-                                scanTomlFile.setPlatform(platform);
-                            }
-                        });
-
-                        // Retrieve all custom rule compiler plugin tables
-                        List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables("plugin");
-                        compilerPluginsTable.forEach(compilerPluginTable -> {
-                            Map<String, Object> properties = compilerPluginTable.toMap();
-                            String org = (String) properties.get("org");
-                            String name = (String) properties.get("name");
-                            String version = (String) properties.get("version");
-
-                            if (org != null && name != null && version != null) {
-                                ScanTomlFile.Plugin plugin = new ScanTomlFile.Plugin(org, name, version);
-                                scanTomlFile.setPlugin(plugin);
-                            }
-                        });
-
-                        // Retrieve all filter rule tables
-                        List<Toml> filterRulesTable = scanTomlDocumentContent.getTables("rule");
-                        filterRulesTable.forEach(filterRuleTable -> {
-                            Map<String, Object> properties = filterRuleTable.toMap();
-                            String id = (String) properties.get("id");
-                            if (id != null) {
-                                ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(id);
-                                scanTomlFile.setRuleToFilter(ruleToFilter);
-                            }
-                        });
-
-                        // Return the populated map
-                        return scanTomlFile;
+                        return new ScanTomlFile();
                     }
-                    return null;
+                    return new ScanTomlFile();
                 }
-                return null;
+                return new ScanTomlFile();
             }
-            return null;
+            return new ScanTomlFile();
         }
-        return null;
+        return new ScanTomlFile();
     }
 }
