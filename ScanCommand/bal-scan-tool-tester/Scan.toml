@@ -16,15 +16,16 @@ name = "codeql"
 path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
 
 
+#[[plugin]]
+#org = "tharana_wanigaratne"
+#name = "compiler_plugin_customRules"
+#version = "0.1.0"
+
 [[plugin]]
 org = "tharana_wanigaratne"
 name = "compiler_plugin_customRules"
 version = "0.1.0"
-
-[[plugin]]
-org = "org2"
-name = "name2"
-version = "version"
+repository = "local"
 
 [[plugin]]
 org = "org3"

@@ -126,6 +126,10 @@ public class ProjectAnalyzer {
         // Step 1: Check if the module is the default module
         if (currentModule.isDefaultModule()) {
             // TODO: Code generate custom compiler plugins from the information available in the scan.toml file
+            // TODO: 1. Check if the scan.toml given compiler plugins exists in central repo or local repo
+            // TODO: 2. Generate them as imports to the main.bal file
+            // TODO: 3. Perform package compilation with generated plugins and retrieve diagnostics
+            // TODO: 4. Add external issues through diagnostics
 
             // Step 2: Get compilation of the whole package once
             PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();

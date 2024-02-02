@@ -11,6 +11,7 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.internal.model.Target;
+import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import org.wso2.ballerina.Issue;
@@ -33,6 +34,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
+import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 
 public class ScanUtils {
     public static void printToConsole(ArrayList<Issue> issues, PrintStream outputStream) {
@@ -322,9 +326,23 @@ public class ScanUtils {
                                 String org = (String) properties.get("org");
                                 String name = (String) properties.get("name");
                                 String version = (String) properties.get("version");
+                                String repository = (String) properties.get("repository");
 
                                 if (org != null && name != null && version != null) {
-                                    ScanTomlFile.Plugin plugin = new ScanTomlFile.Plugin(org, name, version);
+                                    ScanTomlFile.Plugin plugin;
+                                    if (repository != null) {
+                                        plugin = new ScanTomlFile.Plugin(org,
+                                                name,
+                                                version,
+                                                repository.equals(LOCAL_REPOSITORY_NAME) ||
+                                                        repository.equals(CENTRAL_REPOSITORY_CACHE_NAME) ?
+                                                        repository : null);
+                                    } else {
+                                        plugin = new ScanTomlFile.Plugin(org,
+                                                name,
+                                                version,
+                                                null);
+                                    }
                                     scanTomlFile.setPlugin(plugin);
                                 }
                             });

@@ -63,11 +63,13 @@ public class ScanTomlFile {
         private String org;
         private String name;
         private String version;
+        private String repository;
 
-        public Plugin(String org, String name, String version) {
+        public Plugin(String org, String name, String version, String repository) {
             this.org = org;
             this.name = name;
             this.version = version;
+            this.repository = repository;
         }
 
         public String getOrg() {
@@ -80,6 +82,10 @@ public class ScanTomlFile {
 
         public String getVersion() {
             return version;
+        }
+
+        public String getRepository() {
+            return repository;
         }
     }
 

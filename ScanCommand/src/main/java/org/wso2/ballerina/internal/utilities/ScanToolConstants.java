@@ -18,4 +18,7 @@ public class ScanToolConstants {
     public static final String RESULTS_JSON_FILE = "scan_results.json";
     public static final String FILE_PROTOCOL = "file://";
     public static final String REPORT_DATA_PLACEHOLDER = "__data__";
+
+    // Import generation constants
+    public static final String USE_IMPORT_AS_SERVICE = " as _;";
 }
