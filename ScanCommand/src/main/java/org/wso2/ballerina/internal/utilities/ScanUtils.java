@@ -5,13 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.projects.BallerinaToml;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.internal.model.Target;
-import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import org.wso2.ballerina.Issue;
@@ -121,6 +119,14 @@ public class ScanUtils {
                 jsonScanReportFile.addProperty("fileName", filePath + " [FILE_NAME]");
                 jsonScanReportFile.addProperty("filePath", filePath);
 
+                // Get the contents of the file through a file reader
+                String fileContent = "";
+                try {
+                    fileContent = Files.readString(Path.of(filePath));
+                } catch (Exception ignored) {
+                }
+                jsonScanReportFile.addProperty("fileContent", fileContent);
+
                 JsonObject jsonScanReportIssueTextRange = new JsonObject();
                 jsonScanReportIssueTextRange.addProperty("startLine", issue.getStartLine());
                 jsonScanReportIssueTextRange.addProperty("startLineOffset", issue.getStartLineOffset());
@@ -138,7 +144,6 @@ public class ScanUtils {
                 JsonArray jsonIssues = new JsonArray();
                 jsonIssues.add(jsonScanReportIssue);
                 jsonScanReportFile.add("issues", jsonIssues);
-
 
                 jsonScanReportPathAndFile.put(filePath, jsonScanReportFile);
             } else {

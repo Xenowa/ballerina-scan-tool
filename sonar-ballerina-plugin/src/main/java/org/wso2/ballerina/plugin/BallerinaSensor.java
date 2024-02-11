@@ -102,7 +102,7 @@ class BallerinaSensor implements Sensor {
                 "/c",
                 "bal",
                 "scan",
-                "--platform=sonarqube",
+                "--platforms=sonarqube",
                 "-PARG=analyzedResultsFilePath=" + analyzedResultsFilePath);
 
         try {

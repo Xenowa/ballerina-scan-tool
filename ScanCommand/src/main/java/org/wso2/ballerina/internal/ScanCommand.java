@@ -125,7 +125,7 @@ public class ScanCommand implements BLauncherCmd {
                 + "List the internal rules available in the Ballerina scan tool.\n\n");
         builder.append("\t" + "--platforms=<platformName1, ...>\n" + "\t" + "\t"
                 + "Define platform plugin to report analysis results to. Before defining a platform,\n" + "\t" + "\t"
-                + "the relevant plugin should be placed in the 'bre/libs' folder of the Ballerina distribution.\n" + "\t" + "\t"
+                + "the relevant plugin path should be provided in a ‘Scan.toml’ file.\n" + "\t" + "\t"
                 + "The user is able to define more than one platform.\n" + "\n\n");
 
         builder.append("ARGUMENTS\n");
