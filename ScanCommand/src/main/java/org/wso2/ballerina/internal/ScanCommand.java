@@ -18,13 +18,9 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.ballerina.projects.Module;
-import io.ballerina.projects.Project;
-import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.util.ProjectConstants;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
-import org.wso2.ballerina.ToolAndCompilerPluginConnector;
 import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 import org.wso2.ballerina.internal.utilities.ScanUtils;
@@ -218,7 +214,7 @@ public class ScanCommand implements BLauncherCmd {
                             .equals(issue.getRuleID())));
         }
 
-        // Run local analysis if local platform is given
+        // Produce analysis results locally if 'local' platform is given
         if (platforms.contains("local")) {
             // Print results to console
             ScanUtils.printToConsole(issues, outputStream);
@@ -304,55 +300,6 @@ public class ScanCommand implements BLauncherCmd {
                 case "semgrep", "codeql" -> {
                     outputStream.println();
                     outputStream.println(remainingPlatform + " platform support is not available yet!");
-                }
-                case "debug" -> {
-                    // Simulate loading a project and engaging a compiler plugin
-                    String debugUserPath;
-                    debugUserPath = checkPath();
-
-                    // Get access to the project API
-                    Project project = ProjectLoader.loadProject(Path.of(debugUserPath));
-
-                    // Iterate through each module of the project
-                    project.currentPackage().moduleIds().forEach(moduleId -> {
-                        // Get access to the project modules
-                        Module module = project.currentPackage().module(moduleId);
-
-                        // ========
-                        // METHOD 2 (using compiler plugins with URLClassLoaders and service loaders)
-                        // ========
-                        // This method aims to pass Issues without using Ballerina compiler diagnostics
-                        // Load the compiler plugin
-                        URL jarUrl;
-
-                        try {
-                            jarUrl = new File("C:\\Users\\Tharana Wanigaratne\\.ballerina\\repositories\\central.ballerina.io\\bala\\tharana_wanigaratne\\compiler_plugin_issueContextShareTesting\\0.1.0\\java17\\compiler-plugin\\libs\\issue-context-share-test-plugin-1.0-all.jar")
-                                    .toURI()
-                                    .toURL();
-                        } catch (MalformedURLException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        URLClassLoader externalJarClassLoader = new URLClassLoader(new URL[]{jarUrl},
-                                this.getClass().getClassLoader());
-
-                        ServiceLoader<ToolAndCompilerPluginConnector> externalScannerJars = ServiceLoader.load(
-                                ToolAndCompilerPluginConnector.class,
-                                externalJarClassLoader);
-
-                        // Iterate through the loaded interfaces
-                        String messageFromTool = "Sent from Ballerina Scan Tool";
-                        for (ToolAndCompilerPluginConnector externalScannerJar : externalScannerJars) {
-                            // Call the interface method and pass a context
-                            externalScannerJar.sendMessageFromTool(messageFromTool);
-                        }
-
-                        if (module.isDefaultModule()) {
-                            // Compile the project and engage the plugin once
-                            // If context has been passed correctly it will be displayed in the console
-                            project.currentPackage().getCompilation();
-                        }
-                    });
                 }
                 default -> {
                     outputStream.println();

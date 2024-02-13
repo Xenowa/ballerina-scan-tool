@@ -5,11 +5,25 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.projects.BallerinaToml;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageDescriptor;
+import io.ballerina.projects.PackageName;
+import io.ballerina.projects.PackageOrg;
+import io.ballerina.projects.PackageVersion;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.SemanticVersion;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.environment.EnvironmentBuilder;
+import io.ballerina.projects.environment.PackageResolver;
+import io.ballerina.projects.environment.ResolutionOptions;
+import io.ballerina.projects.environment.ResolutionRequest;
+import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.internal.model.Target;
+import io.ballerina.projects.util.ProjectConstants;
+import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import org.wso2.ballerina.Issue;
@@ -26,15 +40,21 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
+import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
+import static io.ballerina.projects.util.ProjectConstants.REPOSITORIES_DIR;
+import static io.ballerina.projects.util.ProjectConstants.REPO_BALA_DIR_NAME;
 
 public class ScanUtils {
     public static void printToConsole(ArrayList<Issue> issues, PrintStream outputStream) {
@@ -115,8 +135,8 @@ public class ScanUtils {
             String filePath = issue.getReportedFilePath();
             if (!jsonScanReportPathAndFile.containsKey(filePath)) {
                 JsonObject jsonScanReportFile = new JsonObject();
-                // TODO: Add file name field to existing Issue objects
-                jsonScanReportFile.addProperty("fileName", filePath + " [FILE_NAME]");
+
+                jsonScanReportFile.addProperty("fileName", issue.getFileName());
                 jsonScanReportFile.addProperty("filePath", filePath);
 
                 // Get the contents of the file through a file reader
@@ -135,8 +155,7 @@ public class ScanUtils {
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                // TODO: Add a issue type field to the existing Issue objects
-                jsonScanReportIssue.addProperty("type", "CODE_SMELL");
+                jsonScanReportIssue.addProperty("type", issue.getType());
                 jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
@@ -157,8 +176,7 @@ public class ScanUtils {
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                // TODO: Add a issue type field to the existing Issue objects
-                jsonScanReportIssue.addProperty("type", "CODE_SMELL");
+                jsonScanReportIssue.addProperty("type", issue.getType());
                 jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);

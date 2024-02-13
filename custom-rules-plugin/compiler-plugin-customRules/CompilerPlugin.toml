@@ -1,5 +1,5 @@
 [plugin] # Have to check if below path is needed
-class = "org.wso2.ballerina.plugin.CustomBallerinaRulesCompilerPlugin"
+class = "org.wso2.ballerina.plugin.CustomRulesCompilerPlugin"
 
 [[dependency]]
 path = "../build/libs/custom-rules-plugin-1.0-all.jar"

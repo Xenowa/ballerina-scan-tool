@@ -1,5 +1,0 @@
-[plugin]
-class = "org.wso2.ballerina.plugin.CustomCompilerPlugin"
-
-[[dependency]]
-path = "../build/libs/issue-context-share-test-plugin-1.0-all.jar"

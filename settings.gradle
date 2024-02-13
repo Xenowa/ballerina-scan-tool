@@ -6,7 +6,3 @@ include 'sonarqube-platform-plugin'
 
 // Platform specific plugins
 include 'sonar-ballerina-plugin'
-
-// TODO: To be removed test plugins
-include 'issue-context-share-test-plugin'
-

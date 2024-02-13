@@ -94,58 +94,12 @@ public class Main {
                     documentContent = ballerinaToml.tomlDocument().textDocument().toString();
                     ballerinaToml = ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
                 }
-
-                // TODO: 3. Perform package compilation with generated plugins and retrieve diagnostics
-                project.currentPackage().getCompilation()
-                        // mainBal.module().project().currentPackage().getCompilation()
-                        .diagnosticResult()
-                        .diagnostics()
-                        .forEach(diagnostic -> {
-                            String issueType = diagnostic.diagnosticInfo().code();
-
-                            if (issueType.equals(ScanToolConstants.CUSTOM_CHECK_VIOLATION)) {
-                                List<DiagnosticProperty<?>> properties = diagnostic.properties();
-
-                                // Retrieve the Issue property and add it to the issues array
-                                AtomicReference<String> externalIssueRuleID = new AtomicReference<>(null);
-                                AtomicReference<String> externalFilePath = new AtomicReference<>(null);
-                                properties.forEach(diagnosticProperty -> {
-                                    if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
-                                        if (diagnosticProperty.value().equals(ScanToolConstants.CUSTOM_RULE_ID)) {
-                                            externalIssueRuleID.set((String) diagnosticProperty.value());
-                                        }
-
-                                        if (Path.of((String) diagnosticProperty.value()).toFile().exists()) {
-                                            externalFilePath.set((String) diagnosticProperty.value());
-                                        }
-                                    }
-                                });
-
-                                // If all properties are available create a new issue and add to the external issues array
-                                if (externalIssueRuleID.get() != null && externalFilePath.get() != null) {
-                                    Issue newExternalIssue = new Issue(diagnostic.location().lineRange().startLine().line(),
-                                            diagnostic.location().lineRange().startLine().offset(),
-                                            diagnostic.location().lineRange().endLine().line(),
-                                            diagnostic.location().lineRange().endLine().offset(),
-                                            externalIssueRuleID.get(),
-                                            diagnostic.message(),
-                                            issueType,
-                                            externalFilePath.get());
-
-                                    issues.add(newExternalIssue);
-                                }
-                            }
-                        });
             }
         });
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(issues);
+        String jsonOutput = gson.toJson(scanTomlFile, ScanTomlFile.class);
         System.out.println(jsonOutput);
-
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        String jsonOutput = gson.toJson(scanTomlFile, ScanTomlFile.class);
-//        System.out.println(jsonOutput);
     }
 
     private static Map<String, ScanTomlFile.Plugin> resolvePackage(ScanTomlFile.Plugin plugin, SemanticVersion version) {

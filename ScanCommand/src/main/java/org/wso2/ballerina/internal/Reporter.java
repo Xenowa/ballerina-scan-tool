@@ -1,118 +1,98 @@
 package org.wso2.ballerina.internal;
 
-import io.ballerina.tools.text.LineRange;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.Project;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.utilities.Rule;
-import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
 import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CUSTOM_CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SONARQUBE_RESERVED_RULES;
 
 public class Reporter {
-    // Parameters required for custom rules
-    private final int SONARQUBE_RESERVED_RULES = 106;
     private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
-    private ArrayList<Issue> internalIssues;
-    private String issuesFilePath;
+    private final ArrayList<Issue> issues;
+    private String issuesFilePath = null;
 
-    public Reporter(ArrayList<Issue> internalIssues, String issuesFilePath) {
-        this.internalIssues = internalIssues;
-        this.issuesFilePath = issuesFilePath;
+    public Reporter(ArrayList<Issue> issues) {
+        this.issues = issues;
     }
 
-    public void reportIssue(LineRange issueLocation, String ruleID, String message) {
-        // Only report the issues if it's present locally and activated
-        if (INBUILT_RULES.containsKey(ruleID) && INBUILT_RULES.get(ruleID).ruleIsActivated()) {
-            reportIssue(issueLocation.startLine().line(),
-                    issueLocation.startLine().offset(),
-                    issueLocation.endLine().line(),
-                    issueLocation.endLine().offset(),
+    ArrayList<Issue> getIssues() {
+        return issues;
+    }
+
+    void addExternalIssues(ArrayList<Issue> issues) {
+        this.issues.addAll(issues);
+    }
+
+    void reportIssue(int startLine,
+                     int startLineOffset,
+                     int endLine,
+                     int endLineOffset,
+                     String ruleID,
+                     String message,
+                     String issueType,
+                     String type,
+                     Document reportedDocument,
+                     Module reportedModule,
+                     Project reportedProject) {
+
+        String moduleName = reportedModule.moduleName().toString();
+        String documentName = reportedDocument.name();
+        Path issuesFilePath = reportedProject.documentPath(reportedDocument.documentId()).orElse(null);
+
+        if (issuesFilePath != null) {
+            Issue issue = new Issue(startLine,
+                    startLineOffset,
+                    endLine,
+                    endLineOffset,
                     ruleID,
                     message,
-                    ScanToolConstants.CHECK_VIOLATION,
-                    issuesFilePath);
+                    issueType,
+                    type,
+                    moduleName + "/" + documentName,
+                    issuesFilePath.toString());
+
+            issues.add(issue);
         }
     }
 
-    public void reportIssue(int startLine,
-                            int startLineOffset,
-                            int endLine,
-                            int endLineOffset,
-                            String ruleID,
-                            String message,
-                            String issueType,
-                            String issuesFilePath) {
-        // Create a new issue
-        Issue newIssue = new Issue(startLine,
-                startLineOffset,
-                endLine,
-                endLineOffset,
-                ruleID,
-                message,
-                issueType,
-                issuesFilePath
-        );
+    public void reportExternalIssue(int startLine,
+                                    int startLineOffset,
+                                    int endLine,
+                                    int endLineOffset,
+                                    String message,
+                                    String type,
+                                    Document reportedDocument,
+                                    Module reportedModule,
+                                    Project reportedProject) {
+        String moduleName = reportedModule.moduleName().toString();
+        String documentName = reportedDocument.name();
+        Path externalIssuesFilePath = reportedProject.documentPath(reportedDocument.documentId()).orElse(null);
 
-        // Add a new issue
-        internalIssues.add(newIssue);
-    }
+        if (externalIssuesFilePath != null && message != null) {
+            Issue issue = new Issue(startLine,
+                    startLineOffset,
+                    endLine,
+                    endLineOffset,
+                    generateCustomRuleID(message),
+                    message,
+                    CUSTOM_CHECK_VIOLATION,
+                    type,
+                    moduleName + "/" + documentName,
+                    externalIssuesFilePath.toString());
 
-    public boolean reportExternalIssues(ArrayList<Issue> externalIssues) {
-        // validate the external issues reported
-        boolean externalIssuesAreValid = true;
-
-        // Transfer external issues to the internal issues array
-        for (Issue externalIssue : externalIssues) {
-            if (externalIssue == null) {
-                externalIssuesAreValid = false;
-                break;
-            } else {
-                try {
-                    // Check the validity of the issue reported
-                    String ruleID = externalIssue.getRuleID();
-                    String issueType = externalIssue.getIssueType();
-                    if (!(ruleID.equals(ScanToolConstants.CUSTOM_RULE_ID) &&
-                            issueType.equals(ScanToolConstants.CUSTOM_CHECK_VIOLATION))) {
-                        externalIssuesAreValid = false;
-                        break;
-                    }
-
-                    int startLine = externalIssue.getStartLine();
-                    int startLineOffset = externalIssue.getStartLineOffset();
-                    int endLine = externalIssue.getEndLine();
-                    int endLineOffset = externalIssue.getEndLineOffset();
-                    String message = externalIssue.getMessage();
-                    String reportedFilePath = externalIssue.getReportedFilePath();
-
-                    // verify if customRuleID generation was successful
-                    String customRuleID = generateCustomRuleID(message);
-                    if (customRuleID == null) {
-                        externalIssuesAreValid = false;
-                        break;
-                    }
-
-                    // Report the external issue
-                    reportIssue(startLine,
-                            startLineOffset,
-                            endLine,
-                            endLineOffset,
-                            customRuleID,
-                            message,
-                            issueType,
-                            reportedFilePath);
-                } catch (Exception e) {
-                    externalIssuesAreValid = false;
-                    break;
-                }
-            }
+            issues.add(issue);
         }
-
-        return externalIssuesAreValid;
     }
 
-    public String generateCustomRuleID(String customRuleMessage) {
+    String generateCustomRuleID(String customRuleMessage) {
         // Check if the custom rule has a valid message
         if (customRuleMessage.isEmpty()) {
             return null;

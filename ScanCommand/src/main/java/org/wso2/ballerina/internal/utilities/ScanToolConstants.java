@@ -6,10 +6,13 @@ public class ScanToolConstants {
 
     // Internal issues constants
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
+    public static final String CODE_SMELL = "CODE_SMELL";
+    public static final String BUG = "BUG";
+    public static final String VULNERABILITY = "VULNERABILITY";
+    public static final int SONARQUBE_RESERVED_RULES = 106;
 
     // External issues constants
     public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
-    public static final String CUSTOM_RULE_ID = "CUSTOM_RULE_ID";
 
     // Report generation constants
     public static final String RESULTS_HTML_FILE = "index.html";

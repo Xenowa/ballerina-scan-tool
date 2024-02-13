@@ -1,14 +1,18 @@
 package org.wso2.ballerina;
 
 public class Issue {
-    private int startLine;
-    private int startLineOffset;
-    private int endLine;
-    private int endLineOffset;
-    private String ruleID;
-    private String message;
-    private String issueType;
-    private String reportedFilePath;
+    private final int startLine;
+    private final int startLineOffset;
+    private final int endLine;
+    private final int endLineOffset;
+    private final String ruleID;
+    private final String message;
+    private final String issueType;
+    private final String type;
+    // There can be more than one ballerina file which has the same name, so we store it in the following format:
+    // fileName = "moduleName/main.bal"
+    private final String fileName;
+    private final String reportedFilePath;
 
     public Issue(int startLine,
                  int startLineOffset,
@@ -17,6 +21,8 @@ public class Issue {
                  String ruleID,
                  String message,
                  String issueType,
+                 String type,
+                 String fileName,
                  String reportedFilePath) {
         this.startLine = startLine;
         this.startLineOffset = startLineOffset;
@@ -25,6 +31,8 @@ public class Issue {
         this.ruleID = ruleID;
         this.message = message;
         this.issueType = issueType;
+        this.type = type;
+        this.fileName = fileName;
         this.reportedFilePath = reportedFilePath;
     }
 
@@ -58,5 +66,13 @@ public class Issue {
 
     public String getReportedFilePath() {
         return reportedFilePath;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getType() {
+        return type;
     }
 }

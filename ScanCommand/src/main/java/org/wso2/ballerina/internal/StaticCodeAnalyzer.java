@@ -12,8 +12,11 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CHECK_VIOLATION;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CODE_SMELL;
+
 public class StaticCodeAnalyzer extends NodeVisitor {
-    Reporter issueReporter;
+    ScannerContext scannerContext;
 
     // Initialize the static code analyzer
     private static Node mainNode;
@@ -22,9 +25,9 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         mainNode = syntaxTree.rootNode();
     }
 
-    public void initialize(Reporter issueReporter) {
-        this.issueReporter = issueReporter;
-        // Go with the following approach as in like the CodeAnalyzer
+    public void initialize(ScannerContext scannerContext) {
+        this.scannerContext = scannerContext;
+        // Go with the following approach similar to CodeAnalyzer
         this.visit((ModulePartNode) mainNode);
 
         // Other method to start the visit
@@ -37,12 +40,20 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         int parameterCount = functionSignatureNode.parameters().size();
         if (parameterCount > 7) {
             // Report issue
-            issueReporter.reportIssue(
-                    functionSignatureNode.lineRange(),
+            scannerContext.getReporter().reportIssue(
+                    functionSignatureNode.lineRange().startLine().line(),
+                    functionSignatureNode.lineRange().startLine().offset(),
+                    functionSignatureNode.lineRange().endLine().line(),
+                    functionSignatureNode.lineRange().endLine().offset(),
                     "S107",
                     "This function has "
                             + parameterCount
-                            + " parameters, which is greater than the 7 authorized."
+                            + " parameters, which is greater than the 7 authorized.",
+                    CHECK_VIOLATION,
+                    CODE_SMELL,
+                    scannerContext.getCurrentDocument(),
+                    scannerContext.getCurrentModule(),
+                    scannerContext.getCurrentProject()
             );
         }
 
@@ -70,12 +81,20 @@ public class StaticCodeAnalyzer extends NodeVisitor {
 
         if (checkPanicCounter.get() > 0) {
             // Report issue
-            issueReporter.reportIssue(
-                    functionBodyBlockNode.lineRange(),
+            scannerContext.getReporter().reportIssue(
+                    functionBodyBlockNode.lineRange().startLine().line(),
+                    functionBodyBlockNode.lineRange().startLine().offset(),
+                    functionBodyBlockNode.lineRange().endLine().line(),
+                    functionBodyBlockNode.lineRange().endLine().offset(),
                     "S108",
                     "This function has "
                             + checkPanicCounter.get()
-                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!"
+                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!",
+                    CHECK_VIOLATION,
+                    CODE_SMELL,
+                    scannerContext.getCurrentDocument(),
+                    scannerContext.getCurrentModule(),
+                    scannerContext.getCurrentProject()
             );
         }
 

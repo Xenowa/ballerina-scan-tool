@@ -8,7 +8,6 @@ import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
 import io.ballerina.projects.Package;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.PackageDescriptor;
 import io.ballerina.projects.PackageName;
 import io.ballerina.projects.PackageOrg;
@@ -24,11 +23,10 @@ import io.ballerina.projects.environment.ResolutionRequest;
 import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.projects.util.ProjectUtils;
-import io.ballerina.tools.diagnostics.DiagnosticProperty;
-import io.ballerina.tools.diagnostics.DiagnosticPropertyKind;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 import org.wso2.ballerina.internal.utilities.ScanToolConstants;
+import org.wso2.ballerina.internal.utilities.ScanUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,9 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
@@ -96,13 +92,13 @@ public class ProjectAnalyzer {
 
     public ArrayList<Issue> analyzeDocument(Project currentProject, Module currentModule, DocumentId documentId) {
         // Retrieve each document from the module
-        Document document = currentModule.document(documentId);
+        Document currentDocument = currentModule.document(documentId);
 
         // Map to store the parsed & Compiled outputs
         Map<String, Object> compiledOutputs = new HashMap<>();
 
         // Retrieve the syntax tree from the parsed ballerina document
-        compiledOutputs.put("syntaxTree", document.syntaxTree());
+        compiledOutputs.put("syntaxTree", currentDocument.syntaxTree());
 
         // Retrieve the compilation of the module
         ModuleCompilation compilation = currentModule.getCompilation();
@@ -114,40 +110,30 @@ public class ProjectAnalyzer {
         // Array to hold analysis issues for each document
         ArrayList<Issue> internalIssues = new ArrayList<>();
 
-        // Retrieve the current document path
-        Path documentPath = currentProject.documentPath(documentId).orElse(null);
-        if (documentPath != null) {
-            // Set up the issue reporter here so issues can be reported from the static code analyzers
-            Reporter issueReporter = new Reporter(internalIssues,
-                    documentPath.toAbsolutePath().toString());
+        // Set up a scanner context for each document being scanned for static code analysis
+        ScannerContext scannerContext = new ScannerContext(internalIssues,
+                currentDocument,
+                currentModule,
+                currentProject);
 
+        // Perform internal static code analysis
+        runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
+                (SemanticModel) compiledOutputs.get("semanticModel"),
+                scannerContext);
 
-            // Perform internal static code analysis
-            runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
-                    (SemanticModel) compiledOutputs.get("semanticModel"),
-                    issueReporter);
-
-            // External rules compiler plugins analysis
-            // ========
-            // METHOD 1 (using compiler plugins with diagnostics) [Currently Implemented]
-            // ========
-            // - Runs when a package compilation is performed through project API
-            runCustomScans(currentModule, currentProject, issueReporter);
-        }
+        runCustomScans(currentModule, currentProject, scannerContext);
 
         // Return the analyzed file results
         return internalIssues;
     }
 
     // For rules that can be implemented using the syntax tree model
-    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, Reporter issueReporter) {
+    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, ScannerContext scannerContext) {
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
-        analyzer.initialize(issueReporter);
+        analyzer.initialize(scannerContext);
     }
 
-    // TODO: This function is yet to be finalized depending on the approach taken to link compiler plugins and scan tool
-    //  Current Approach - compiler diagnostics based external issue reporting
-    public void runCustomScans(Module currentModule, Project currentProject, Reporter issueReporter) {
+    public void runCustomScans(Module currentModule, Project currentProject, ScannerContext scannerContext) {
         if (currentModule.isDefaultModule()) {
             // Checking if compiler plugins provided in Scan.toml exists
             Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
@@ -187,49 +173,14 @@ public class ProjectAnalyzer {
                 ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
             }
 
-            // Performing compilation, retrieving diagnostics and reporting as external issues
-            PackageCompilation engagedPlugins = currentProject.currentPackage().getCompilation();
-            ArrayList<Issue> externalIssues = new ArrayList<>();
-            engagedPlugins.diagnosticResult().diagnostics().forEach(diagnostic -> {
-                String issueType = diagnostic.diagnosticInfo().code();
+            // Engage custom compiler plugins through package compilation
+            currentProject.currentPackage().getCompilation();
 
-                if (issueType.equals(ScanToolConstants.CUSTOM_CHECK_VIOLATION)) {
-                    List<DiagnosticProperty<?>> properties = diagnostic.properties();
-
-                    // Retrieve the Issue property and add it to the issues array
-                    AtomicReference<String> externalIssueRuleID = new AtomicReference<>(null);
-                    AtomicReference<String> externalFilePath = new AtomicReference<>(null);
-                    properties.forEach(diagnosticProperty -> {
-                        if (diagnosticProperty.kind().equals(DiagnosticPropertyKind.STRING)) {
-                            if (diagnosticProperty.value().equals(ScanToolConstants.CUSTOM_RULE_ID)) {
-                                externalIssueRuleID.set((String) diagnosticProperty.value());
-                            }
-
-                            if (Path.of((String) diagnosticProperty.value()).toFile().exists()) {
-                                externalFilePath.set((String) diagnosticProperty.value());
-                            }
-                        }
-                    });
-
-                    // If all properties are available create a new issue and add to the external issues array
-                    if (externalIssueRuleID.get() != null && externalFilePath.get() != null) {
-                        Issue newExternalIssue = new Issue(diagnostic.location().lineRange().startLine().line(),
-                                diagnostic.location().lineRange().startLine().offset(),
-                                diagnostic.location().lineRange().endLine().line(),
-                                diagnostic.location().lineRange().endLine().offset(),
-                                externalIssueRuleID.get(),
-                                diagnostic.message(),
-                                issueType,
-                                externalFilePath.get());
-
-                        externalIssues.add(newExternalIssue);
-                    }
-                }
-            });
-
-            // Report the external issues
-            boolean successfullyReported = issueReporter.reportExternalIssues(externalIssues);
-            if (!successfullyReported) {
+            // Add external issues to the internal issues array
+            ArrayList<Issue> externalIssues = ScannerCompilerPlugin.getExternalIssues();
+            if (externalIssues != null) {
+                scannerContext.getReporter().addExternalIssues(externalIssues);
+            } else {
                 System.out.println("Unable to report external issues from: " +
                         currentProject.currentPackage().packageName());
             }

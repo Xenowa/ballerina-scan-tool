@@ -1,8 +1,0 @@
-[package]
-org = "tharana_wanigaratne"
-name = "compiler_plugin_issueContextShareTesting"
-version = "0.1.0"
-distribution = "2201.8.4-SNAPSHOT"
-
-[build-options]
-observabilityIncluded = true

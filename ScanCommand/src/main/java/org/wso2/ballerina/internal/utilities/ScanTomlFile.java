@@ -8,7 +8,6 @@ import java.util.Set;
 public class ScanTomlFile {
     private ArrayList<Platform> platforms = new ArrayList<>();
     private Set<Plugin> plugins = new HashSet<>();
-
     private Set<RuleToFilter> rules = new HashSet<>();
 
     public void setPlatform(Platform platform) {
