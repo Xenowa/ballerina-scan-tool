@@ -5,25 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.projects.BallerinaToml;
-import io.ballerina.projects.Document;
-import io.ballerina.projects.Package;
-import io.ballerina.projects.PackageDescriptor;
-import io.ballerina.projects.PackageName;
-import io.ballerina.projects.PackageOrg;
-import io.ballerina.projects.PackageVersion;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
-import io.ballerina.projects.SemanticVersion;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.projects.environment.EnvironmentBuilder;
-import io.ballerina.projects.environment.PackageResolver;
-import io.ballerina.projects.environment.ResolutionOptions;
-import io.ballerina.projects.environment.ResolutionRequest;
-import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.internal.model.Target;
-import io.ballerina.projects.util.ProjectConstants;
-import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import org.wso2.ballerina.Issue;
@@ -40,23 +26,25 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
-import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
-import static io.ballerina.projects.util.ProjectConstants.REPOSITORIES_DIR;
-import static io.ballerina.projects.util.ProjectConstants.REPO_BALA_DIR_NAME;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLATFORM_TABLE;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLUGIN_TABLE;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.RULE_TABLE;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_FILE_FIELD;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_TABLE;
 
 public class ScanUtils {
+    private ScanUtils() {
+    }
+
     public static void printToConsole(ArrayList<Issue> issues, PrintStream outputStream) {
         String jsonOutput = convertIssuesToJsonString(issues);
 
@@ -308,11 +296,19 @@ public class ScanUtils {
                 Toml ballerinaTomlDocumentContent = ballerinaTomlDocument.toml();
 
                 // Retrieve only the [Scan] Table values
-                Toml scanTable = ballerinaTomlDocumentContent.getTable("scan").orElse(null);
+                Toml scanTable = ballerinaTomlDocumentContent.getTable(SCAN_TABLE).orElse(null);
 
+                // TODO: Recreate Loading the 'Scan.toml' file similar to the format toml
+                //  1. First check if it's available in the config path provided in the Ballerina toml
+                //  2. If it's already available in cache load it from there
+                //  3. Else download/copy the configurations from the remote Scan.toml and create a copy in a cache
+                //  directory of project directory
+                //  4. If it's not available in the cache directory proceed checking for a Scan.toml in the project
+                //  directory
+                //  5. If scan toml file path is not given, by default check for a 'Scan.toml' in the project directory
                 if (scanTable != null) {
                     // Retrieve the Scan.toml file path
-                    TomlValueNode configPath = scanTable.get("configPath").orElse(null);
+                    TomlValueNode configPath = scanTable.get(SCAN_FILE_FIELD).orElse(null);
 
                     if (configPath != null) {
                         Path scanTomlFilePath = Path.of((String) configPath.toNativeValue());
@@ -330,7 +326,7 @@ public class ScanUtils {
                             ScanTomlFile scanTomlFile = new ScanTomlFile();
 
                             // Retrieve all platform tables
-                            List<Toml> platformsTable = scanTomlDocumentContent.getTables("platform");
+                            List<Toml> platformsTable = scanTomlDocumentContent.getTables(PLATFORM_TABLE);
                             platformsTable.forEach(platformTable -> {
                                 Map<String, Object> properties = platformTable.toMap();
                                 String name = (String) properties.remove("name");
@@ -343,7 +339,7 @@ public class ScanUtils {
                             });
 
                             // Retrieve all custom rule compiler plugin tables
-                            List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables("plugin");
+                            List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables(PLUGIN_TABLE);
                             compilerPluginsTable.forEach(compilerPluginTable -> {
                                 Map<String, Object> properties = compilerPluginTable.toMap();
                                 String org = (String) properties.get("org");
@@ -371,7 +367,7 @@ public class ScanUtils {
                             });
 
                             // Retrieve all filter rule tables
-                            List<Toml> filterRulesTable = scanTomlDocumentContent.getTables("rule");
+                            List<Toml> filterRulesTable = scanTomlDocumentContent.getTables(RULE_TABLE);
                             filterRulesTable.forEach(filterRuleTable -> {
                                 Map<String, Object> properties = filterRuleTable.toMap();
                                 String id = (String) properties.get("id");

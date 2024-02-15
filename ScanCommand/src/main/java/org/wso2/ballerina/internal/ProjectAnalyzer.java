@@ -121,7 +121,7 @@ public class ProjectAnalyzer {
                 (SemanticModel) compiledOutputs.get("semanticModel"),
                 scannerContext);
 
-        runCustomScans(currentModule, currentProject, scannerContext);
+        runCustomScans(currentDocument, currentProject, scannerContext);
 
         // Return the analyzed file results
         return internalIssues;
@@ -133,8 +133,9 @@ public class ProjectAnalyzer {
         analyzer.initialize(scannerContext);
     }
 
-    public void runCustomScans(Module currentModule, Project currentProject, ScannerContext scannerContext) {
-        if (currentModule.isDefaultModule()) {
+    public void runCustomScans(Document currentDocument, Project currentProject, ScannerContext scannerContext) {
+        // Currently for each document in the default module it will run the custom scan which should be avoided
+        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals("main.bal")) {
             // Checking if compiler plugins provided in Scan.toml exists
             Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
             Pattern versionPattern = Pattern.compile("^\\d+\\.\\d+\\.\\d+$");
@@ -162,9 +163,10 @@ public class ProjectAnalyzer {
             });
 
             // Generating imports
-            Document mainBal = currentModule.document(currentModule.documentIds().iterator().next());
-            String documentContent = mainBal.textDocument().toString();
-            mainBal.modify().withContent(newImports + documentContent).apply();
+
+            // Since there can multiple files in default module
+            String documentContent = currentDocument.textDocument().toString();
+            currentDocument.modify().withContent(newImports + documentContent).apply();
 
             // Generating dependencies
             BallerinaToml ballerinaToml = currentProject.currentPackage().ballerinaToml().orElse(null);
@@ -173,7 +175,7 @@ public class ProjectAnalyzer {
                 ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
             }
 
-            // Engage custom compiler plugins through package compilation
+            // Engage custom compiler plugins through module compilation
             currentProject.currentPackage().getCompilation();
 
             // Add external issues to the internal issues array

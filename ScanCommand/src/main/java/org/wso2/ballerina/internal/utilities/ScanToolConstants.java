@@ -22,6 +22,13 @@ public class ScanToolConstants {
     public static final String FILE_PROTOCOL = "file://";
     public static final String REPORT_DATA_PLACEHOLDER = "__data__";
 
+    // Scan.toml constants
+    public static final String SCAN_TABLE = "scan";
+    public static final String SCAN_FILE_FIELD = "configPath";
+    public static final String PLATFORM_TABLE = "platform";
+    public static final String PLUGIN_TABLE = "plugin";
+    public static final String RULE_TABLE = "rule";
+
     // Import generation constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";
 }

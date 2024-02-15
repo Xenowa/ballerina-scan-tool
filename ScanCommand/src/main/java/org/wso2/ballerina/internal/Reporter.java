@@ -17,7 +17,6 @@ import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SONARQUBE_
 public class Reporter {
     private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
     private final ArrayList<Issue> issues;
-    private String issuesFilePath = null;
 
     public Reporter(ArrayList<Issue> issues) {
         this.issues = issues;

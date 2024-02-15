@@ -68,7 +68,7 @@ bal push --repository=local
 📦<USER_HOME>/.ballerina
  ┗ 📦.config
     ┗**📜bal-tools.toml**
-    ┗**📜dist-2201.8.4.toml**
+    ┗**📜dist-2201.8.5.toml**
 ```
 
 7. Include the tool details in them as follows
@@ -82,7 +82,7 @@ name = "tool_scan"
 ```
 
 ```
-# (dist-2201.8.4.toml)
+# (dist-2201.8.5.toml)
 [[tool]]
 id = "scan"
 org = "tharana_wanigaratne"
@@ -159,7 +159,7 @@ accesstoken="TOKEN_FROM_CENTRAL"
 org = "DEV_CENTRAL_ORGANIZATION_NAME"
 name = "tool_scan"
 version = "0.1.0"
-distribution = "2201.8.4"
+distribution = "2201.8.5"
 ```
 
 8. Set the ballerina dev central environment variable to true
