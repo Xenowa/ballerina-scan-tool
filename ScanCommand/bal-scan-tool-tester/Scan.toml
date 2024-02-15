@@ -1,20 +1,16 @@
-# =========================================================
-# all following are optional (populated with defaul values)
-# =========================================================
 # For platform specific properties to get picked up, the path should be valid
-[[platform]]
-name = "sonarqube"
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
-sonarProjectPropertiesPath = "sonar-project.properties"
-
-[[platform]]
-name = "semgrep"
-path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
-
-[[platform]]
-name = "codeql"
-path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
-
+#[[platform]]
+#name = "sonarqube"
+#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+#sonarProjectPropertiesPath = "sonar-project.properties"
+#
+#[[platform]]
+#name = "semgrep"
+#path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
+#
+#[[platform]]
+#name = "codeql"
+#path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
 
 [[plugin]]
 org = "tharana_wanigaratne"
@@ -32,12 +28,32 @@ org = "org3"
 name = "name3"
 version = "version"
 
+#[rule]
+#ids = "S107, S108"
 
-#[[rule]]
-#id = "S107"
-#
-#[[rule]]
-#id = "S108"
-#
-#[[rule]]
-#id = "S109"
+# ================================================
+# Invalid use cases which are ignored by scan tool
+# ================================================
+[[platform]]
+name = ""
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+
+[[platform]]
+name = 10
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+
+[[platform]]
+
+[[plugin]]
+org = ""
+name = ""
+version = ""
+repository = ""
+
+[[plugin]]
+org = 20
+name = 10
+version = 30
+repository = 40
+
+[[plugin]]

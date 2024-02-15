@@ -30,9 +30,9 @@ public class CustomRulesCompilerPlugin extends ScannerCompilerPlugin {
                     if (functionBodyBlockNode.statements().isEmpty()) {
                         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
                         scannerContext.getReporter().reportExternalIssue(
-                                functionBodyBlockNode.lineRange().startLine().line() - 1,
+                                functionBodyBlockNode.lineRange().startLine().line(),
                                 functionBodyBlockNode.lineRange().startLine().offset(),
-                                functionBodyBlockNode.lineRange().endLine().line() - 1,
+                                functionBodyBlockNode.lineRange().endLine().line(),
                                 functionBodyBlockNode.lineRange().endLine().offset(),
                                 "Add a nested comment explaining why" +
                                         " this function is empty or complete the implementation.",
@@ -41,7 +41,7 @@ public class CustomRulesCompilerPlugin extends ScannerCompilerPlugin {
                                 module,
                                 project
                         );
-                        
+
                         saveExternalIssues(compilerPluginContext);
                     }
                 }, SyntaxKind.FUNCTION_BODY_BLOCK);

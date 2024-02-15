@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CAC
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLATFORM_TABLE;
 import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLUGIN_TABLE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.RULE_TABLE;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.RULES_TABLE;
 import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_FILE_FIELD;
 import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_TABLE;
 
@@ -326,28 +327,36 @@ public class ScanUtils {
                             ScanTomlFile scanTomlFile = new ScanTomlFile();
 
                             // Retrieve all platform tables
-                            List<Toml> platformsTable = scanTomlDocumentContent.getTables(PLATFORM_TABLE);
-                            platformsTable.forEach(platformTable -> {
+                            List<Toml> platformTables = scanTomlDocumentContent.getTables(PLATFORM_TABLE);
+                            platformTables.forEach(platformTable -> {
                                 Map<String, Object> properties = platformTable.toMap();
-                                String name = (String) properties.remove("name");
-                                String path = (String) properties.remove("path");
+                                String name = !(properties.get("name") instanceof String) ? null :
+                                        properties.remove("name").toString();
+                                String path = !(properties.get("path") instanceof String) ? null :
+                                        properties.remove("path").toString();
 
-                                if (name != null && path != null && Files.exists(Path.of(path))) {
+                                if (name != null && !name.isEmpty() && path != null && Files.exists(Path.of(path))) {
                                     ScanTomlFile.Platform platform = new ScanTomlFile.Platform(name, path, properties);
                                     scanTomlFile.setPlatform(platform);
                                 }
                             });
 
                             // Retrieve all custom rule compiler plugin tables
-                            List<Toml> compilerPluginsTable = scanTomlDocumentContent.getTables(PLUGIN_TABLE);
-                            compilerPluginsTable.forEach(compilerPluginTable -> {
+                            List<Toml> compilerPluginTables = scanTomlDocumentContent.getTables(PLUGIN_TABLE);
+                            compilerPluginTables.forEach(compilerPluginTable -> {
                                 Map<String, Object> properties = compilerPluginTable.toMap();
-                                String org = (String) properties.get("org");
-                                String name = (String) properties.get("name");
-                                String version = (String) properties.get("version");
-                                String repository = (String) properties.get("repository");
+                                String org = !(properties.get("org") instanceof String) ? null :
+                                        properties.get("org").toString();
+                                String name = !(properties.get("name") instanceof String) ? null :
+                                        properties.get("name").toString();
+                                String version = !(properties.get("version") instanceof String) ? null :
+                                        properties.get("version").toString();
+                                String repository = !(properties.get("repository") instanceof String) ? null :
+                                        properties.get("repository").toString();
 
-                                if (org != null && name != null && version != null) {
+                                if (org != null && !org.isEmpty() &&
+                                        name != null && !name.isEmpty() &&
+                                        version != null && !version.isEmpty()) {
                                     ScanTomlFile.Plugin plugin;
                                     if (repository != null) {
                                         plugin = new ScanTomlFile.Plugin(org,
@@ -367,15 +376,20 @@ public class ScanUtils {
                             });
 
                             // Retrieve all filter rule tables
-                            List<Toml> filterRulesTable = scanTomlDocumentContent.getTables(RULE_TABLE);
-                            filterRulesTable.forEach(filterRuleTable -> {
-                                Map<String, Object> properties = filterRuleTable.toMap();
-                                String id = (String) properties.get("id");
-                                if (id != null) {
-                                    ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(id);
-                                    scanTomlFile.setRuleToFilter(ruleToFilter);
+                            // [rules]
+                            // ids = "S107, S108"
+                            Toml rulesTable = scanTomlDocumentContent.getTable(RULES_TABLE).orElse(null);
+                            if (rulesTable != null) {
+                                TomlValueNode ids = rulesTable.get("ids").orElse(null);
+                                if (ids != null) {
+                                    String stringIds = ids.toNativeValue().toString();
+                                    List<String> rules = Arrays.asList(stringIds.split("\\s*,\\s*"));
+                                    rules.forEach(rule -> {
+                                        ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(rule);
+                                        scanTomlFile.setRuleToFilter(ruleToFilter);
+                                    });
                                 }
-                            });
+                            }
 
                             // Return the populated map
                             return scanTomlFile;

@@ -7,12 +7,9 @@ import org.apache.commons.lang3.SystemUtils;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.PlatformPlugin;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +17,6 @@ import java.util.Map;
 public class SonarQube extends PlatformPlugin {
     private List<String> arguments;
     private ProcessBuilder processBuilder;
-    // private Map<String, String> platformArgs;
     private Map<String, String> platformArgs;
 
     @Override
@@ -66,43 +62,35 @@ public class SonarQube extends PlatformPlugin {
 
     @Override
     public void onScan(ArrayList<Issue> issues) {
-        // If file path is provided save issues to it else save it to a default file
-        String analyzedResultsPath = platformArgs.getOrDefault("analyzedResultsPath", null);
+        String analyzedReportPath = saveIssues(issues, "ballerina-analysis-results.json");
+        if (analyzedReportPath != null) {
+            arguments.add("-DanalyzedResultsPath=" + analyzedReportPath);
+        }
 
-        if (analyzedResultsPath != null) {
-            String analyzedReportPath = saveIssues(issues, analyzedResultsPath);
-            System.out.println("Issues saved at: " + analyzedReportPath);
-        } else {
-            String analyzedReportPath = saveIssues(issues, "ballerina-analysis-results.json");
-            if (analyzedReportPath != null) {
-                arguments.add("-DanalyzedResultsPath=" + analyzedReportPath);
+        String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
+                null);
+        if (sonarProjectPropertiesPath != null) {
+            arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
+        }
+
+        // Add all arguments to the process
+        processBuilder.command(arguments);
+
+        // To redirect output of the scanning process to the initiated console
+        processBuilder.inheritIO();
+
+        // Trigger the reporting process
+        try {
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Reporting successful!");
+            } else {
+                System.out.println("Reporting failed!");
             }
-
-            String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
-                    null);
-            if (sonarProjectPropertiesPath != null) {
-                arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
-            }
-
-            // Add all arguments to the process
-            processBuilder.command(arguments);
-
-            // To redirect output of the scanning process to the initiated console
-            processBuilder.inheritIO();
-
-            // Trigger the reporting process
-            try {
-                Process process = processBuilder.start();
-                InputStream inputStream = process.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

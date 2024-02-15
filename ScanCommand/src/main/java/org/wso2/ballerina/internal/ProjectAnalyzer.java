@@ -21,12 +21,9 @@ import io.ballerina.projects.environment.PackageResolver;
 import io.ballerina.projects.environment.ResolutionOptions;
 import io.ballerina.projects.environment.ResolutionRequest;
 import io.ballerina.projects.environment.ResolutionResponse;
-import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.projects.util.ProjectUtils;
 import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.utilities.ScanTomlFile;
-import org.wso2.ballerina.internal.utilities.ScanToolConstants;
-import org.wso2.ballerina.internal.utilities.ScanUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,12 +32,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPOSITORIES_DIR;
 import static io.ballerina.projects.util.ProjectConstants.REPO_BALA_DIR_NAME;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.MAIN_BAL;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PATH_SEPARATOR;
+import static org.wso2.ballerina.internal.utilities.ScanToolConstants.USE_IMPORT_AS_SERVICE;
 
 public class ProjectAnalyzer {
     private ScanTomlFile scanTomlFile = null;
@@ -135,10 +138,10 @@ public class ProjectAnalyzer {
 
     public void runCustomScans(Document currentDocument, Project currentProject, ScannerContext scannerContext) {
         // Currently for each document in the default module it will run the custom scan which should be avoided
-        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals("main.bal")) {
+        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
             // Checking if compiler plugins provided in Scan.toml exists
             Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
-            Pattern versionPattern = Pattern.compile("^\\d+\\.\\d+\\.\\d+$");
+            Pattern versionPattern = Pattern.compile(CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN);
             scanTomlFile.getPlugins().forEach(plugin -> {
                 if (versionPattern.matcher(plugin.getVersion()).matches()) {
                     SemanticVersion version = SemanticVersion.from(plugin.getVersion());
@@ -149,8 +152,10 @@ public class ProjectAnalyzer {
             // Converting compiler plugins as imports and dependencies
             StringBuilder newImports = new StringBuilder();
             StringBuilder tomlDependencies = new StringBuilder();
+            AtomicInteger importCounter = new AtomicInteger(0);
             compilerPluginImports.forEach((pluginImport, plugin) -> {
                 newImports.append(pluginImport).append("\n");
+                importCounter.getAndIncrement();
                 if (plugin.getRepository() != null && plugin.getRepository().equals(LOCAL_REPOSITORY_NAME)) {
                     tomlDependencies.append("\n");
                     tomlDependencies.append("[[dependency]]" + "\n");
@@ -178,10 +183,38 @@ public class ProjectAnalyzer {
             // Engage custom compiler plugins through module compilation
             currentProject.currentPackage().getCompilation();
 
-            // Add external issues to the internal issues array
+            // Retrieve External issues
             ArrayList<Issue> externalIssues = ScannerCompilerPlugin.getExternalIssues();
+
             if (externalIssues != null) {
-                scannerContext.getReporter().addExternalIssues(externalIssues);
+                // Filter main bal file which compiler plugin imports were generated and remove imported lines from
+                // reported issues and create a modified external issues array
+                ArrayList<Issue> modifiedExternalIssues = new ArrayList<>();
+                externalIssues.forEach(externalIssue -> {
+                    if (externalIssue.getFileName().equals(currentProject.currentPackage()
+                            .packageName()
+                            + PATH_SEPARATOR
+                            + MAIN_BAL)) {
+                        // Modify the issue
+                        Issue modifiedExternalIssue = new Issue(
+                                externalIssue.getStartLine() - importCounter.get(),
+                                externalIssue.getStartLineOffset(),
+                                externalIssue.getEndLine() - importCounter.get(),
+                                externalIssue.getEndLineOffset(),
+                                externalIssue.getRuleID(),
+                                externalIssue.getMessage(),
+                                externalIssue.getIssueType(),
+                                externalIssue.getType(),
+                                externalIssue.getFileName(),
+                                externalIssue.getReportedFilePath()
+                        );
+                        modifiedExternalIssues.add(modifiedExternalIssue);
+                    } else {
+                        modifiedExternalIssues.add(externalIssue);
+                    }
+                });
+
+                scannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
             } else {
                 System.out.println("Unable to report external issues from: " +
                         currentProject.currentPackage().packageName());
@@ -193,7 +226,7 @@ public class ProjectAnalyzer {
         Map<String, ScanTomlFile.Plugin> importAndPlugin = new HashMap<>();
         Path localRepoPath = ProjectUtils.createAndGetHomeReposPath();
         Path centralCachePath = localRepoPath.resolve(REPOSITORIES_DIR)
-                .resolve(ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME);
+                .resolve(CENTRAL_REPOSITORY_CACHE_NAME);
 
         // Avoids pulling from central if user has provided the repository as local
         if (plugin.getRepository() != null && plugin.getRepository().equals(LOCAL_REPOSITORY_NAME)) {
@@ -206,9 +239,9 @@ public class ProjectAnalyzer {
             if (Files.exists(packagePathInLocalRepo) && Files.isDirectory(packagePathInLocalRepo)) {
                 importAndPlugin.put(IMPORT_PREFIX
                         + plugin.getOrg()
-                        + ScanToolConstants.PATH_SEPARATOR
+                        + PATH_SEPARATOR
                         + plugin.getName()
-                        + ScanToolConstants.USE_IMPORT_AS_SERVICE, plugin);
+                        + USE_IMPORT_AS_SERVICE, plugin);
                 return importAndPlugin;
             }
         }
@@ -220,9 +253,9 @@ public class ProjectAnalyzer {
         if (Files.exists(packagePathInCentralCache) && Files.isDirectory(packagePathInCentralCache)) {
             importAndPlugin.put(IMPORT_PREFIX
                     + plugin.getOrg()
-                    + ScanToolConstants.PATH_SEPARATOR
+                    + PATH_SEPARATOR
                     + plugin.getName()
-                    + ScanToolConstants.USE_IMPORT_AS_SERVICE, plugin);
+                    + USE_IMPORT_AS_SERVICE, plugin);
             return importAndPlugin;
         }
 
@@ -246,9 +279,9 @@ public class ProjectAnalyzer {
             if (resolvedPackage != null) {
                 importAndPlugin.put(IMPORT_PREFIX
                         + plugin.getOrg()
-                        + ScanToolConstants.PATH_SEPARATOR
+                        + PATH_SEPARATOR
                         + plugin.getName()
-                        + ScanToolConstants.USE_IMPORT_AS_SERVICE, plugin);
+                        + USE_IMPORT_AS_SERVICE, plugin);
                 return importAndPlugin;
             }
         }

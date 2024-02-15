@@ -1,0 +1,62 @@
+[
+  {
+    "startLine": 3,
+    "startLineOffset": 51,
+    "endLine": 6,
+    "endLineOffset": 1,
+    "ruleID": "S108",
+    "message": "This function has 1 occurrences of checkpanic keyword. Please consider using the check keyword instead!",
+    "issueType": "CHECK_VIOLATION",
+    "type": "CODE_SMELL",
+    "fileName": "bal_scan_tool_tester/main.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+  },
+  {
+    "startLine": 8,
+    "startLineOffset": 51,
+    "endLine": 10,
+    "endLineOffset": 1,
+    "ruleID": "S108",
+    "message": "This function has 3 occurrences of checkpanic keyword. Please consider using the check keyword instead!",
+    "issueType": "CHECK_VIOLATION",
+    "type": "CODE_SMELL",
+    "fileName": "bal_scan_tool_tester/main.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+  },
+  {
+    "startLine": 13,
+    "startLineOffset": 37,
+    "endLine": 13,
+    "endLineOffset": 105,
+    "ruleID": "S107",
+    "message": "This function has 8 parameters, which is greater than the 7 authorized.",
+    "issueType": "CHECK_VIOLATION",
+    "type": "CODE_SMELL",
+    "fileName": "bal_scan_tool_tester/main.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+  },
+  {
+    "startLine": 18,
+    "startLineOffset": 38,
+    "endLine": 18,
+    "endLineOffset": 112,
+    "ruleID": "S107",
+    "message": "This function has 9 parameters, which is greater than the 7 authorized.",
+    "issueType": "CHECK_VIOLATION",
+    "type": "CODE_SMELL",
+    "fileName": "bal_scan_tool_tester/main.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+  },
+  {
+    "startLine": 0,
+    "startLineOffset": 26,
+    "endLine": 1,
+    "endLineOffset": 1,
+    "ruleID": "S109",
+    "message": "Add a nested comment explaining why this function is empty or complete the implementation.",
+    "issueType": "CUSTOM_CHECK_VIOLATION",
+    "type": "CODE_SMELL",
+    "fileName": "bal_scan_tool_tester/main.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+  }
+]

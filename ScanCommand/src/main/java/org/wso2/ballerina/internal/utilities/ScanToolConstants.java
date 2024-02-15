@@ -1,9 +1,6 @@
 package org.wso2.ballerina.internal.utilities;
 
 public class ScanToolConstants {
-    // CommandLine constants
-    public static final String PLATFORM_ARGS_PATTERN = "-PARG[\\w\\W]+=([\\w\\W]+)";
-
     // Internal issues constants
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String CODE_SMELL = "CODE_SMELL";
@@ -13,6 +10,7 @@ public class ScanToolConstants {
 
     // External issues constants
     public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
+    public static final String MAIN_BAL = "main.bal";
 
     // Report generation constants
     public static final String RESULTS_HTML_FILE = "index.html";
@@ -27,8 +25,9 @@ public class ScanToolConstants {
     public static final String SCAN_FILE_FIELD = "configPath";
     public static final String PLATFORM_TABLE = "platform";
     public static final String PLUGIN_TABLE = "plugin";
-    public static final String RULE_TABLE = "rule";
+    public static final String RULES_TABLE = "rule";
 
     // Import generation constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";
+    public static final String CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN = "^\\d+\\.\\d+\\.\\d+$";
 }

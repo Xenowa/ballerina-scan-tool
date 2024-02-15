@@ -97,15 +97,18 @@ class BallerinaSensor implements Sensor {
 
     public void performLibraryCall(SensorContext context, Map<String, InputFile> pathAndInputFiles) {
         LOG.info("Analyzing Ballerina project");
-        String analyzedResultsFilePath = "ballerina-analysis-results.json";
+
+        String analyzedResultsFilePath = "/target/report/scan_results.json";
         ProcessBuilder fileScan = new ProcessBuilder("cmd",
                 "/c",
                 "bal",
                 "scan",
-                "--platforms=sonarqube",
-                "-PARG=analyzedResultsFilePath=" + analyzedResultsFilePath);
+                "--quiet");
 
         try {
+            // To redirect output of the scanning process to the initiated console
+            fileScan.inheritIO();
+
             // Start the process
             Process process = fileScan.start();
 
