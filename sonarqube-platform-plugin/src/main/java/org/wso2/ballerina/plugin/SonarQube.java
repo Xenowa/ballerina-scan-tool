@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import org.apache.commons.lang3.SystemUtils;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.PlatformPlugin;
+import org.wso2.ballerina.ScannerPlatformPlugin;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SonarQube extends PlatformPlugin {
+public class SonarQube implements ScannerPlatformPlugin {
     private List<String> arguments;
     private ProcessBuilder processBuilder;
     private Map<String, String> platformArgs;

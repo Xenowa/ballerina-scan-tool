@@ -8,8 +8,8 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import org.wso2.ballerina.internal.ScannerCompilerPlugin;
-import org.wso2.ballerina.internal.ScannerContext;
+import org.wso2.ballerina.ScannerCompilerPlugin;
+import org.wso2.ballerina.ScannerContext;
 
 import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CODE_SMELL;
 
@@ -42,7 +42,7 @@ public class CustomRulesCompilerPlugin extends ScannerCompilerPlugin {
                                 project
                         );
 
-                        saveExternalIssues(compilerPluginContext);
+                        save(compilerPluginContext);
                     }
                 }, SyntaxKind.FUNCTION_BODY_BLOCK);
             }

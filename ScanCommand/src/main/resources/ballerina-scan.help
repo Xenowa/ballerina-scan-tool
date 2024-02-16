@@ -1,0 +1,56 @@
+NAME
+        ballerina-scan - Static code analyzer
+
+SYNOPSIS
+        bal scan [OPTIONS] [<package>|<source-file>]
+
+DESCRIPTION
+        Compiles and performs static code analysis and reports the analysis issues.
+        Analyze source code defined in each module of a package when compiling the current package.
+        It analyzes the given source file when compiling a single '.bal' file.
+
+        Note: Analyzing individual '.bal' files of a package is not allowed.
+
+
+OPTIONS
+        --target-dir=<path>
+                Target directory path.
+
+        --scan-report
+                Generates an HTML report containing the analysis results.
+
+        --rules=<rule1, ...>
+                Specify a subset of internal rules to perform the scan against.
+
+        --list-rules
+                List all internal rules available in the Ballerina scan tool.
+
+        --platforms=<platformName1, ...>
+                Define platform to report analysis results to. The user is able to define
+                more than one platform
+
+EXAMPLES
+        Run analysis against all Ballerina documents in the current package
+                $ bal scan
+
+        Run analysis against a standalone Ballerina file. The file path can be
+        relative or absolute.
+                $ bal scan main.bal
+
+        Run analysis and save analysis results in specified directory.
+                $ bal scan --target-dir='results'
+
+        Run analysis and generate an analysis report.
+                $ bal scan --scan-report
+
+        Run analysis for a specified internal rule.
+                $ bal scan --rules=S107
+
+        Run analysis for a subset of specified internal rules.
+                $ bal scan --rules='S107, S108'
+
+        Run analysis and report to sonarqube
+                $ bal scan --platforms=sonarqube
+
+        Run analysis and report to multiple platforms
+                $ bal scan --platforms='sonarqube, semgrep, codeql'

@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;

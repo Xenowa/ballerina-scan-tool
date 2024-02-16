@@ -1,9 +1,8 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
-import org.wso2.ballerina.Issue;
 
 import java.util.ArrayList;
 

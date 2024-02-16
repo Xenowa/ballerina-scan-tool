@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
@@ -22,7 +22,6 @@ import io.ballerina.projects.environment.ResolutionOptions;
 import io.ballerina.projects.environment.ResolutionRequest;
 import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.util.ProjectUtils;
-import org.wso2.ballerina.Issue;
 import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 
 import java.nio.file.Files;
@@ -184,7 +183,7 @@ public class ProjectAnalyzer {
             currentProject.currentPackage().getCompilation();
 
             // Retrieve External issues
-            ArrayList<Issue> externalIssues = ScannerCompilerPlugin.getExternalIssues();
+            ArrayList<Issue> externalIssues = ScannerCompilerPlugin.getIssues();
 
             if (externalIssues != null) {
                 // Filter main bal file which compiler plugin imports were generated and remove imported lines from

@@ -2,11 +2,16 @@ package org.wso2.ballerina.internal;
 
 import io.ballerina.cli.BLauncherCmd;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -20,7 +25,8 @@ import java.util.stream.Collectors;
 
 import io.ballerina.projects.util.ProjectConstants;
 import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.PlatformPlugin;
+import org.wso2.ballerina.ScannerPlatformPlugin;
+import org.wso2.ballerina.ProjectAnalyzer;
 import org.wso2.ballerina.internal.utilities.ScanTomlFile;
 import org.wso2.ballerina.internal.utilities.ScanToolConstants;
 import org.wso2.ballerina.internal.utilities.ScanUtils;
@@ -91,50 +97,21 @@ public class ScanCommand implements BLauncherCmd {
     }
 
     public StringBuilder helpMessage() {
+        InputStream inputStream = ScanCommand.class.getResourceAsStream("/ballerina-scan.help");
         StringBuilder builder = new StringBuilder();
-        builder.append("NAME\n");
-        builder.append("\t" + "ballerina-scan - Static code analyzer" + "\n" + "\n\n");
-
-        builder.append("SYNOPSIS\n");
-        builder.append("\t" + "bal scan [OPTIONS] [<package>|<source-file>] [(-PARGkey=value)...]" + "\n " + "\n\n");
-
-        builder.append("DESCRIPTION\n");
-        builder.append("\t" + "Compiles and performs static code analysis and reports the analysis issues.\n" + "\t"
-                + "Analyze source code defined in each module of a package when compiling the current package.\n" + "\t"
-                + "It analyzes the given source file when compiling a single '.bal' file.\n" + "\n" + "\t"
-                + "Note: Analyzing individual '.bal' files of a package is not allowed.\n" + "\n\n");
-
-        builder.append("OPTIONS\n");
-        builder.append("\t" + "--target-dir=<path>\n" + "\t" + "\t"
-                + "Target directory path.\n\n");
-        builder.append("\t" + "--scan-report\n" + "\t" + "\t"
-                + "Generates an HTML report containing the analysis results.\n\n");
-        builder.append("\t" + "--rules=<rule1, ...>\n" + "\t" + "\t"
-                + "Specify a subset of internal rules to perform the scan against.\n\n");
-        builder.append("\t" + "--list-rules\n" + "\t" + "\t"
-                + "List all internal rules available in the Ballerina scan tool.\n\n");
-        builder.append("\t" + "--platforms=<platformName1, ...>\n" + "\t" + "\t"
-                + "Define platform to report analysis results to. The user is able to define\n" + "\t" + "\t"
-                + "more than one platform\n" + "\n\n");
-
-        builder.append("EXAMPLES\n");
-        builder.append("\t" + "Run analysis against all Ballerina documents in the current package\n" + "\t" + "\t"
-                + "$ bal scan\n\n");
-        builder.append("\t" + "Run analysis against a standalone Ballerina file. The file path can be\n" + "\t"
-                + "relative or absolute.\n" + "\t" + "\t"
-                + "$ bal scan main.bal\n\n");
-        builder.append("\t" + "Run analysis and save analysis results in specified directory.\n" + "\t" + "\t"
-                + "$ bal scan --target-dir='results'\n\n");
-        builder.append("\t" + "Run analysis and generate an analysis report.\n" + "\t" + "\t"
-                + "$ bal scan --scan-report\n\n");
-        builder.append("\t" + "Run analysis for a specified internal rule.\n" + "\t" + "\t"
-                + "$ bal scan --rules=S107\n\n");
-        builder.append("\t" + "Run analysis for a subset of specified internal rules.\n" + "\t" + "\t"
-                + "$ bal scan --rules='S107, S108'\n\n");
-        builder.append("\t" + "Run analysis and report to sonarqube\n" + "\t" + "\t"
-                + "$ bal scan --platforms=sonarqube\n\n");
-        builder.append("\t" + "Run analysis and report to multiple platforms\n" + "\t" + "\t"
-                + "$ bal scan --platforms='sonarqube, semgrep, codeql'\n\n");
+        if (inputStream != null) {
+            try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                 BufferedReader br = new BufferedReader(inputStreamReader)) {
+                String content = br.readLine();
+                builder.append(content);
+                while ((content = br.readLine()) != null) {
+                    builder.append("\n").append(content);
+                }
+            } catch (IOException e) {
+                builder.append("Helper text is not available.");
+                throw new RuntimeException(e);
+            }
+        }
 
         return builder;
     }
@@ -261,18 +238,19 @@ public class ScanCommand implements BLauncherCmd {
 
         URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
 
-        ServiceLoader<PlatformPlugin> platformPlugins = ServiceLoader.load(PlatformPlugin.class, ucl);
+        ServiceLoader<ScannerPlatformPlugin> scannerPlatformPlugins = ServiceLoader.load(ScannerPlatformPlugin.class,
+                ucl);
 
         // Proceed reporting to platforms if plugins exists
-        if (platformPlugins.stream().findAny().isPresent()) {
-            platformPlugins.forEach(platformPlugin -> {
-                if (platforms.contains(platformPlugin.platformName())) {
-                    Map<String, String> platformSpecificArgs = platformArgs.get(platformPlugin.platformName());
+        if (scannerPlatformPlugins.stream().findAny().isPresent()) {
+            scannerPlatformPlugins.forEach(scannerPlatformPlugin -> {
+                if (platforms.contains(scannerPlatformPlugin.platformName())) {
+                    Map<String, String> platformSpecificArgs = platformArgs.get(scannerPlatformPlugin.platformName());
 
-                    platformPlugin.initialize(platformSpecificArgs);
-                    platformPlugin.onScan(issues);
+                    scannerPlatformPlugin.initialize(platformSpecificArgs);
+                    scannerPlatformPlugin.onScan(issues);
 
-                    platforms.removeAll(Collections.singleton(platformPlugin.platformName()));
+                    platforms.removeAll(Collections.singleton(scannerPlatformPlugin.platformName()));
                 }
             });
         }

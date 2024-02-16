@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -6,7 +6,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.ballerina.projects.plugins.CompilerPlugin;
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import org.wso2.ballerina.Issue;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -27,28 +26,6 @@ public abstract class ScannerCompilerPlugin extends CompilerPlugin {
     }.getType();
     private final Map<CompilerPluginContext, ScannerContext> scannerContexts = new HashMap<>();
 
-    // Retrieve the deserialized context from file
-    static ArrayList<Issue> getExternalIssues() {
-        Path serializedContextFilePath = Path.of(serializeContextFile);
-        if (Files.exists(serializedContextFilePath)) {
-            try {
-                Reader fileReader = new FileReader(serializeContextFile);
-                JsonReader reader = new JsonReader(fileReader);
-                ArrayList<Issue> externalIssues = gson.fromJson(reader, listOfIssuesType);
-                reader.close();
-
-                // delete the file after getting the context
-                Files.delete(serializedContextFilePath);
-
-                return externalIssues;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return null;
-    }
-
     public ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
         if (scannerContexts.containsKey(compilerPluginContext)) {
             return scannerContexts.get(compilerPluginContext);
@@ -62,7 +39,7 @@ public abstract class ScannerCompilerPlugin extends CompilerPlugin {
     }
 
     // Save the serialized context to file
-    public synchronized void saveExternalIssues(CompilerPluginContext compilerPluginContext) {
+    public synchronized void save(CompilerPluginContext compilerPluginContext) {
         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
 
         try {
@@ -90,5 +67,27 @@ public abstract class ScannerCompilerPlugin extends CompilerPlugin {
         } catch (IOException ignored) {
             System.out.println("To engage compiler plugin please run 'bal bridge'");
         }
+    }
+
+    // Retrieve the deserialized context from file
+    static ArrayList<Issue> getIssues() {
+        Path serializedContextFilePath = Path.of(serializeContextFile);
+        if (Files.exists(serializedContextFilePath)) {
+            try {
+                Reader fileReader = new FileReader(serializeContextFile);
+                JsonReader reader = new JsonReader(fileReader);
+                ArrayList<Issue> externalIssues = gson.fromJson(reader, listOfIssuesType);
+                reader.close();
+
+                // delete the file after getting the context
+                Files.delete(serializedContextFilePath);
+
+                return externalIssues;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return null;
     }
 }

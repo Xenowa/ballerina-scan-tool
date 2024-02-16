@@ -12,7 +12,7 @@ public class InbuiltRules {
 
     /**
      * Custom rules map is populated through
-     * {@link Reporter#generateCustomRuleID(String customRuleMessage)}
+     * {@link org.wso2.ballerina.Reporter#generateCustomRuleID(String customRuleMessage)}
      */
     // Map for custom rules
     public static final Map<String, Rule> CUSTOM_RULES = new HashMap<>();
