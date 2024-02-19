@@ -39,7 +39,7 @@ public abstract class ScannerCompilerPlugin extends CompilerPlugin {
     }
 
     // Save the serialized context to file
-    public synchronized void save(CompilerPluginContext compilerPluginContext) {
+    public synchronized void complete(CompilerPluginContext compilerPluginContext) {
         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
 
         try {

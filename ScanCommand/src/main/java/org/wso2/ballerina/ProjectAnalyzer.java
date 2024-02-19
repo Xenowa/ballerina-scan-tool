@@ -214,9 +214,7 @@ public class ProjectAnalyzer {
                 });
 
                 scannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
-            } else {
-                System.out.println("Unable to report external issues from: " +
-                        currentProject.currentPackage().packageName());
+                System.out.println("Running custom scanner plugins...");
             }
         }
     }

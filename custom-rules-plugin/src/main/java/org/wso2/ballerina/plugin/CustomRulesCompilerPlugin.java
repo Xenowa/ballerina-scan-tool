@@ -42,7 +42,7 @@ public class CustomRulesCompilerPlugin extends ScannerCompilerPlugin {
                                 project
                         );
 
-                        save(compilerPluginContext);
+                        complete(compilerPluginContext);
                     }
                 }, SyntaxKind.FUNCTION_BODY_BLOCK);
             }
