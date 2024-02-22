@@ -1,7 +1,10 @@
 package org.wso2.ballerina.plugin;
 
-// Sonar Plugin API imports
-
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.commons.lang3.SystemUtils;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
@@ -17,22 +20,23 @@ import org.sonar.api.rules.RuleType;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
-// Other imports
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import static org.wso2.ballerina.plugin.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
 
 class BallerinaSensor implements Sensor {
+
+    private static final String TARGET_FOLDER = "target";
+    private static final String REPORT_FOLDER = "report";
+    private static final String ANALYZED_RESULTS_FILE = "scan_results.json";
     private static final Logger LOG = Loggers.get(BallerinaSensor.class);
     private final FileLinesContextFactory fileLinesContextFactory;
     private final NoSonarFilter noSonarFilter;
@@ -46,6 +50,7 @@ class BallerinaSensor implements Sensor {
                            FileLinesContextFactory fileLinesContextFactory,
                            NoSonarFilter noSonarFilter,
                            BallerinaLanguage language) {
+
         this.checkFactory = checkFactory;
         this.fileLinesContextFactory = fileLinesContextFactory;
         this.noSonarFilter = noSonarFilter;
@@ -55,6 +60,7 @@ class BallerinaSensor implements Sensor {
     // Method which defines which language files the plugin should work with
     @Override
     public void describe(SensorDescriptor descriptor) {
+
         descriptor
                 .onlyOnLanguage(language.getKey())
                 .name(language.getName() + " Sensor");
@@ -89,21 +95,29 @@ class BallerinaSensor implements Sensor {
     public void processAnalyzedResultsReport(SensorContext context,
                                              Map<String, InputFile> pathAndInputFiles,
                                              String analyzedResultsFilePath) {
+
         LOG.info("Analyzing batch report: ", analyzedResultsFilePath);
         String fileContent = getFileContent(analyzedResultsFilePath);
         reportFileContent(context, pathAndInputFiles, fileContent);
     }
 
-
     public void performLibraryCall(SensorContext context, Map<String, InputFile> pathAndInputFiles) {
+
         LOG.info("Analyzing Ballerina project");
 
-        String analyzedResultsFilePath = "/target/report/scan_results.json";
-        ProcessBuilder fileScan = new ProcessBuilder("cmd",
-                "/c",
-                "bal",
-                "scan",
-                "--quiet");
+        ProcessBuilder fileScan = new ProcessBuilder();
+        List<String> arguments = new ArrayList<>();
+        if (SystemUtils.IS_OS_WINDOWS) {
+            arguments.add("cmd");
+            arguments.add("/c");
+        } else {
+            arguments.add("sh");
+            arguments.add("-c");
+        }
+        arguments.add("bal");
+        arguments.add("scan");
+        arguments.add("--quiet");
+        fileScan.command(arguments);
 
         try {
             // To redirect output of the scanning process to the initiated console
@@ -117,6 +131,10 @@ class BallerinaSensor implements Sensor {
 
             // If file creation was successful proceed reporting
             if (exitCode == 0) {
+                String analyzedResultsFilePath = Paths.get(TARGET_FOLDER)
+                        .resolve(REPORT_FOLDER)
+                        .resolve(ANALYZED_RESULTS_FILE)
+                        .toString();
                 String fileContent = getFileContent(analyzedResultsFilePath);
                 reportFileContent(context, pathAndInputFiles, fileContent);
             } else {
@@ -128,23 +146,21 @@ class BallerinaSensor implements Sensor {
     }
 
     private String getFileContent(String analyzedResultsFilePath) {
-        String fileContent = "";
-        try {
-            // Read the file using FileReader and BufferedReader
-            FileReader fileReader = new FileReader(analyzedResultsFilePath);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
 
+        String fileContent = "";
+        // Read the file
+        try (
+                FileReader fileReader = new FileReader(analyzedResultsFilePath, StandardCharsets.UTF_8);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+        ) {
             StringBuilder stringBuilder = new StringBuilder();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 stringBuilder.append(line);
             }
             fileContent = stringBuilder.toString();
-
-            // Close the readers
-            bufferedReader.close();
-            fileReader.close();
-        } catch (Exception ignored) {
+        } catch (IOException e) {
+            LOG.info("Unable to retrieve analysis results!");
         }
         return fileContent;
     }
@@ -157,6 +173,7 @@ class BallerinaSensor implements Sensor {
         try {
             balScanOutput = JsonParser.parseString(fileContent).getAsJsonArray();
         } catch (Exception ignored) {
+            LOG.info("Unable to report analysis results!");
         }
 
         // Report parsed issues
@@ -171,6 +188,7 @@ class BallerinaSensor implements Sensor {
     public boolean reportAnalysisIssues(SensorContext context,
                                         JsonArray analysisIssues,
                                         Map<String, InputFile> pathAndInputFiles) {
+
         boolean reportingSuccessful = false;
         // Perform the remaining operations if the output is not empty
         if (analysisIssues != null) {
@@ -190,15 +208,10 @@ class BallerinaSensor implements Sensor {
 
                 // Perform validations on the issueType and proceed
                 switch (issueType) {
-                    case "CHECK_VIOLATION":
-                        reportIssue(inputFile, context, issue);
-                        break;
-                    case "CUSTOM_CHECK_VIOLATION":
-                        reportExternalIssue(inputFile, context, issue);
-                        break;
-                    case "SOURCE_INVALID":
-                        reportParseIssue(issue.get("message").getAsString());
-                        break;
+                    case "CHECK_VIOLATION" -> reportIssue(inputFile, context, issue);
+                    case "CUSTOM_CHECK_VIOLATION" -> reportExternalIssue(inputFile, context, issue);
+                    case "SOURCE_INVALID" -> reportParseIssue(issue.get("message").getAsString());
+                    default -> LOG.info("Invalid Issue Format!");
                 }
             }
 
@@ -296,6 +309,7 @@ class BallerinaSensor implements Sensor {
     }
 
     public void reportParseIssue(String message) {
+
         LOG.error(message);
     }
 }

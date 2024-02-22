@@ -8,17 +8,20 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import org.wso2.ballerina.ScannerCompilerPlugin;
 import org.wso2.ballerina.ScannerContext;
+import org.wso2.ballerina.StaticCodeAnalyzerPlugin;
 
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CODE_SMELL;
+import static org.wso2.ballerina.utilities.ScanToolConstants.CODE_SMELL;
 
-public class CustomRulesCompilerPlugin extends ScannerCompilerPlugin {
+public class CustomRulesCompilerPlugin extends StaticCodeAnalyzerPlugin {
+
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
+
         compilerPluginContext.addCodeAnalyzer(new CodeAnalyzer() {
             @Override
             public void init(CodeAnalysisContext codeAnalysisContext) {
+
                 codeAnalysisContext.addSyntaxNodeAnalysisTask(context -> {
                     Module module = context.currentPackage().module(context.moduleId());
                     Document document = module.document(context.documentId());

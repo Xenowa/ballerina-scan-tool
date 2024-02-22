@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal.utilities;
+package org.wso2.ballerina.utilities;
 
 import picocli.CommandLine;
 
@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class StringToListConverter implements CommandLine.ITypeConverter<List<String>> {
+
     @Override
     public List<String> convert(String value) {
         // Remove white spaces between commas and split into a list

@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BallerinaChecks {
+
     // List for default checks
-    public static final List<String> DEFAULT_CHECKS = new ArrayList<>();
+    static final List<String> DEFAULT_CHECKS = new ArrayList<>();
 
     // Populating default checks
     static {

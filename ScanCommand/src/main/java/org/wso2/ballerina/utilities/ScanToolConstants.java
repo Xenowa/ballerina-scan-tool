@@ -1,6 +1,7 @@
-package org.wso2.ballerina.internal.utilities;
+package org.wso2.ballerina.utilities;
 
 public class ScanToolConstants {
+
     // Internal issues constants
     public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
     public static final String CODE_SMELL = "CODE_SMELL";

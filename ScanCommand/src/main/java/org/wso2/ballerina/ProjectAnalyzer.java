@@ -22,8 +22,9 @@ import io.ballerina.projects.environment.ResolutionOptions;
 import io.ballerina.projects.environment.ResolutionRequest;
 import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.util.ProjectUtils;
-import org.wso2.ballerina.internal.utilities.ScanTomlFile;
+import org.wso2.ballerina.utilities.ScanTomlFile;
 
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -39,18 +40,23 @@ import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPOSITORIES_DIR;
 import static io.ballerina.projects.util.ProjectConstants.REPO_BALA_DIR_NAME;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.MAIN_BAL;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PATH_SEPARATOR;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.USE_IMPORT_AS_SERVICE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
+import static org.wso2.ballerina.utilities.ScanToolConstants.MAIN_BAL;
+import static org.wso2.ballerina.utilities.ScanToolConstants.PATH_SEPARATOR;
+import static org.wso2.ballerina.utilities.ScanToolConstants.USE_IMPORT_AS_SERVICE;
 
 public class ProjectAnalyzer {
-    private ScanTomlFile scanTomlFile = null;
 
-    public ArrayList<Issue> analyzeProject(Path userPath, ScanTomlFile scanTomlFile) {
-        // Set the scan toml file received
+    private final ScanTomlFile scanTomlFile;
+    private final PrintStream outputStream;
+
+    ProjectAnalyzer(ScanTomlFile scanTomlFile, PrintStream outputStream) {
+
         this.scanTomlFile = scanTomlFile;
+        this.outputStream = outputStream;
+    }
 
+    public ArrayList<Issue> analyzeProject(Path userPath) {
         // Array to hold all issues
         ArrayList<Issue> issues = new ArrayList<>();
 
@@ -131,6 +137,7 @@ public class ProjectAnalyzer {
 
     // For rules that can be implemented using the syntax tree model
     public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, ScannerContext scannerContext) {
+
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
         analyzer.initialize(scannerContext);
     }
@@ -183,7 +190,7 @@ public class ProjectAnalyzer {
             currentProject.currentPackage().getCompilation();
 
             // Retrieve External issues
-            ArrayList<Issue> externalIssues = ScannerCompilerPlugin.getIssues();
+            ArrayList<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
 
             if (externalIssues != null) {
                 // Filter main bal file which compiler plugin imports were generated and remove imported lines from
@@ -214,12 +221,13 @@ public class ProjectAnalyzer {
                 });
 
                 scannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
-                System.out.println("Running custom scanner plugins...");
+                outputStream.println("Running custom scanner plugins...");
             }
         }
     }
 
     private Map<String, ScanTomlFile.Plugin> resolvePackage(ScanTomlFile.Plugin plugin, SemanticVersion version) {
+
         Map<String, ScanTomlFile.Plugin> importAndPlugin = new HashMap<>();
         Path localRepoPath = ProjectUtils.createAndGetHomeReposPath();
         Path centralCachePath = localRepoPath.resolve(REPOSITORIES_DIR)
@@ -260,6 +268,7 @@ public class ProjectAnalyzer {
     }
 
     private Map<String, ScanTomlFile.Plugin> resolveBalaPath(ScanTomlFile.Plugin plugin, SemanticVersion version) {
+
         Map<String, ScanTomlFile.Plugin> importAndPlugin = new HashMap<>();
         PackageDescriptor packageDescriptor = PackageDescriptor.from(PackageOrg.from(plugin.getOrg()),
                 PackageName.from(plugin.getName()),
@@ -271,7 +280,8 @@ public class ProjectAnalyzer {
                 Collections.singletonList(resolutionRequest), ResolutionOptions.builder().setOffline(false).build());
         ResolutionResponse resolutionResponse = resolutionResponses.stream().findFirst().orElse(null);
 
-        if (resolutionResponse != null && resolutionResponse.resolutionStatus().equals(ResolutionResponse.ResolutionStatus.RESOLVED)) {
+        if (resolutionResponse != null &&
+                resolutionResponse.resolutionStatus().equals(ResolutionResponse.ResolutionStatus.RESOLVED)) {
             Package resolvedPackage = resolutionResponse.resolvedPackage();
             if (resolvedPackage != null) {
                 importAndPlugin.put(IMPORT_PREFIX

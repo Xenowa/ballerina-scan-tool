@@ -1,21 +1,21 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
-import org.wso2.ballerina.internal.utilities.Rule;
+import org.wso2.ballerina.utilities.Rule;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class InbuiltRules {
+
     // Initializing the inbuilt rules
     // Map for inbuilt rules
-    public static final HashMap<String, Rule> INBUILT_RULES = new HashMap<>();
+    static final HashMap<String, Rule> INBUILT_RULES = new HashMap<>();
 
     /**
      * Custom rules map is populated through
-     * {@link org.wso2.ballerina.Reporter#generateCustomRuleID(String customRuleMessage)}
+     * {@link org.wso2.ballerina.Reporter#generateCustomRuleID(String customRuleMessage)}.
      */
     // Map for custom rules
-    public static final Map<String, Rule> CUSTOM_RULES = new HashMap<>();
+    static final HashMap<String, Rule> CUSTOM_RULES = new HashMap<>();
 
     // Populating inbuilt rules
     static {

@@ -113,8 +113,13 @@ checkstyle {
     configProperties = ["suppressionFile": file("${rootDir}/custom-rules-plugin/build/suppressions.xml")]
 }
 
+checkstyleTest {
+    enabled = true
+}
+
 // Run checkstyle only after downloading the custom checkstyle configurations
 checkstyleMain.dependsOn(":custom-rules-plugin:downloadCheckstyleRuleFiles")
+checkstyleTest.dependsOn(":custom-rules-plugin:downloadCheckstyleRuleFiles")
 
 // ===================
 // Setting up spotbugs
@@ -139,9 +144,25 @@ spotbugsMain {
     }
 }
 
-// Disable spotbugs for test files
+// Have spotbugs test enabled
 spotbugsTest {
-    enabled = false
+    effort = "max"
+    reportLevel = "low"
+
+    // Spotbugs report destination
+    reportsDir = file("$project.buildDir/reports/spotbugs")
+
+    // Spotbugs report types to generate
+    reports {
+        html.enabled true
+        text.enabled = true
+    }
+
+    // spotbugs exclusions file destination
+    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    if (excludeFile.exists()) {
+        excludeFilter = excludeFile
+    }
 }
 
 task validateSpotbugs() {
@@ -152,6 +173,7 @@ task validateSpotbugs() {
             spotbugsMain.reports[0].destination?.eachLine {
                 println 'Failure: ' + it
             }
+        } else {
             throw new GradleException("Spotbugs rule violations were found.");
         }
     }

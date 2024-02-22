@@ -3,30 +3,33 @@ package org.wso2.ballerina;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
-import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.internal.utilities.Rule;
+import org.wso2.ballerina.utilities.Rule;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import static org.wso2.ballerina.internal.InbuiltRules.CUSTOM_RULES;
-import static org.wso2.ballerina.internal.InbuiltRules.INBUILT_RULES;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CUSTOM_CHECK_VIOLATION;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SONARQUBE_RESERVED_RULES;
+import static org.wso2.ballerina.InbuiltRules.CUSTOM_RULES;
+import static org.wso2.ballerina.InbuiltRules.INBUILT_RULES;
+import static org.wso2.ballerina.utilities.ScanToolConstants.CUSTOM_CHECK_VIOLATION;
+import static org.wso2.ballerina.utilities.ScanToolConstants.SONARQUBE_RESERVED_RULES;
 
 public class Reporter {
-    private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
-    private final ArrayList<Issue> issues;
 
-    public Reporter(ArrayList<Issue> issues) {
+    private final ArrayList<Issue> issues;
+    private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
+
+    Reporter(ArrayList<Issue> issues) {
+
         this.issues = issues;
     }
 
     ArrayList<Issue> getIssues() {
+
         return issues;
     }
 
     void addExternalIssues(ArrayList<Issue> issues) {
+
         this.issues.addAll(issues);
     }
 
@@ -71,6 +74,7 @@ public class Reporter {
                                     Document reportedDocument,
                                     Module reportedModule,
                                     Project reportedProject) {
+
         String moduleName = reportedModule.moduleName().toString();
         String documentName = reportedDocument.name();
         Path externalIssuesFilePath = reportedProject.documentPath(reportedDocument.documentId()).orElse(null);

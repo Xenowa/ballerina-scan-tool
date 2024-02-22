@@ -1,4 +1,4 @@
-package org.wso2.ballerina.internal.utilities;
+package org.wso2.ballerina.utilities;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -43,21 +43,26 @@ import java.util.zip.ZipInputStream;
 import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPORT_DIR_NAME;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.NEWLINE_SYMBOL;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLATFORM_TABLE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.PLUGIN_TABLE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.RESULTS_JSON_FILE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.RULES_TABLE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_FILE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_FILE_FIELD;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.SCAN_TABLE;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.TARGET_DIR_NAME;
+import static org.wso2.ballerina.utilities.ScanToolConstants.NEWLINE_SYMBOL;
+import static org.wso2.ballerina.utilities.ScanToolConstants.PLATFORM_TABLE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.PLUGIN_TABLE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.RESULTS_JSON_FILE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.RULES_TABLE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.SCAN_FILE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.SCAN_FILE_FIELD;
+import static org.wso2.ballerina.utilities.ScanToolConstants.SCAN_TABLE;
+import static org.wso2.ballerina.utilities.ScanToolConstants.TARGET_DIR_NAME;
 
 public class ScanUtils {
+
+    private static final PrintStream outputStream = System.out;
+
     private ScanUtils() {
+
     }
 
-    public static void printToConsole(ArrayList<Issue> issues, PrintStream outputStream) {
+    public static void printToConsole(ArrayList<Issue> issues) {
+
         String jsonOutput = convertIssuesToJsonString(issues);
 
         outputStream.println();
@@ -65,12 +70,14 @@ public class ScanUtils {
     }
 
     public static String convertIssuesToJsonString(ArrayList<Issue> issues) {
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         return gson.toJson(issuesAsJson);
     }
 
     public static Target getTargetPath(Project project, String directoryName) {
+
         Target target;
         try {
             if (directoryName != null) {
@@ -144,6 +151,7 @@ public class ScanUtils {
                 try {
                     fileContent = Files.readString(Path.of(filePath));
                 } catch (Exception ignored) {
+                    outputStream.println("Unable to retrieve file contents!");
                 }
                 jsonScanReportFile.addProperty("fileContent", fileContent);
 
@@ -229,6 +237,7 @@ public class ScanUtils {
     }
 
     public static void unzipReportResources(InputStream source, File target) throws IOException {
+
         final ZipInputStream zipStream = new ZipInputStream(source);
         ZipEntry nextEntry;
         while ((nextEntry = zipStream.getNextEntry()) != null) {
@@ -255,6 +264,7 @@ public class ScanUtils {
     }
 
     public static void printRulesToConsole(HashMap<String, Rule> rules, PrintStream outputStream) {
+
         outputStream.println("Default available rules:");
 
         outputStream.println("\t" + "RuleID" + "\t"
@@ -273,6 +283,7 @@ public class ScanUtils {
     }
 
     public static boolean activateUserDefinedRule(Map<String, Rule> rules, List<String> userDefinedRules) {
+
         AtomicBoolean userDefinedRulesActivated = new AtomicBoolean(true);
 
         // Disable all inbuilt rules
@@ -293,6 +304,7 @@ public class ScanUtils {
     }
 
     public static ScanTomlFile retrieveScanTomlConfigurations(String projectPath) {
+
         Path ballerinaProjectPath = Path.of(projectPath);
         Project project = ProjectLoader.loadProject(ballerinaProjectPath);
 
@@ -325,20 +337,22 @@ public class ScanUtils {
                                 URL url = new URL(scanTomlPath);
                                 return loadRemoteScanFile(ballerinaProjectPath, url);
                             } catch (Exception ignored) {
-                                System.out.println("File: " + scanTomlPath + " does not exists!");
+                                outputStream.println("File: " + scanTomlPath + " does not exists!");
                                 return new ScanTomlFile();
                             }
                         }
                     }
 
-                    System.out.println("configPath for Scan.toml is missing!");
+                    outputStream.println("configPath for Scan.toml is missing!");
                     return new ScanTomlFile();
                 }
 
                 // Try to find a 'Scan.toml' file in the default project
                 Path scanTomlFilePath = Path.of(SCAN_FILE);
                 if (Files.exists(scanTomlFilePath)) {
-                    System.out.println("Loading scan tool configurations from " + scanTomlFilePath.toString() + "...");
+                    outputStream.println("Loading scan tool configurations from "
+                            + scanTomlFilePath.toString()
+                            + "...");
                     return loadScanFile(scanTomlFilePath);
                 }
 
@@ -354,7 +368,7 @@ public class ScanUtils {
         //  2. If 'Scan.toml' is already available in cache load it from there
         Path cachePath = root.resolve(TARGET_DIR_NAME).resolve(REPORT_DIR_NAME).resolve(SCAN_FILE);
         if (Files.exists(cachePath)) {
-            System.out.println("Loading scan tool configurations from cache...");
+            outputStream.println("Loading scan tool configurations from cache...");
             return loadScanFile(cachePath);
         }
 
@@ -366,7 +380,7 @@ public class ScanUtils {
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 connection.disconnect();
-                System.out.println("Unable to load scan tool configurations from: "
+                outputStream.println("Unable to load scan tool configurations from: "
                         + remoteScanTomlFilePath.toString());
                 return new ScanTomlFile();
             }
@@ -380,7 +394,7 @@ public class ScanUtils {
             }
             connection.disconnect();
         } catch (IOException e) {
-            System.out.println("Unable to load scan tool configurations from: "
+            outputStream.println("Unable to load scan tool configurations from: "
                     + remoteScanTomlFilePath.toString());
             return new ScanTomlFile();
         }
@@ -388,11 +402,12 @@ public class ScanUtils {
         // Cache remote file
         cacheScanFile(root, fileContent.toString());
         // Load file from cache
-        System.out.println("Loading scan tool configurations from " + remoteScanTomlFilePath.toString());
+        outputStream.println("Loading scan tool configurations from " + remoteScanTomlFilePath.toString());
         return loadScanFile(cachePath);
     }
 
     public static void cacheScanFile(Path root, String fileContent) {
+
         Path targetDir = root.resolve(TARGET_DIR_NAME);
         if (!Files.exists(targetDir)) {
             try {

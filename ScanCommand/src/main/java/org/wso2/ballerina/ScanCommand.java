@@ -1,6 +1,12 @@
-package org.wso2.ballerina.internal;
+package org.wso2.ballerina;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.projects.util.ProjectConstants;
+import org.wso2.ballerina.utilities.ScanTomlFile;
+import org.wso2.ballerina.utilities.ScanToolConstants;
+import org.wso2.ballerina.utilities.ScanUtils;
+import org.wso2.ballerina.utilities.StringToListConverter;
+import picocli.CommandLine;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,26 +29,15 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.ballerina.projects.util.ProjectConstants;
-import org.wso2.ballerina.Issue;
-import org.wso2.ballerina.ScannerPlatformPlugin;
-import org.wso2.ballerina.ProjectAnalyzer;
-import org.wso2.ballerina.internal.utilities.ScanTomlFile;
-import org.wso2.ballerina.internal.utilities.ScanToolConstants;
-import org.wso2.ballerina.internal.utilities.ScanUtils;
-import org.wso2.ballerina.internal.utilities.StringToListConverter;
-import picocli.CommandLine;
-
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
 public class ScanCommand implements BLauncherCmd {
+
     private final PrintStream outputStream;
     private final PrintStream errorStream;
-    private String projectPath = null;
-    private ScanTomlFile scanTomlFile;
-
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
-
+    private String projectPath = null;
+    private ScanTomlFile scanTomlFile;
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
@@ -71,37 +66,45 @@ public class ScanCommand implements BLauncherCmd {
     private List<String> platforms = new ArrayList<>();
 
     public ScanCommand() {
+
         this.outputStream = System.out;
         this.errorStream = System.err;
     }
 
     public ScanCommand(PrintStream outputStream) {
+
         this.outputStream = outputStream;
         this.errorStream = outputStream;
     }
 
     @Override
     public String getName() {
+
         return "scan";
     }
 
     @Override
     public void printLongDesc(StringBuilder out) {
+
         StringBuilder builder = helpMessage();
         out.append(builder);
     }
 
     @Override
     public void printUsage(StringBuilder out) {
+
         out.append("Tool for providing static code analysis results for Ballerina projects");
     }
 
     public StringBuilder helpMessage() {
+
         InputStream inputStream = ScanCommand.class.getResourceAsStream("/ballerina-scan.help");
         StringBuilder builder = new StringBuilder();
         if (inputStream != null) {
-            try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                 BufferedReader br = new BufferedReader(inputStreamReader)) {
+            try (
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                    BufferedReader br = new BufferedReader(inputStreamReader)
+            ) {
                 String content = br.readLine();
                 builder.append(content);
                 while ((content = br.readLine()) != null) {
@@ -118,6 +121,7 @@ public class ScanCommand implements BLauncherCmd {
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
+
     }
 
     // ========================
@@ -125,6 +129,7 @@ public class ScanCommand implements BLauncherCmd {
     // ========================
     @Override
     public void execute() {
+
         if (helpFlag) {
             StringBuilder builder = helpMessage();
             outputStream.println(builder);
@@ -167,8 +172,8 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         // Perform scan on ballerina file/project
-        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer();
-        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath), scanTomlFile);
+        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
+        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
 
         // Stop reporting if there is no issues array
         if (issues == null) {
@@ -180,16 +185,15 @@ public class ScanCommand implements BLauncherCmd {
         if (platforms.contains("local") && quietFlag) {
             // Save results to directory quietly
             if (targetDir != null) {
-                ScanUtils.saveToDirectory(issues, userPath, targetDir.toString()
-                );
+                ScanUtils.saveToDirectory(issues, userPath, targetDir.toString());
             } else {
                 ScanUtils.saveToDirectory(issues, userPath, null);
             }
 
-            platforms.removeAll(Collections.singleton("local"));
+            return; // Stop further execution after generating the report
         } else if (platforms.contains("local")) {
             // Print results to console
-            ScanUtils.printToConsole(issues, outputStream);
+            ScanUtils.printToConsole(issues);
 
             if (scanReport) {
                 Path scanReportPath;
@@ -276,6 +280,7 @@ public class ScanCommand implements BLauncherCmd {
     }
 
     private String checkPath() {
+
         if (!argList.isEmpty()) {
             this.projectPath = String.valueOf(Paths.get(argList.get(0)));
         }
@@ -311,10 +316,8 @@ public class ScanCommand implements BLauncherCmd {
                 } else {
                     // Following is to mitigate the issue when "." is encountered in the scanning process
                     if (userFilePath.equals(".")) {
-                        return Path.of(userFilePath)
-                                .toAbsolutePath()
-                                .getParent()
-                                .toString();
+                        Path parentPath = Path.of(userFilePath).toAbsolutePath().getParent();
+                        return parentPath != null ? parentPath.toString() : "";
                     }
 
                     return userFilePath;
@@ -328,6 +331,7 @@ public class ScanCommand implements BLauncherCmd {
     }
 
     private URLClassLoader loadExternalJars(ArrayList<String> jarPaths) {
+
         ArrayList<URL> jarUrls = new ArrayList<>();
 
         jarPaths.forEach(jarPath -> {

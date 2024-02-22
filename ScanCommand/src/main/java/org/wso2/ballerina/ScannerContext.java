@@ -7,6 +7,7 @@ import io.ballerina.projects.Project;
 import java.util.ArrayList;
 
 public class ScannerContext {
+
     private final Reporter reporter;
     private Document currentDocument = null;
     private Module currentModule = null;
@@ -17,30 +18,36 @@ public class ScannerContext {
                    Document currentDocument,
                    Module currentModule,
                    Project currentProject) {
+
         this.reporter = new Reporter(issues);
         this.currentDocument = currentDocument;
         this.currentModule = currentModule;
         this.currentProject = currentProject;
     }
 
+    // External constructor and methods
+    public ScannerContext(ArrayList<Issue> issues) {
+
+        this.reporter = new Reporter(issues);
+    }
+
     Document getCurrentDocument() {
+
         return currentDocument;
     }
 
     Module getCurrentModule() {
+
         return currentModule;
     }
 
     Project getCurrentProject() {
+
         return currentProject;
     }
 
-    // External constructor and methods
-    public ScannerContext(ArrayList<Issue> issues) {
-        this.reporter = new Reporter(issues);
-    }
-
     public Reporter getReporter() {
+
         return reporter;
     }
 }

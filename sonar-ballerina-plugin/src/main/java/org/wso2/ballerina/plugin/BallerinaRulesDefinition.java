@@ -10,6 +10,7 @@ public class BallerinaRulesDefinition implements RulesDefinition {
     private final SonarRuntime runtime;
 
     public BallerinaRulesDefinition(SonarRuntime runtime) {
+
         this.runtime = runtime;
     }
 
@@ -18,10 +19,16 @@ public class BallerinaRulesDefinition implements RulesDefinition {
     // 2. Add rules by the rule keys
     @Override
     public void define(Context context) {
-        NewRepository repository = context.createRepository(BallerinaPlugin.BALLERINA_REPOSITORY_KEY, BallerinaPlugin.BALLERINA_LANGUAGE_KEY);
+
+        NewRepository repository = context.createRepository(
+                BallerinaPlugin.BALLERINA_REPOSITORY_KEY,
+                BallerinaPlugin.BALLERINA_LANGUAGE_KEY);
         repository.setName(BallerinaPlugin.REPOSITORY_NAME);
 
-        RuleMetadataLoader ruleMetadataLoader = new RuleMetadataLoader(RESOURCE_FOLDER, BallerinaProfileDefinition.PATH_TO_JSON, runtime);
+        RuleMetadataLoader ruleMetadataLoader = new RuleMetadataLoader(
+                RESOURCE_FOLDER,
+                BallerinaProfileDefinition.PATH_TO_JSON,
+                runtime);
 
         ruleMetadataLoader.addRulesByRuleKey(repository, BallerinaChecks.DEFAULT_CHECKS);
         repository.done();

@@ -1,0 +1,3 @@
+[[platform]]
+name = "sonarqube"
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"

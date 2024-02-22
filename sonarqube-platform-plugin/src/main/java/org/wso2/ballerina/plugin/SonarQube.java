@@ -10,25 +10,30 @@ import org.wso2.ballerina.ScannerPlatformPlugin;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SonarQube implements ScannerPlatformPlugin {
-    private List<String> arguments;
-    private ProcessBuilder processBuilder;
-    private Map<String, String> platformArgs;
+
+    private final List<String> arguments = new ArrayList<>();
+    private final ProcessBuilder processBuilder = new ProcessBuilder();
+    private final Map<String, String> platformArgs = new HashMap<>();
+    private final PrintStream outputStream = System.out;
 
     @Override
     public String platformName() {
+
         return "sonarqube";
     }
 
     @Override
     public void initialize(Map<String, String> platformArgs) {
-        this.platformArgs = platformArgs;
 
-        arguments = new ArrayList<>();
+        this.platformArgs.putAll(platformArgs);
 
         // Initializing sonar-scanner cli
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -55,13 +60,11 @@ public class SonarQube implements ScannerPlatformPlugin {
                 "**/*.scala," +
                 "**/*.py" +
                 "'");
-
-        // Initialize the process builder
-        processBuilder = new ProcessBuilder();
     }
 
     @Override
     public void onScan(ArrayList<Issue> issues) {
+
         String analyzedReportPath = saveIssues(issues, "ballerina-analysis-results.json");
         if (analyzedReportPath != null) {
             arguments.add("-DanalyzedResultsPath=" + analyzedReportPath);
@@ -85,9 +88,9 @@ public class SonarQube implements ScannerPlatformPlugin {
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
-                System.out.println("Reporting successful!");
+                outputStream.println("Reporting successful!");
             } else {
-                System.out.println("Reporting failed!");
+                outputStream.println("Reporting failed!");
             }
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -101,20 +104,21 @@ public class SonarQube implements ScannerPlatformPlugin {
         String jsonOutput = gson.toJson(issuesAsJson);
 
         // Save analysis results to file
-        File newTempFile;
+        File newTempFile = new File(fileName);
+        boolean newFileCreated = false;
         try {
-            newTempFile = new File(fileName);
-
-            // Create a new file to hold analysis results
-            newTempFile.createNewFile();
-
-            // write the analysis results to the new file
-            FileWriter writer = new FileWriter(newTempFile);
-            writer.write(jsonOutput);
-            writer.close();
-
+            newFileCreated = newTempFile.createNewFile();
         } catch (IOException e) {
             return null;
+        }
+
+        // write the analysis results to the new file
+        if (newFileCreated) {
+            try (FileWriter writer = new FileWriter(newTempFile, StandardCharsets.UTF_8)) {
+                writer.write(jsonOutput);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return newTempFile.getAbsolutePath();

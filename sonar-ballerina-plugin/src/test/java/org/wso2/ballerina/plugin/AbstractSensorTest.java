@@ -1,7 +1,6 @@
 package org.wso2.ballerina.plugin;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -15,7 +14,6 @@ import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.measures.FileLinesContext;
 import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.rule.RuleKey;
-import org.sonar.api.utils.log.LogTesterJUnit5;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,13 +24,9 @@ public abstract class AbstractSensorTest {
 
     @TempDir
     public Path temp;
-
     protected Path baseDir;
     protected SensorContextTester context;
     protected FileLinesContextFactory fileLinesContextFactory = Mockito.mock(FileLinesContextFactory.class);
-
-    @RegisterExtension
-    public LogTesterJUnit5 logTester = new LogTesterJUnit5();
 
     @BeforeEach
     public void setup() throws IOException {
@@ -53,6 +47,7 @@ public abstract class AbstractSensorTest {
     }
 
     protected CheckFactory checkFactory(String... ruleKeys) {
+
         ActiveRulesBuilder builder = new ActiveRulesBuilder();
         for (String ruleKey : ruleKeys) {
             NewActiveRule newRule = new NewActiveRule.Builder()
@@ -66,6 +61,7 @@ public abstract class AbstractSensorTest {
     }
 
     protected InputFile createInputFile(String relativePath, String content, InputFile.Status status) {
+
         return TestInputFileBuilder.create("moduleKey", relativePath)
                 .setModuleBaseDir(baseDir)
                 .setType(InputFile.Type.MAIN)
@@ -77,11 +73,12 @@ public abstract class AbstractSensorTest {
     }
 
     protected InputFile createInputFileFromPath(String relativePath) {
+
         Path balFilePath = Path.of(baseDir.toString() + "/" + relativePath);
 
         String fileContent = null;
         try {
-            fileContent = new String(Files.readAllBytes(balFilePath)).trim();
+            fileContent = new String(Files.readAllBytes(balFilePath), StandardCharsets.UTF_8).trim();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -97,6 +94,7 @@ public abstract class AbstractSensorTest {
     }
 
     protected BallerinaLanguage language() {
+
         return new BallerinaLanguage(new MapSettings().asConfig());
     }
 }

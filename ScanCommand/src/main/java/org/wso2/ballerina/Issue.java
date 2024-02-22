@@ -1,6 +1,7 @@
 package org.wso2.ballerina;
 
 public class Issue {
+
     private final int startLine;
     private final int startLineOffset;
     private final int endLine;
@@ -24,6 +25,7 @@ public class Issue {
                  String type,
                  String fileName,
                  String reportedFilePath) {
+
         this.startLine = startLine;
         this.startLineOffset = startLineOffset;
         this.endLine = endLine;
@@ -37,42 +39,52 @@ public class Issue {
     }
 
     public int getStartLine() {
+
         return startLine;
     }
 
     public int getStartLineOffset() {
+
         return startLineOffset;
     }
 
     public int getEndLine() {
+
         return endLine;
     }
 
     public int getEndLineOffset() {
+
         return endLineOffset;
     }
 
     public String getRuleID() {
+
         return ruleID;
     }
 
     public String getMessage() {
+
         return message;
     }
 
     public String getIssueType() {
+
         return issueType;
     }
 
     public String getReportedFilePath() {
+
         return reportedFilePath;
     }
 
     public String getFileName() {
+
         return fileName;
     }
 
     public String getType() {
+
         return type;
     }
 }

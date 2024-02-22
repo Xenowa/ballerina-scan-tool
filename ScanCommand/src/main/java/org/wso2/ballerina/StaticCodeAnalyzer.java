@@ -12,20 +12,22 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CHECK_VIOLATION;
-import static org.wso2.ballerina.internal.utilities.ScanToolConstants.CODE_SMELL;
+import static org.wso2.ballerina.utilities.ScanToolConstants.CHECK_VIOLATION;
+import static org.wso2.ballerina.utilities.ScanToolConstants.CODE_SMELL;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
-    ScannerContext scannerContext;
 
     // Initialize the static code analyzer
-    private static Node mainNode;
+    private final Node mainNode;
+    private ScannerContext scannerContext;
 
     public StaticCodeAnalyzer(SyntaxTree syntaxTree) {
+
         mainNode = syntaxTree.rootNode();
     }
 
     public void initialize(ScannerContext scannerContext) {
+
         this.scannerContext = scannerContext;
         // Go with the following approach similar to CodeAnalyzer
         this.visit((ModulePartNode) mainNode);
@@ -63,6 +65,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
 
     @Override
     public void visit(FunctionBodyBlockNode functionBodyBlockNode) {
+
         AtomicInteger checkPanicCounter = new AtomicInteger(0);
 
         functionBodyBlockNode.statements().forEach(statement -> {

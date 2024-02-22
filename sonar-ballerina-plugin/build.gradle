@@ -2,9 +2,6 @@
 import java.util.jar.JarInputStream
 
 plugins {
-    // You can prevent applying a plugin as follows:
-    // id "com.github.johnrengelman.shadow" version "7.1.0" apply false
-
     // Required plugin to create an executable jar which does not require external dependencies
     id "com.github.johnrengelman.shadow" version "7.1.0"
 
@@ -58,7 +55,6 @@ dependencies {
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
     // Required dependencies to work with sonar plugin API
-    // compileOnly group:'org.sonarsource.api.plugin', name:'sonar-plugin-api', version:'9.12.0.310'
     compileOnly group: 'org.sonarsource.api.plugin', name: 'sonar-plugin-api', version: '9.14.0.375'
     implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-analyzer-commons', version: '2.1.0.1111'
     implementation group: 'org.sonarsource.analyzer-commons', name: 'sonar-xml-parsing', version: '2.1.0.1111'
@@ -124,7 +120,7 @@ artifacts.add('default', file("$project.buildDir/suppressions.xml")) {
     builtBy('downloadCheckstyleRuleFiles')
 }
 
-// Files to be excluded from checkstyle \
+// Files to be excluded from checkstyle
 def excludePattern = '**/module-info.java'
 tasks.withType(Checkstyle) {
     exclude excludePattern
@@ -138,8 +134,14 @@ checkstyle {
     configProperties = ["suppressionFile": file("${rootDir}/sonar-ballerina-plugin/build/suppressions.xml")]
 }
 
+// Enable checkstyles for test files
+checkstyleTest {
+    enabled = true
+}
+
 // Run checkstyle only after downloading the custom checkstyle configurations
 checkstyleMain.dependsOn(":sonar-ballerina-plugin:downloadCheckstyleRuleFiles")
+checkstyleTest.dependsOn(":sonar-ballerina-plugin:downloadCheckstyleRuleFiles")
 
 // ===================
 // Setting up spotbugs
@@ -164,9 +166,25 @@ spotbugsMain {
     }
 }
 
-// Disable spotbugs for test files
+// Have spotbugs test enabled
 spotbugsTest {
-    enabled = false
+    effort = "max"
+    reportLevel = "low"
+
+    // Spotbugs report destination
+    reportsDir = file("$project.buildDir/reports/spotbugs")
+
+    // Spotbugs report types to generate
+    reports {
+        html.enabled true
+        text.enabled = true
+    }
+
+    // spotbugs exclusions file destination
+    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    if (excludeFile.exists()) {
+        excludeFilter = excludeFile
+    }
 }
 
 task validateSpotbugs() {
@@ -177,6 +195,7 @@ task validateSpotbugs() {
             spotbugsMain.reports[0].destination?.eachLine {
                 println 'Failure: ' + it
             }
+        } else {
             throw new GradleException("Spotbugs rule violations were found.");
         }
     }
@@ -273,7 +292,6 @@ tasks.shadowJar {
     exclude 'sonar-scanner-api-batch.jar'
     exclude 'javax/**'
     exclude 'license/**'
-    exclude 'org/apache/**'
     exclude 'META-INF/maven/**'
     exclude 'META-INF/proguard/**'
     exclude 'META-INF/versions/**'
