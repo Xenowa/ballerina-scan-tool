@@ -1,7 +1,7 @@
 # For platform specific properties to get picked up, the path should be valid
-#[[platform]]
-#name = "sonarqube"
-#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+[[platform]]
+name = "sonarqube"
+path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
 #
 #[[platform]]
@@ -14,7 +14,7 @@
 
 [[plugin]]
 org = "tharana_wanigaratne"
-name = "compiler_plugin_customRules"
+name = "custom_static_code_analyzer"
 version = "0.1.0"
 
 #[[plugin]]

@@ -1,8 +1,0 @@
-[package]
-org = "tharana_wanigaratne"
-name = "compiler_plugin_customRules"
-version = "0.1.0"
-distribution = "2201.8.5"
-
-[build-options]
-observabilityIncluded = true

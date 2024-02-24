@@ -20,10 +20,10 @@ OPTIONS
                 Generates an HTML report containing the analysis results.
 
         --rules=<rule1, ...>
-                Specify a subset of internal rules to perform the scan against.
+                Specify a subset of core rules to perform the scan against.
 
         --list-rules
-                List all internal rules available in the Ballerina scan tool.
+                List all core rules available in the Ballerina scan tool.
 
         --platforms=<platformName1, ...>
                 Define platform to report analysis results to. The user is able to define
@@ -43,10 +43,10 @@ EXAMPLES
         Run analysis and generate an analysis report.
                 $ bal scan --scan-report
 
-        Run analysis for a specified internal rule.
+        Run analysis for a specified core rule.
                 $ bal scan --rules=S107
 
-        Run analysis for a subset of specified internal rules.
+        Run analysis for a subset of specified core rules.
                 $ bal scan --rules='S107, S108'
 
         Run analysis and report to sonarqube

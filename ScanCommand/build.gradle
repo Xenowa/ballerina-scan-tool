@@ -12,7 +12,7 @@ plugins {
     id "de.undercouch.download" version "5.4.0"
 }
 
-group = 'org.wso2.ballerina'
+group = 'io.ballerina.scan'
 version = '1.0'
 
 repositories {
@@ -86,13 +86,13 @@ task downloadCheckstyleRuleFiles(type: Download) {
 }
 
 // Location for placing the wso2 checkstyle configuration
-artifacts.add('default', file("$project.buildDir/checkstyle.xml")) {
-    builtBy('downloadCheckstyleRuleFiles')
+artifacts.add('default', file("${project.buildDir}/checkstyle.xml")) {
+    builtBy(downloadCheckstyleRuleFiles)
 }
 
 // Location for placing the suppression files configurations
-artifacts.add('default', file("$project.buildDir/suppressions.xml")) {
-    builtBy('downloadCheckstyleRuleFiles')
+artifacts.add('default', file("${project.buildDir}/suppressions.xml")) {
+    builtBy(downloadCheckstyleRuleFiles)
 }
 
 // Files to be excluded from checkstyle \
@@ -105,13 +105,13 @@ tasks.withType(Checkstyle) {
 checkstyle {
     toolVersion "10.12.1"
     // As in the current implementation the project is as a sub module
-    configFile rootProject.file("ScanCommand/build/checkstyle.xml")
-    configProperties = ["suppressionFile": file("${rootDir}/ScanCommand/build/suppressions.xml")]
+    configFile rootProject.file("${project.buildDir}/checkstyle.xml")
+    configProperties = ["suppressionFile": file("${project.buildDir}/suppressions.xml")]
 }
 
 // Run checkstyle only after downloading the custom checkstyle configurations
-checkstyleMain.dependsOn(":ScanCommand:downloadCheckstyleRuleFiles")
-checkstyleTest.dependsOn(":ScanCommand:downloadCheckstyleRuleFiles")
+checkstyleMain.dependsOn(downloadCheckstyleRuleFiles)
+checkstyleTest.dependsOn(downloadCheckstyleRuleFiles)
 
 // ===================
 // Setting up spotbugs
@@ -151,7 +151,7 @@ spotbugsTest {
     }
 
     // spotbugs exclusions file destination
-    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    def excludeFile = file("${projectDir}/spotbugs-exclude.xml")
     if (excludeFile.exists()) {
         excludeFilter = excludeFile
     }
@@ -175,5 +175,5 @@ spotbugsMain.finalizedBy validateSpotbugs
 
 // class to build when gradlew run is executed in there terminal
 application {
-    mainClass = 'org.wso2.ballerina.Main'
+    mainClass = 'io.ballerina.scan.Main'
 }

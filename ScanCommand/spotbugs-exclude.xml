@@ -1,16 +1,16 @@
 <FindBugsFilter>
     <Match>
-        <Class name="org.wso2.ballerina.ScannerContext"/>
+        <Class name="io.ballerina.scan.ScannerContext"/>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
-        <Class name="org.wso2.ballerina.ScanCommand"/>
+        <Class name="io.ballerina.scan.ScanCommand"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
     <Match>
         <or>
-            <Class name="org.wso2.ballerina.utilities.ScanTomlFile"/>
-            <Class name="org.wso2.ballerina.utilities.ScanTomlFile$Platform"/>
+            <Class name="io.ballerina.scan.utilities.ScanTomlFile"/>
+            <Class name="io.ballerina.scan.utilities.ScanTomlFile$Platform"/>
         </or>
         <or>
             <Bug pattern="EI_EXPOSE_REP"/>

@@ -10,7 +10,7 @@ plugins {
     id "de.undercouch.download" version "5.4.0"
 }
 
-group = 'org.wso2.ballerina'
+group = 'io.ballerina.scan.platform'
 version = '1.0'
 
 repositories {
@@ -73,13 +73,13 @@ task downloadCheckstyleRuleFiles(type: Download) {
 }
 
 // Location for placing the wso2 checkstyle configuration
-artifacts.add('default', file("$project.buildDir/checkstyle.xml")) {
-    builtBy('downloadCheckstyleRuleFiles')
+artifacts.add('default', file("${project.buildDir}/checkstyle.xml")) {
+    builtBy(downloadCheckstyleRuleFiles)
 }
 
 // Location for placing the suppression files configurations
-artifacts.add('default', file("$project.buildDir/suppressions.xml")) {
-    builtBy('downloadCheckstyleRuleFiles')
+artifacts.add('default', file("${project.buildDir}/suppressions.xml")) {
+    builtBy(downloadCheckstyleRuleFiles)
 }
 
 // Files to be excluded from checkstyle \
@@ -92,8 +92,8 @@ tasks.withType(Checkstyle) {
 checkstyle {
     toolVersion "10.12.1"
     // As in the current implementation the project is as a sub module
-    configFile rootProject.file("sonarqube-platform-plugin/build/checkstyle.xml")
-    configProperties = ["suppressionFile": file("${rootDir}/sonarqube-platform-plugin/build/suppressions.xml")]
+    configFile rootProject.file("${project.buildDir}/checkstyle.xml")
+    configProperties = ["suppressionFile": file("${project.buildDir}/suppressions.xml")]
 }
 
 // Enable checkstyles for test files
@@ -102,8 +102,8 @@ checkstyleTest {
 }
 
 // Run checkstyle only after downloading the custom checkstyle configurations
-checkstyleMain.dependsOn(":sonarqube-platform-plugin:downloadCheckstyleRuleFiles")
-checkstyleTest.dependsOn(":sonarqube-platform-plugin:downloadCheckstyleRuleFiles")
+checkstyleMain.dependsOn(downloadCheckstyleRuleFiles)
+checkstyleTest.dependsOn(downloadCheckstyleRuleFiles)
 
 // ===================
 // Setting up spotbugs
@@ -122,7 +122,7 @@ spotbugsMain {
     }
 
     // spotbugs exclusions file destination
-    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    def excludeFile = file("${projectDir}/spotbugs-exclude.xml")
     if (excludeFile.exists()) {
         excludeFilter = excludeFile
     }
@@ -143,7 +143,7 @@ spotbugsTest {
     }
 
     // spotbugs exclusions file destination
-    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    def excludeFile = file("${projectDir}/spotbugs-exclude.xml")
     if (excludeFile.exists()) {
         excludeFilter = excludeFile
     }

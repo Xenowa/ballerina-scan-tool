@@ -1,6 +1,9 @@
 public function voidFunc(){
 }
 
+public function voidFunc2(){
+}
+
 public function panicFunction(byte v) returns byte {
     byte byteResult = checkpanic v;
     return byteResult;
