@@ -14,3 +14,6 @@ configPath = "C:/Users/Tharana Wanigaratne/Desktop/sonar-ballerina/ScanCommand/b
 
 # With relative path
 #configPath = "ScanCommand/bal-scan-tool-tester/Scan.toml"
+
+# With remote path
+#configPath = "https://raw.githubusercontent.com/Xenowa/sonar-ballerina/main/ScanCommand/bal-scan-tool-tester/Scan.toml"

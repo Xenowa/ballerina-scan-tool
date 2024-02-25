@@ -32,7 +32,7 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
                     // CUSTOM RULE: if function body is empty then report issue
                     if (functionBodyBlockNode.statements().isEmpty()) {
                         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-                        scannerContext.getReporter().reportExternalIssue(
+                        scannerContext.getReporter().reportIssue(
                                 functionBodyBlockNode.lineRange().startLine().line(),
                                 functionBodyBlockNode.lineRange().startLine().offset(),
                                 functionBodyBlockNode.lineRange().endLine().line(),

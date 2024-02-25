@@ -137,7 +137,7 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         if (listAllRules) {
-            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES, outputStream);
+            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
             return;
         }
 
@@ -168,7 +168,7 @@ public class ScanCommand implements BLauncherCmd {
                 outputStream.println("Invalid rules list: " + userRules);
                 return;
             }
-            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES, outputStream);
+            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
         }
 
         // Perform scan on ballerina file/project

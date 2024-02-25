@@ -1,20 +1,27 @@
 <FindBugsFilter>
     <Match>
-        <Class name="io.ballerina.scan.ScannerContext"/>
-        <Bug pattern="EI_EXPOSE_REP"/>
-    </Match>
-    <Match>
         <Class name="io.ballerina.scan.ScanCommand"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
     <Match>
-        <or>
-            <Class name="io.ballerina.scan.utilities.ScanTomlFile"/>
-            <Class name="io.ballerina.scan.utilities.ScanTomlFile$Platform"/>
-        </or>
+        <Class name="io.ballerina.scan.utilities.ScanTomlFile"/>
         <or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
+        </or>
+    </Match>
+    <Match>
+        <Class name="io.ballerina.scan.utilities.ScanTomlFile$Platform"/>
+        <or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </or>
+    </Match>
+    <Match>
+        <Class name="io.ballerina.scan.StaticCodeAnalyzer"/>
+        <or>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+            <Bug pattern="URF_UNREAD_FIELD"/>
         </or>
     </Match>
 </FindBugsFilter>

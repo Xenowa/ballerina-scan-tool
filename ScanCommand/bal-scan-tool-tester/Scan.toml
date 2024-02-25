@@ -1,7 +1,9 @@
 # For platform specific properties to get picked up, the path should be valid
 [[platform]]
 name = "sonarqube"
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
+#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\target\\sonarqube.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
 #
 #[[platform]]

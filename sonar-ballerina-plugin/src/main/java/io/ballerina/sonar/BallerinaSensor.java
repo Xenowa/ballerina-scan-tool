@@ -220,7 +220,6 @@ class BallerinaSensor implements Sensor {
                 switch (issueType) {
                     case "CHECK_VIOLATION" -> reportIssue(inputFile, context, issue);
                     case "CUSTOM_CHECK_VIOLATION" -> reportExternalIssue(inputFile, context, issue);
-                    case "SOURCE_INVALID" -> reportParseIssue(issue.get("message").getAsString());
                     default -> LOG.info("Invalid Issue Format!");
                 }
             }
@@ -316,10 +315,5 @@ class BallerinaSensor implements Sensor {
                         ))
                 )
                 .save();
-    }
-
-    public void reportParseIssue(String message) {
-
-        LOG.error(message);
     }
 }

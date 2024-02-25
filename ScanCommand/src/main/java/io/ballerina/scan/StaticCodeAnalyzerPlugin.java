@@ -26,19 +26,17 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     }.getType();
     private ScannerContext currentScannerContext = null;
 
-    public ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
-        // Implementations here can change
+    public synchronized ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
+        // Implementations here will change once scanner context can be retrieved from compilerPluginContext
         if (currentScannerContext != null) {
             return currentScannerContext;
         }
 
-        // Create new context when requested by compiler plugins
         ArrayList<Issue> externalIssues = new ArrayList<>();
         currentScannerContext = new ScannerContext(externalIssues);
         return currentScannerContext;
     }
 
-    // Save the serialized issues to file (Test to see if synchornizing is required)
     public synchronized void complete() {
 
         if (currentScannerContext != null) {

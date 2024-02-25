@@ -29,6 +29,7 @@ public class ScanToolConstants {
     public static final String PLUGIN_TABLE = "plugin";
     public static final String RULES_TABLE = "rule";
     public static final String NEWLINE_SYMBOL = System.getProperty("line.separator");
+    public static final String JAR_PREDICATE = ".jar";
 
     // Import generation constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";

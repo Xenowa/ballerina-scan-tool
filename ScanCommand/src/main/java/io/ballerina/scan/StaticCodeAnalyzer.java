@@ -1,13 +1,16 @@
 package io.ballerina.scan;
 
+import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.internal.parser.tree.STToken;
 import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
-import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.Project;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,20 +20,31 @@ import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
 
-    // Initialize the static code analyzer
-    private final Node mainNode;
-    private ScannerContext scannerContext;
+    private final Project currentProject;
+    private final Module currentModule;
+    private final Document currentDocument;
+    private final SyntaxTree syntaxTree;
+    private final SemanticModel semanticModel;
+    private final InternalScannerContext scannerContext;
 
-    public StaticCodeAnalyzer(SyntaxTree syntaxTree) {
+    public StaticCodeAnalyzer(Project currentProject,
+                              Module currentModule,
+                              Document currentDocument,
+                              SyntaxTree syntaxTree,
+                              SemanticModel semanticModel,
+                              InternalScannerContext scannerContext) {
 
-        mainNode = syntaxTree.rootNode();
+        this.currentProject = currentProject;
+        this.currentModule = currentModule;
+        this.currentDocument = currentDocument;
+        this.syntaxTree = syntaxTree;
+        this.semanticModel = semanticModel;
+        this.scannerContext = scannerContext;
     }
 
-    public void initialize(ScannerContext scannerContext) {
-
-        this.scannerContext = scannerContext;
+    public void initialize() {
         // Go with the following approach similar to CodeAnalyzer
-        this.visit((ModulePartNode) mainNode);
+        this.visit((ModulePartNode) syntaxTree.rootNode());
 
         // Other method to start the visit
         // mainNode.accept(this);
@@ -53,10 +67,9 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                             + " parameters, which is greater than the 7 authorized.",
                     CHECK_VIOLATION,
                     CODE_SMELL,
-                    scannerContext.getCurrentDocument(),
-                    scannerContext.getCurrentModule(),
-                    scannerContext.getCurrentProject()
-            );
+                    currentDocument,
+                    currentModule,
+                    currentProject);
         }
 
         // Continue visiting other nodes of the syntax tree
@@ -95,10 +108,9 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                             + " occurrences of checkpanic keyword. Please consider using the check keyword instead!",
                     CHECK_VIOLATION,
                     CODE_SMELL,
-                    scannerContext.getCurrentDocument(),
-                    scannerContext.getCurrentModule(),
-                    scannerContext.getCurrentProject()
-            );
+                    currentDocument,
+                    currentModule,
+                    currentProject);
         }
 
         this.visitSyntaxNode(functionBodyBlockNode);

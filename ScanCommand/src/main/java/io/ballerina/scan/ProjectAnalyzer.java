@@ -57,8 +57,10 @@ public class ProjectAnalyzer {
     }
 
     public ArrayList<Issue> analyzeProject(Path userPath) {
-        // Array to hold all issues
-        ArrayList<Issue> issues = new ArrayList<>();
+
+        // Issues store
+        ArrayList<Issue> allIssues = new ArrayList<>();
+        InternalScannerContext internalScannerContext = new InternalScannerContext(allIssues);
 
         // Get access to the project API
         Project project = ProjectLoader.loadProject(userPath);
@@ -72,8 +74,7 @@ public class ProjectAnalyzer {
 
             Module tempModule = project.currentPackage().getDefaultModule();
             DocumentId documentId = project.documentId(userPath);
-            ArrayList<Issue> detectedIssues = analyzeDocument(project, tempModule, documentId);
-            issues.addAll(detectedIssues);
+            analyzeDocument(project, tempModule, documentId, internalScannerContext);
         } else {
             // Iterate through each module of the project
             project.currentPackage().moduleIds().forEach(moduleId -> {
@@ -82,69 +83,75 @@ public class ProjectAnalyzer {
 
                 // Iterate through each ballerina test file in a ballerina project and perform static analysis
                 module.testDocumentIds().forEach(testDocumentID -> {
-                    ArrayList<Issue> detectedIssues = analyzeDocument(project, module, testDocumentID);
-                    issues.addAll(detectedIssues);
+                    analyzeDocument(project, module, testDocumentID, internalScannerContext);
                 });
 
                 // Iterate through each document of the Main module/project + submodules
                 module.documentIds().forEach(documentId -> {
-                    ArrayList<Issue> detectedIssues = analyzeDocument(project, module, documentId);
-                    issues.addAll(detectedIssues);
+                    analyzeDocument(project, module, documentId, internalScannerContext);
                 });
             });
         }
 
         // return the detected issues
-        return issues;
+        return allIssues;
     }
 
-    public ArrayList<Issue> analyzeDocument(Project currentProject, Module currentModule, DocumentId documentId) {
+    public void analyzeDocument(Project currentProject,
+                                Module currentModule,
+                                DocumentId documentId,
+                                InternalScannerContext internalScannerContext) {
         // Retrieve each document from the module
         Document currentDocument = currentModule.document(documentId);
 
-        // Map to store the parsed & Compiled outputs
-        Map<String, Object> compiledOutputs = new HashMap<>();
+        // Retrieve syntax tree of each document
+        SyntaxTree syntaxTree = currentDocument.syntaxTree();
 
-        // Retrieve the syntax tree from the parsed ballerina document
-        compiledOutputs.put("syntaxTree", currentDocument.syntaxTree());
-
-        // Retrieve the compilation of the module
+        // Get semantic model from module compilation
         ModuleCompilation compilation = currentModule.getCompilation();
+        SemanticModel semanticModel = compilation.getSemanticModel();
 
-        // Retrieve the semantic model from the ballerina document compilation
-        compiledOutputs.put("semanticModel", compilation.getSemanticModel());
-
-        // Perform static code analysis
-        // Array to hold analysis issues for each document
-        ArrayList<Issue> internalIssues = new ArrayList<>();
-
-        // Set up a scanner context for each document being scanned for static code analysis
-        ScannerContext scannerContext = new ScannerContext(internalIssues,
-                currentDocument,
+        // Perform core scans
+        runInternalScans(currentProject,
                 currentModule,
-                currentProject);
+                currentDocument,
+                syntaxTree,
+                semanticModel,
+                internalScannerContext);
 
-        // Perform internal static code analysis
-        runInternalScans((SyntaxTree) compiledOutputs.get("syntaxTree"),
-                (SemanticModel) compiledOutputs.get("semanticModel"),
+        // Perform external scans
+        runCustomScans(currentProject, currentModule, currentDocument, internalScannerContext);
+    }
+
+    public void runInternalScans(Project currentProject,
+                                 Module currentModule,
+                                 Document currentDocument,
+                                 SyntaxTree syntaxTree,
+                                 SemanticModel semanticModel,
+                                 InternalScannerContext scannerContext) {
+
+        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentProject,
+                currentModule,
+                currentDocument,
+                syntaxTree,
+                semanticModel,
                 scannerContext);
 
-        runCustomScans(currentDocument, currentProject, scannerContext);
-
-        // Return the analyzed file results
-        return internalIssues;
+        analyzer.initialize();
     }
 
-    // For rules that can be implemented using the syntax tree model
-    public void runInternalScans(SyntaxTree syntaxTree, SemanticModel semanticModel, ScannerContext scannerContext) {
+    public void runCustomScans(Project currentProject,
+                               Module currentModule,
+                               Document currentDocument,
+                               InternalScannerContext internalScannerContext) {
 
-        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(syntaxTree);
-        analyzer.initialize(scannerContext);
-    }
+        // Run custom scans once
+        if (currentModule.isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
+            // TODO: External Scanner context will be used after property bag feature is introduced by project API
+            //  External issues store
+            //  ArrayList<Issue> externalIssues = new ArrayList<>();
+            //  ScannerContext scannerContext = new ScannerContext(externalIssues);
 
-    public void runCustomScans(Document currentDocument, Project currentProject, ScannerContext scannerContext) {
-        // Currently for each document in the default module it will run the custom scan which should be avoided
-        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
             // Checking if compiler plugins provided in Scan.toml exists
             Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
             Pattern versionPattern = Pattern.compile(CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN);
@@ -220,7 +227,7 @@ public class ProjectAnalyzer {
                     }
                 });
 
-                scannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
+                internalScannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
                 outputStream.println("Running custom scanner plugins...");
             }
         }

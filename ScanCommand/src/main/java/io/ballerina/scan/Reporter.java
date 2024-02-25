@@ -7,6 +7,7 @@ import io.ballerina.scan.utilities.Rule;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.scan.InbuiltRules.CUSTOM_RULES;
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
@@ -16,13 +17,17 @@ import static io.ballerina.scan.utilities.ScanToolConstants.SONARQUBE_RESERVED_R
 public class Reporter {
 
     private final ArrayList<Issue> issues;
-    private int lastRuleIndex = SONARQUBE_RESERVED_RULES + INBUILT_RULES.size();
+
+    // TODO: To be made non-static once property bag is introduced by project API
+    private static final AtomicInteger lastRuleIndex = new AtomicInteger(
+            SONARQUBE_RESERVED_RULES + INBUILT_RULES.size());
 
     Reporter(ArrayList<Issue> issues) {
 
         this.issues = issues;
     }
 
+    // TODO: To be removed once property bag is introduced by project API
     ArrayList<Issue> getIssues() {
 
         ArrayList<Issue> existingIssues = new ArrayList<>(issues);
@@ -30,52 +35,15 @@ public class Reporter {
         return existingIssues;
     }
 
-    void addExternalIssues(ArrayList<Issue> issues) {
-
-        this.issues.addAll(issues);
-    }
-
-    void reportIssue(int startLine,
-                     int startLineOffset,
-                     int endLine,
-                     int endLineOffset,
-                     String ruleID,
-                     String message,
-                     String issueType,
-                     String type,
-                     Document reportedDocument,
-                     Module reportedModule,
-                     Project reportedProject) {
-
-        String moduleName = reportedModule.moduleName().toString();
-        String documentName = reportedDocument.name();
-        Path issuesFilePath = reportedProject.documentPath(reportedDocument.documentId()).orElse(null);
-
-        if (issuesFilePath != null) {
-            Issue issue = new Issue(startLine,
-                    startLineOffset,
-                    endLine,
-                    endLineOffset,
-                    ruleID,
-                    message,
-                    issueType,
-                    type,
-                    moduleName + "/" + documentName,
-                    issuesFilePath.toString());
-
-            issues.add(issue);
-        }
-    }
-
-    public void reportExternalIssue(int startLine,
-                                    int startLineOffset,
-                                    int endLine,
-                                    int endLineOffset,
-                                    String message,
-                                    String type,
-                                    Document reportedDocument,
-                                    Module reportedModule,
-                                    Project reportedProject) {
+    public synchronized void reportIssue(int startLine,
+                                         int startLineOffset,
+                                         int endLine,
+                                         int endLineOffset,
+                                         String message,
+                                         String type,
+                                         Document reportedDocument,
+                                         Module reportedModule,
+                                         Project reportedProject) {
 
         String moduleName = reportedModule.moduleName().toString();
         String documentName = reportedDocument.name();
@@ -97,7 +65,7 @@ public class Reporter {
         }
     }
 
-    String generateCustomRuleID(String customRuleMessage) {
+    private String generateCustomRuleID(String customRuleMessage) {
         // Check if the custom rule has a valid message
         if (customRuleMessage.isEmpty()) {
             return null;
@@ -109,10 +77,10 @@ public class Reporter {
         }
 
         // Increment the last rule index
-        lastRuleIndex++;
+        lastRuleIndex.getAndIncrement();
 
         // Create custom rule ID
-        String customRuleID = "S" + lastRuleIndex;
+        String customRuleID = "S" + lastRuleIndex.get();
 
         // Put the message mapped with the custom rule ID
         CUSTOM_RULES.put(customRuleMessage, new Rule(customRuleID, customRuleMessage, true));

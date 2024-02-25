@@ -12,6 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ public class SonarQube implements ScannerPlatformPlugin {
     private final ProcessBuilder processBuilder = new ProcessBuilder();
     private final Map<String, String> platformArgs = new HashMap<>();
     private final PrintStream outputStream = System.out;
+    private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
 
     @Override
     public String platformName() {
@@ -65,62 +67,54 @@ public class SonarQube implements ScannerPlatformPlugin {
     @Override
     public void onScan(ArrayList<Issue> issues) {
 
-        String analyzedReportPath = saveIssues(issues, "ballerina-analysis-results.json");
-        if (analyzedReportPath != null) {
-            arguments.add("-DanalyzedResultsPath=" + analyzedReportPath);
-        }
+        boolean issuesSaved = saveIssues(ISSUES_FILE_PATH, issues);
 
-        String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
-                null);
-        if (sonarProjectPropertiesPath != null) {
-            arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
-        }
+        if (issuesSaved) {
+            arguments.add("-DanalyzedResultsPath=" + Path.of(ISSUES_FILE_PATH).toAbsolutePath());
 
-        // Add all arguments to the process
-        processBuilder.command(arguments);
-
-        // To redirect output of the scanning process to the initiated console
-        processBuilder.inheritIO();
-
-        // Trigger the reporting process
-        try {
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                outputStream.println("Reporting successful!");
-            } else {
-                outputStream.println("Reporting failed!");
+            String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
+                    null);
+            if (sonarProjectPropertiesPath != null) {
+                arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
             }
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+
+            // Add all arguments to the process
+            processBuilder.command(arguments);
+
+            // To redirect output of the scanning process to the initiated console
+            processBuilder.inheritIO();
+
+            // Trigger the reporting process
+            try {
+                Process process = processBuilder.start();
+                int exitCode = process.waitFor();
+
+                if (exitCode == 0) {
+                    outputStream.println("Reporting successful!");
+                } else {
+                    outputStream.println("Reporting failed!");
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            outputStream.println("Unable to save issues to file!");
         }
     }
 
-    public String saveIssues(ArrayList<Issue> issues, String fileName) {
+    private boolean saveIssues(String fileName, ArrayList<Issue> issues) {
         // Convert the output to a string
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         String jsonOutput = gson.toJson(issuesAsJson);
 
         // Save analysis results to file
-        File newTempFile = new File(fileName);
-        boolean newFileCreated = false;
-        try {
-            newFileCreated = newTempFile.createNewFile();
+        File destination = new File(fileName);
+        try (FileWriter writer = new FileWriter(destination, StandardCharsets.UTF_8)) {
+            writer.write(jsonOutput);
+            return true;
         } catch (IOException e) {
-            return null;
+            return false;
         }
-
-        // write the analysis results to the new file
-        if (newFileCreated) {
-            try (FileWriter writer = new FileWriter(newTempFile, StandardCharsets.UTF_8)) {
-                writer.write(jsonOutput);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return newTempFile.getAbsolutePath();
     }
 }
