@@ -63,7 +63,7 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.15.1'
 
     // For including the scan report JAR
-    implementation files('C:/Users/Tharana Wanigaratne/Desktop/sonar-ballerina/ScanCommand/src/main/resources/report.zip')
+    implementation files("${projectDir}/src/main/resources/report.zip")
 }
 
 // Setting up the ballerina home property for the project

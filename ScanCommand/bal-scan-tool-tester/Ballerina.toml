@@ -10,10 +10,10 @@ observabilityIncluded = true
 # Testing custom property retrieving from toml file
 [scan]
 # With absolute path
-configPath = "C:/Users/Tharana Wanigaratne/Desktop/sonar-ballerina/ScanCommand/bal-scan-tool-tester/Scan.toml"
+#configPath = "C:/Users/Tharana Wanigaratne/Desktop/sonar-ballerina/ScanCommand/bal-scan-tool-tester/Scan.toml"
 
 # With relative path
 #configPath = "ScanCommand/bal-scan-tool-tester/Scan.toml"
 
 # With remote path
-#configPath = "https://raw.githubusercontent.com/Xenowa/sonar-ballerina/main/ScanCommand/bal-scan-tool-tester/Scan.toml"
+configPath = "https://raw.githubusercontent.com/Xenowa/sonar-ballerina/main/ScanCommand/bal-scan-tool-tester/Scan.toml"
