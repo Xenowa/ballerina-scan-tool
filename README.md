@@ -19,8 +19,8 @@ The following software should be installed locally
 ## Getting started
 
 1. Create the bal scan tool by following the
-   instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/ScanCommand)
+   instructions [here](https://github.com/Xenowa/ballerina-scan-tool/tree/main/ScanCommand)
 2. Create the SonarQube Ballerina Plugin by following the
-   instructions [here](https://github.com/Xenowa/sonar-ballerina/tree/main/sonar-ballerina-plugin)
+   instructions [here](https://github.com/Xenowa/ballerina-scan-tool/tree/main/sonar-ballerina-plugin)
 3. Run SonarQube server instance
 4. Initialize a sonar scan in a project, [example](https://github.com/SonarDance/SonarQube-scans-testing)
