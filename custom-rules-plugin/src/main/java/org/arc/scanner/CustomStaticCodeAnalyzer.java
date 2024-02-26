@@ -8,6 +8,7 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.scan.Reporter;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
 
@@ -32,7 +33,8 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
                     // CUSTOM RULE: if function body is empty then report issue
                     if (functionBodyBlockNode.statements().isEmpty()) {
                         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-                        scannerContext.getReporter().reportIssue(
+                        Reporter reporter = scannerContext.getReporter();
+                        reporter.reportIssue(
                                 functionBodyBlockNode.lineRange().startLine().line(),
                                 functionBodyBlockNode.lineRange().startLine().offset(),
                                 functionBodyBlockNode.lineRange().endLine().line(),

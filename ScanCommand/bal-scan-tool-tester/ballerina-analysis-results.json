@@ -9,7 +9,7 @@
     "issueType": "CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   },
   {
     "startLine": 11,
@@ -21,7 +21,7 @@
     "issueType": "CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   },
   {
     "startLine": 16,
@@ -33,7 +33,7 @@
     "issueType": "CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   },
   {
     "startLine": 21,
@@ -45,7 +45,7 @@
     "issueType": "CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   },
   {
     "startLine": 0,
@@ -57,7 +57,7 @@
     "issueType": "CUSTOM_CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   },
   {
     "startLine": 3,
@@ -69,6 +69,6 @@
     "issueType": "CUSTOM_CHECK_VIOLATION",
     "type": "CODE_SMELL",
     "fileName": "bal_scan_tool_tester/main.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\main.bal"
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\ScanCommand\\bal-scan-tool-tester\\main.bal"
   }
 ]
