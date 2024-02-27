@@ -13,8 +13,8 @@ import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
 import static io.ballerina.scan.utilities.ScanToolConstants.CHECK_VIOLATION;
 import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
 
@@ -54,17 +54,16 @@ public class StaticCodeAnalyzer extends NodeVisitor {
     public void visit(FunctionSignatureNode functionSignatureNode) {
         // Perform the analysis
         int parameterCount = functionSignatureNode.parameters().size();
-        if (parameterCount > 7) {
+        int allowedParametersLimit = 7;
+        if (parameterCount > allowedParametersLimit) {
             // Report issue
             scannerContext.getReporter().reportIssue(
                     functionSignatureNode.lineRange().startLine().line(),
                     functionSignatureNode.lineRange().startLine().offset(),
                     functionSignatureNode.lineRange().endLine().line(),
                     functionSignatureNode.lineRange().endLine().offset(),
-                    "S107",
-                    "This function has "
-                            + parameterCount
-                            + " parameters, which is greater than the 7 authorized.",
+                    INBUILT_RULES.get("S107").getRuleID(),
+                    INBUILT_RULES.get("S107").getRuleDescription(),
                     CHECK_VIOLATION,
                     CODE_SMELL,
                     currentDocument,
@@ -79,39 +78,29 @@ public class StaticCodeAnalyzer extends NodeVisitor {
     @Override
     public void visit(FunctionBodyBlockNode functionBodyBlockNode) {
 
-        AtomicInteger checkPanicCounter = new AtomicInteger(0);
-
-        functionBodyBlockNode.statements().forEach(statement -> {
-            // Iterate through each statement
-            statement.children().forEach(childPair -> {
-                // Iterate through each child pair
+        functionBodyBlockNode.statements().forEach(statementNode -> {
+            statementNode.children().forEach(childPair -> {
                 List<STToken> tokens = childPair.internalNode().tokens();
                 tokens.forEach(token -> {
-                    // If there are tokens with checkpanic keyword increment the counter
                     if (token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
-                        checkPanicCounter.getAndIncrement();
+                        // Report the issue
+                        scannerContext.getReporter().reportIssue(
+                                childPair.lineRange().startLine().line(),
+                                childPair.lineRange().startLine().offset(),
+                                childPair.lineRange().endLine().line(),
+                                childPair.lineRange().endLine().offset(),
+                                INBUILT_RULES.get("S108").getRuleID(),
+                                INBUILT_RULES.get("S108").getRuleDescription(),
+                                CHECK_VIOLATION,
+                                CODE_SMELL,
+                                currentDocument,
+                                currentModule,
+                                currentProject
+                        );
                     }
                 });
             });
         });
-
-        if (checkPanicCounter.get() > 0) {
-            // Report issue
-            scannerContext.getReporter().reportIssue(
-                    functionBodyBlockNode.lineRange().startLine().line(),
-                    functionBodyBlockNode.lineRange().startLine().offset(),
-                    functionBodyBlockNode.lineRange().endLine().line(),
-                    functionBodyBlockNode.lineRange().endLine().offset(),
-                    "S108",
-                    "This function has "
-                            + checkPanicCounter.get()
-                            + " occurrences of checkpanic keyword. Please consider using the check keyword instead!",
-                    CHECK_VIOLATION,
-                    CODE_SMELL,
-                    currentDocument,
-                    currentModule,
-                    currentProject);
-        }
 
         this.visitSyntaxNode(functionBodyBlockNode);
     }

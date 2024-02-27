@@ -1,5 +1,5 @@
 {
-  "title": "use check keyword instead of checkpanic",
+  "title": "Avoid checkpanic, prefer explicit error handling",
   "type": "CODE_SMELL",
   "status": "ready",
   "remediation": {

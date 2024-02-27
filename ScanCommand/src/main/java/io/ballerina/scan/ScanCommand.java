@@ -262,9 +262,6 @@ public class ScanCommand implements BLauncherCmd {
         // If there are any platforms remaining which were not found in platform plugin JARs
         platforms.forEach(remainingPlatform -> {
             switch (remainingPlatform) {
-                // TODO: Create logic to check if equivalent platform plugin created by Ballerina exists
-                //  - If so first check if a cached version is there or proceed to download the relevant JAR
-                //  - Next execute the relevant platform
                 case "semgrep", "codeql" -> {
                     outputStream.println();
                     outputStream.println(remainingPlatform + " platform support is not available yet!");

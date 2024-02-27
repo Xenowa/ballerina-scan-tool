@@ -1,8 +1,8 @@
 <p><b>Why is this an issue?</b></p>
 
 <p>
-    if the checking-keyword is checkpanic, then the check-expression completes abruptly with a panic with
-    associated value.
+    When “checkpanic” is used, the program terminates abruptly with a panic unless
+    it’s handled explicitly along the call stack.
 </p>
 
 <pre>
@@ -19,7 +19,7 @@
 <p>The solution can be to</p>
 
 <ul>
-    <li>Handle the error using the error keyword</li>
+    <li>Check and handle the error explicitly</li></br>
     <pre>
     // Compliant
     public function checkResult() {
@@ -32,9 +32,11 @@
     public function getResult() returns json|error {
         // ...
     }
-    </pre>
-
-    <li>Make use of check keyword instead</li>
+    </pre></br>
+    <li>
+        Make use of check keyword, which returns errors directly in contrast to
+        checkpanic and panicking if an expression or action evaluates to an error.
+    </li></br>
     <pre>
     // Compliant
     public function checkResult() returns error?{

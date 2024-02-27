@@ -20,10 +20,10 @@ public class InbuiltRules {
     // Populating inbuilt rules
     static {
         INBUILT_RULES.put("S107", new Rule("S107",
-                "Functions should not have too many parameters",
+                "Functions should not have too many parameters!",
                 true));
         INBUILT_RULES.put("S108", new Rule("S108",
-                "use check keyword instead of checkpanic",
+                "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                 true));
     }
 }
