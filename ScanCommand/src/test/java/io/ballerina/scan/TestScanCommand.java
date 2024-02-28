@@ -49,24 +49,13 @@ public class TestScanCommand {
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
             arguments.add("/c");
+            arguments.add("cd bal-scan-tool-tester & bal scan --quiet");
         } else {
             arguments.add("sh");
             arguments.add("-c");
+            arguments.add("cd bal-scan-tool-tester ; bal scan --quiet");
         }
 
-        arguments.add("cd");
-        arguments.add("bal-scan-tool-tester");
-
-        // Command separator
-        if (SystemUtils.IS_OS_WINDOWS) {
-            arguments.add(" & ");
-        } else {
-            arguments.add(" ; ");
-        }
-
-        arguments.add("bal");
-        arguments.add("scan");
-        arguments.add("--quiet");
         processBuilder.command(arguments);
 
         // Redirect IO
