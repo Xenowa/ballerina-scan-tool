@@ -1,5 +1,5 @@
 [tool]
-id = “scan” # need to be same as picoclie name in java file
+id = "scan" # need to be same as picoclie name in java file
 
 [[dependency]]
 path = "../build/libs/ScanCommand-1.0.jar"

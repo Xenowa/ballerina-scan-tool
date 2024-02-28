@@ -1,48 +1,32 @@
 # For platform specific properties to get picked up, the path should be valid
-[[platform]]
-name = "sonarqube"
-#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
-path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
-#path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester\\target\\sonarqube.jar"
+#[[platform]]
+#name = "sonarqube"
+#path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
-#
-#[[platform]]
-#name = "semgrep"
-#path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\semgrep-ballerina-plugin-1.0-all.jar"
-#
-#[[platform]]
-#name = "codeql"
-#path = "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5\\bre\\lib\\codeql-ballerina-plugin-1.0-all.jar"
-
-[[plugin]]
-org = "tharana_wanigaratne"
-name = "custom_static_code_analyzer"
-version = "0.1.0"
 
 #[[plugin]]
 #org = "tharana_wanigaratne"
-#name = "compiler_plugin_customRules"
+#name = "custom_static_code_analyzer"
 #version = "0.1.0"
-#repository = "local"
 
 [[plugin]]
 org = "org3"
 name = "name3"
 version = "version"
 
-#[rule]
-#ids = "S107, S108"
+[rule]
+ids = "S107, S108"
 
 # ================================================
 # Invalid use cases which are ignored by scan tool
 # ================================================
 [[platform]]
 name = ""
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
 
 [[platform]]
 name = 10
-path = "C:\\Users\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\sonarqube-platform-plugin\\build\\libs\\sonarqube-platform-plugin-1.0.jar"
+path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
 
 [[platform]]
 

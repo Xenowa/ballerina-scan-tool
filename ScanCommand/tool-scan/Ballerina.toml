@@ -1,5 +1,5 @@
 [package]
-org = "tharana_wanigaratne"
+org = "ballerina"
 name = "tool_scan"
 version = "0.1.0"
 distribution = "2201.8.5"
