@@ -45,6 +45,7 @@ public class TestScanCommand {
         // Set up process
         ProcessBuilder processBuilder = new ProcessBuilder();
         List<String> arguments = new ArrayList<>();
+
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
             arguments.add("/c");
@@ -52,9 +53,17 @@ public class TestScanCommand {
             arguments.add("sh");
             arguments.add("-c");
         }
+
         arguments.add("cd");
         arguments.add("bal-scan-tool-tester");
-        arguments.add("&");
+
+        // Command separator
+        if (SystemUtils.IS_OS_WINDOWS) {
+            arguments.add(" & ");
+        } else {
+            arguments.add(" ; ");
+        }
+
         arguments.add("bal");
         arguments.add("scan");
         arguments.add("--quiet");

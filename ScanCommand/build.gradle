@@ -263,7 +263,7 @@ task buildScanTool {
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine 'cmd', '/c', 'cd tool-scan & bal pack & bal push --repository=local'
             } else {
-                commandLine 'sh', '-c', 'cd tool-scan & bal pack & bal push --repository=local'
+                commandLine 'sh', '-c', 'cd tool-scan ; bal pack ; bal push --repository=local'
             }
         }
         println("Successfully build and pushed the scan tool to the local repository")

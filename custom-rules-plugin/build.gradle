@@ -357,7 +357,7 @@ task buildCompilerPlugin {
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine 'cmd', '/c', 'cd custom-static-code-analyzer & bal pack & bal push --repository=local'
             } else {
-                commandLine 'sh', '-c', 'cd custom-static-code-analyzer & bal pack & bal push --repository=local'
+                commandLine 'sh', '-c', 'cd custom-static-code-analyzer ; bal pack ; bal push --repository=local'
             }
         }
         println("Successfully build and pushed the custom static code analyzer compiler plugin to the local repository")
