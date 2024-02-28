@@ -219,7 +219,6 @@ def ballerinaTomlFile = new File("${projectDir}/tool-scan/Ballerina.toml")
 def balToolTomlFile = new File("${projectDir}/tool-scan/BalTool.toml")
 def balerinaCentralDir = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
 def ballerinaLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/ballerina"
-def scanToolPackageDir = project.file("$projectDir")
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
 def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.config/bal-tools.toml"
 
@@ -261,7 +260,6 @@ task buildScanTool {
     doLast {
         // Pack and push to local repo of distribution
         exec {
-            workingDir scanToolPackageDir
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine 'cmd', '/c', 'cd tool-scan & bal pack & bal push --repository=local'
             } else {

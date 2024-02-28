@@ -335,9 +335,7 @@ def ballerinaTomlFile = new File("${projectDir}/custom-static-code-analyzer/Ball
 def compilerPluginTomlFile = new File("${projectDir}/custom-static-code-analyzer/CompilerPlugin.toml")
 def pluginCentralDirectory = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/tharana_wanigaratne"
 def pluginLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/tharana_wanigaratne"
-def scanToolPackageDir = project.file("$projectDir")
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
-def ballerinaPluginConfigToml = System.getProperty("user.home") + "/.ballerina/.config/bal-tools.toml"
 
 task updateTomlFiles {
     // Update the Ballerina.toml and Dependencies.toml files
@@ -356,7 +354,6 @@ task buildCompilerPlugin {
     doLast {
         // Pack and push to local repo of distribution
         exec {
-            workingDir scanToolPackageDir
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine 'cmd', '/c', 'cd custom-static-code-analyzer & bal pack & bal push --repository=local'
             } else {
