@@ -252,9 +252,6 @@ task createBallerinaToolConfigFile {
             file(ballerinaToolConfigToml).mkdir()
         }
 
-        // Get existing tool list from the bal-tools.toml file
-        TomlDocument
-
         file(ballerinaToolConfigToml).write(configFileContent)
         println("Successfully created the bal-tools.toml file in the .ballerina/.config directory")
     }
