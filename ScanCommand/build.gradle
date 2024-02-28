@@ -252,6 +252,11 @@ task createBallerinaToolConfigFile {
             file(ballerinaToolConfigToml).mkdir()
         }
 
+        // Retrieve existing content of toml file
+        
+
+        // Check if scan tool already exists and if not append and save it
+
         file(ballerinaToolConfigToml).write(configFileContent)
         println("Successfully created the bal-tools.toml file in the .ballerina/.config directory")
     }
