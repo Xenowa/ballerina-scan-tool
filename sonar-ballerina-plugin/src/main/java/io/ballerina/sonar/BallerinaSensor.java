@@ -137,9 +137,7 @@ class BallerinaSensor implements Sensor {
             arguments.add("-c");
         }
 
-        arguments.add("bal");
-        arguments.add("scan");
-        arguments.add("--quiet");
+        arguments.add("bal scan --quiet");
 
         fileScan.command(arguments);
 

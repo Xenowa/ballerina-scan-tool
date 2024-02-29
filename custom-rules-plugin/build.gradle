@@ -388,3 +388,6 @@ build {
     dependsOn updateTomlFiles
     dependsOn buildCompilerPlugin
 }
+
+// To make sure the compiler plugins gets built after the fat JAR is created
+buildCompilerPlugin.dependsOn shadowJar

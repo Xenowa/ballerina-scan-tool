@@ -253,7 +253,7 @@ task createBallerinaToolConfigFile {
         }
 
         // Retrieve existing content of toml file
-        
+
 
         // Check if scan tool already exists and if not append and save it
 
