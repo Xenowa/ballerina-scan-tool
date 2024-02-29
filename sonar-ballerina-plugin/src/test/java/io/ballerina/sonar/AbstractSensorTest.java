@@ -48,7 +48,9 @@ public abstract class AbstractSensorTest {
     @BeforeEach
     public void setup() throws IOException {
         // Pointing the testing directory
-        baseDir = Path.of("src/test/java/io/ballerina/sonar/");
+        baseDir = Path.of(System.getProperty("user.dir")
+                + "/"
+                + "src/test/java/io/ballerina/sonar/sonar_bal_testing");
 
         // Setting the context for the testing directory
         context = SensorContextTester.create(baseDir);

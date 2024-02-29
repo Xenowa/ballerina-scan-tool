@@ -41,8 +41,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,13 +116,6 @@ class BallerinaSensor implements Sensor {
         LOG.info("Analyzing batch report: ", analyzedResultsFilePath);
         String fileContent = getFileContent(analyzedResultsFilePath);
 
-        // Delete existing file
-        try {
-            Files.delete(Path.of(analyzedResultsFilePath));
-        } catch (IOException ignored) {
-            LOG.info("Unable to remove analyzed results file: " + analyzedResultsFilePath);
-        }
-
         reportFileContent(context, pathAndInputFiles, fileContent);
     }
 
@@ -133,7 +124,11 @@ class BallerinaSensor implements Sensor {
         LOG.info("Analyzing Ballerina project");
 
         ProcessBuilder fileScan = new ProcessBuilder();
+
+        fileScan.directory(context.fileSystem().baseDir());
+
         List<String> arguments = new ArrayList<>();
+
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
             arguments.add("/c");
@@ -141,9 +136,11 @@ class BallerinaSensor implements Sensor {
             arguments.add("sh");
             arguments.add("-c");
         }
+
         arguments.add("bal");
         arguments.add("scan");
         arguments.add("--quiet");
+
         fileScan.command(arguments);
 
         try {
@@ -158,7 +155,8 @@ class BallerinaSensor implements Sensor {
 
             // If file creation was successful proceed reporting
             if (exitCode == 0) {
-                String analyzedResultsFilePath = Paths.get(TARGET_FOLDER)
+                String analyzedResultsFilePath = Paths.get(context.fileSystem().baseDir().getPath())
+                        .resolve(TARGET_FOLDER)
                         .resolve(REPORT_FOLDER)
                         .resolve(ANALYZED_RESULTS_FILE)
                         .toString();
