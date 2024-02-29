@@ -306,7 +306,7 @@ tasks.shadowJar {
     exclude "bal-tools-toml-schema.json"
     exclude "ballerina-toml-schema.json"
     exclude "dependencies-toml-schema.json"
-    exclude "jballerina-tools-2201.8.5-20240214-084700-478a0ef4.zip"
+    exclude "jballerina-tools-2201.8.5.zip"
     exclude "old-dependencies-toml-schema.json"
     exclude "plugin.xml"
     exclude "production.html"
