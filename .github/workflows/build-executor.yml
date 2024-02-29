@@ -41,7 +41,7 @@ jobs:
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
         # To make sure the scan command gets built before running tests
         run: |
-          ./gradlew build --no-daemon
+          ./gradlew build
 
 # Currently windows build is not possible due to issue: https://github.com/ballerina-platform/ballerina-action/issues/57
 #  windows_build:
@@ -71,4 +71,4 @@ jobs:
 #        env:
 #          packageUser: ${{ github.actor }}
 #          packagePAT: ${{ secrets.GITHUB_TOKEN }}
-#        run: ./gradlew.bat build --no-daemon
+#        run: ./gradlew.bat build

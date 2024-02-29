@@ -29,11 +29,11 @@ public class Main {
     private static final PrintStream outputStream = System.out;
 
     public static void main(String[] args) {
-        // To set the ballerina home
-        System.setProperty("ballerina.home", "C:\\Program Files\\Ballerina\\distributions\\ballerina-2201.8.5");
 
-        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations("C:\\Users" +
-                "\\Tharana Wanigaratne\\Desktop\\sonar-ballerina\\ScanCommand\\bal-scan-tool-tester");
+        System.setProperty("ballerina.home", System.getProperty("ballerina.home").split("\\\\bin")[0]);
+
+        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations("ScanCommand/" +
+                "bal-scan-tool-tester");
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonOutput = gson.toJson(scanTomlFile, ScanTomlFile.class);
