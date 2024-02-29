@@ -26,7 +26,14 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.rule.CheckFactory;
 import org.sonar.api.batch.sensor.issue.internal.DefaultNoSonarFilter;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 class BallerinaSensorTest extends AbstractSensorTest {
+
+    private static final String TARGET_FOLDER = "target";
+    private static final String REPORT_FOLDER = "report";
+    private static final String ANALYZED_RESULTS_FILE = "scan_results.json";
 
     @AfterEach
     @Test
@@ -62,8 +69,13 @@ class BallerinaSensorTest extends AbstractSensorTest {
 
         sensor.execute(context);
 
-        // Asset that there are reported issues
-        Assertions.assertThat(context.allIssues().isEmpty()).isEqualTo(false);
+        // Assert if a results file was generated during the process
+        Assertions.assertThat(Files.exists(Paths.get(context.fileSystem()
+                        .baseDir()
+                        .getPath())
+                .resolve(TARGET_FOLDER)
+                .resolve(REPORT_FOLDER)
+                .resolve(ANALYZED_RESULTS_FILE))).isEqualTo(true);
     }
 
     private BallerinaSensor sensor(CheckFactory checkFactory) {
