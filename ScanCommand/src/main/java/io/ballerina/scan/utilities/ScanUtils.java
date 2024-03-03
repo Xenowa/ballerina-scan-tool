@@ -93,16 +93,31 @@ public class ScanUtils {
 
         Target target;
         try {
-            if (directoryName != null) {
-                String file = project.sourceRoot().toString() + ScanToolConstants.PATH_SEPARATOR + directoryName;
-                Path tempDirectory = Files.createDirectory(Path.of(file));
-                target = new Target(tempDirectory);
-            } else if (project.kind() == ProjectKind.BUILD_PROJECT) {
-                target = new Target(project.targetDir());
+            if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
+                if (directoryName != null) {
+                    Path parentDirectory = project.sourceRoot().toAbsolutePath().getParent();
+                    if (parentDirectory != null) {
+                        Path targetDirectory = Files.createDirectories(parentDirectory.resolve(directoryName));
+                        target = new Target(targetDirectory);
+                    } else {
+                        target = new Target(project.targetDir());
+                    }
+                } else {
+                    target = new Target(project.targetDir());
+                }
             } else {
-                Path tempDirectory = Files.createTempDirectory(TARGET_DIR_NAME
-                        + System.nanoTime());
-                target = new Target(tempDirectory);
+                Path parentDirectory = project.sourceRoot().toAbsolutePath().getParent();
+                if (parentDirectory != null) {
+                    Path targetDirectory;
+                    if (directoryName != null) {
+                        targetDirectory = Files.createDirectories(parentDirectory.resolve(directoryName));
+                    } else {
+                        targetDirectory = Files.createDirectories(parentDirectory.resolve(TARGET_DIR_NAME));
+                    }
+                    target = new Target(targetDirectory);
+                } else {
+                    target = new Target(project.targetDir());
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

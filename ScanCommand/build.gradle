@@ -32,7 +32,7 @@ plugins {
 }
 
 group = 'io.ballerina.scan'
-version = '1.0'
+version = '1.0.0'
 
 repositories {
     mavenLocal()
@@ -219,6 +219,7 @@ def balToolTomlFile = new File("${projectDir}/tool-scan/BalTool.toml")
 def balerinaCentralDir = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
 def ballerinaLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/ballerina"
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
+def ballerinaToolConfigDir = System.getProperty("user.home") + "/.ballerina/.config"
 def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.config/bal-tools.toml"
 
 task updateTomlFiles {
@@ -248,7 +249,8 @@ task createBallerinaToolConfigFile {
     outputs.upToDateWhen { false }
     doLast {
         if (!file(ballerinaToolConfigToml).exists()) {
-            file(ballerinaToolConfigToml).mkdir()
+            file(ballerinaToolConfigDir).mkdirs()
+            file(ballerinaToolConfigToml).createNewFile()
         }
 
         // Retrieve existing content of toml file

@@ -62,7 +62,7 @@ public class ScanCommand implements BLauncherCmd {
     private boolean quietFlag;
 
     @CommandLine.Option(names = "--target-dir", description = "Target directory path")
-    private Path targetDir;
+    private String targetDir;
 
     @CommandLine.Option(names = {"--scan-report"}, description = "Enable scan report generation")
     private boolean scanReport;
@@ -202,7 +202,7 @@ public class ScanCommand implements BLauncherCmd {
         if (platforms.contains("local") && quietFlag) {
             // Save results to directory quietly
             if (targetDir != null) {
-                ScanUtils.saveToDirectory(issues, userPath, targetDir.toString());
+                ScanUtils.saveToDirectory(issues, userPath, targetDir);
             } else {
                 ScanUtils.saveToDirectory(issues, userPath, null);
             }
@@ -217,7 +217,7 @@ public class ScanCommand implements BLauncherCmd {
                 outputStream.println();
                 outputStream.println("Generating scan report...");
                 if (targetDir != null) {
-                    scanReportPath = ScanUtils.generateScanReport(issues, userPath, targetDir.toString());
+                    scanReportPath = ScanUtils.generateScanReport(issues, userPath, targetDir);
                 } else {
                     scanReportPath = ScanUtils.generateScanReport(issues, userPath, null);
                 }
@@ -229,8 +229,7 @@ public class ScanCommand implements BLauncherCmd {
             // Save results to directory
             Path reportPath;
             if (targetDir != null) {
-                reportPath = ScanUtils.saveToDirectory(issues, userPath, targetDir.toString()
-                );
+                reportPath = ScanUtils.saveToDirectory(issues, userPath, targetDir);
             } else {
                 reportPath = ScanUtils.saveToDirectory(issues, userPath, null);
             }
