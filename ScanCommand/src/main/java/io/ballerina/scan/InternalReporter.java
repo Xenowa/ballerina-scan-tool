@@ -51,7 +51,8 @@ public class InternalReporter {
         String documentName = reportedDocument.name();
         Path issuesFilePath = reportedProject.documentPath(reportedDocument.documentId()).orElse(null);
 
-        if (issuesFilePath != null && INBUILT_RULES.containsKey(ruleID)) {
+        if (issuesFilePath != null && INBUILT_RULES.containsKey(ruleID)
+                && INBUILT_RULES.get(ruleID).ruleIsActivated()) {
             Issue issue = new Issue(startLine,
                     startLineOffset,
                     endLine,
