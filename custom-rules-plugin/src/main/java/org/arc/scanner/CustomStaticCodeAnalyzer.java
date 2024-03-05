@@ -25,21 +25,22 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Reporter;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
 
-import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
+import java.nio.file.Path;
+
+import static io.ballerina.scan.utilities.ScanToolConstants.EXTERNAL_ISSUE;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
-
         compilerPluginContext.addCodeAnalyzer(new CodeAnalyzer() {
             @Override
             public void init(CodeAnalysisContext codeAnalysisContext) {
-
                 codeAnalysisContext.addSyntaxNodeAnalysisTask(context -> {
                     Module module = context.currentPackage().module(context.moduleId());
                     Document document = module.document(context.documentId());
@@ -51,17 +52,23 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
                     if (functionBodyBlockNode.statements().isEmpty()) {
                         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
                         Reporter reporter = scannerContext.getReporter();
-                        reporter.reportIssue(
-                                functionBodyBlockNode.lineRange().startLine().line(),
-                                functionBodyBlockNode.lineRange().startLine().offset(),
-                                functionBodyBlockNode.lineRange().endLine().line(),
-                                functionBodyBlockNode.lineRange().endLine().offset(),
-                                "Add a nested comment explaining why" +
-                                        " this function is empty or complete the implementation.",
-                                CODE_SMELL,
-                                document,
-                                module,
-                                project
+                        String externalIssuesFilePath = project.documentPath(document.documentId())
+                                .orElse(Path.of(document.name())).toString();
+                        reporter.reportIssue(new IssueIml(
+                                        functionBodyBlockNode.lineRange().startLine().line(),
+                                        functionBodyBlockNode.lineRange().startLine().offset(),
+                                        functionBodyBlockNode.lineRange().endLine().line(),
+                                        functionBodyBlockNode.lineRange().endLine().offset(),
+                                        "S109",
+                                        "Add a nested comment explaining why" +
+                                                " this function is empty or complete the implementation.",
+                                        EXTERNAL_ISSUE,
+                                        "CODE_SMELL",
+                                        document,
+                                        module,
+                                        project,
+                                        "CustomStaticCodeAnalyzer"
+                                )
                         );
 
                         complete();

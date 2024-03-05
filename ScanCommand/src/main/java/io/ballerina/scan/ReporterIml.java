@@ -19,31 +19,24 @@ package io.ballerina.scan;
 
 import java.util.ArrayList;
 
-import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
-
-public class InternalReporter {
+public class ReporterIml implements Reporter {
 
     private final ArrayList<Issue> issues;
-    private final String reportedSource;
 
-    InternalReporter(ArrayList<Issue> issues, String reportedSource) {
-
+    ReporterIml(ArrayList<Issue> issues) {
         this.issues = issues;
-        this.reportedSource = reportedSource;
     }
 
-    void reportIssue(Issue issue) {
-        if (INBUILT_RULES.containsKey(issue.getRuleID()) && INBUILT_RULES.get(issue.getRuleID()).ruleIsActivated()) {
-            issues.add(issue);
-        }
+    // TODO: To be removed once property bag is introduced by project API
+    ArrayList<Issue> getIssues() {
+        ArrayList<Issue> existingIssues = new ArrayList<>(issues);
+        issues.clear();
+        return existingIssues;
     }
 
-    void addExternalIssues(ArrayList<Issue> externalIssues) {
-
-        issues.addAll(externalIssues);
-    }
-
-    public String getReportedSource() {
-        return reportedSource;
+    @Override
+    public synchronized void reportIssue(Issue issue) {
+        issues.add(issue);
     }
 }
+

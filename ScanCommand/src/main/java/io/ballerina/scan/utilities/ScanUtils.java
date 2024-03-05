@@ -75,22 +75,18 @@ public class ScanUtils {
     }
 
     public static void printToConsole(ArrayList<Issue> issues) {
-
         String jsonOutput = convertIssuesToJsonString(issues);
-
         outputStream.println();
         outputStream.println(jsonOutput);
     }
 
     public static String convertIssuesToJsonString(ArrayList<Issue> issues) {
-
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         return gson.toJson(issuesAsJson);
     }
 
     public static Target getTargetPath(Project project, String directoryName) {
-
         Target target;
         try {
             if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
@@ -191,7 +187,7 @@ public class ScanUtils {
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("type", issue.getType());
+                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity());
                 jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
@@ -212,7 +208,7 @@ public class ScanUtils {
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("type", issue.getType());
+                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity());
                 jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);

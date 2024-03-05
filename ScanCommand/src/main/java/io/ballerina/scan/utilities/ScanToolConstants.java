@@ -19,15 +19,12 @@ package io.ballerina.scan.utilities;
 
 public class ScanToolConstants {
 
-    // Internal issues constants
-    public static final String CHECK_VIOLATION = "CHECK_VIOLATION";
+    // Internal and external issues constants
+    public static final String CORE_ISSUE = "CORE_ISSUE";
+    public static final String EXTERNAL_ISSUE = "EXTERNAL_ISSUE";
     public static final String CODE_SMELL = "CODE_SMELL";
     public static final String BUG = "BUG";
     public static final String VULNERABILITY = "VULNERABILITY";
-    public static final int SONARQUBE_RESERVED_RULES = 106;
-
-    // External issues constants
-    public static final String CUSTOM_CHECK_VIOLATION = "CUSTOM_CHECK_VIOLATION";
     public static final String MAIN_BAL = "main.bal";
 
     // Report generation constants
@@ -45,7 +42,6 @@ public class ScanToolConstants {
     public static final String PLATFORM_TABLE = "platform";
     public static final String PLUGIN_TABLE = "plugin";
     public static final String RULES_TABLE = "rule";
-    public static final String NEWLINE_SYMBOL = System.getProperty("line.separator");
     public static final String JAR_PREDICATE = ".jar";
 
     // Import generation constants

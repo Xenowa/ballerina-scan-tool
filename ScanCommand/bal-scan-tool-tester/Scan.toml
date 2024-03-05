@@ -4,10 +4,10 @@
 #path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
 
-#[[plugin]]
-#org = "tharana_wanigaratne"
-#name = "custom_static_code_analyzer"
-#version = "0.1.0"
+[[plugin]]
+org = "tharana_wanigaratne"
+name = "custom_static_code_analyzer"
+version = "0.1.0"
 
 [[plugin]]
 org = "org3"

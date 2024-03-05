@@ -39,9 +39,9 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
 
     private static final String SERIALIZE_CONTEXT_FILE = "serialized-context-out.json";
     private static final Gson gson = new Gson();
-    private static final Type listOfIssuesType = new TypeToken<ArrayList<Issue>>() {
+    private static final Type listOfIssuesType = new TypeToken<ArrayList<IssueIml>>() {
     }.getType();
-    private ScannerContext currentScannerContext = null;
+    private ScannerContextIml currentScannerContext = null;
 
     public synchronized ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
         // Implementations here will change once scanner context can be retrieved from compilerPluginContext
@@ -49,15 +49,16 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
             return currentScannerContext;
         }
 
+        // TODO: To be created from the scan tool side ones project API fix is in effect
         ArrayList<Issue> externalIssues = new ArrayList<>();
-        currentScannerContext = new ScannerContext(externalIssues);
+        currentScannerContext = new ScannerContextIml(externalIssues);
         return currentScannerContext;
     }
 
+    // TODO: To be removed ones project API fix is in effect
     public synchronized void complete() {
-
         if (currentScannerContext != null) {
-            ArrayList<Issue> existingIssues = currentScannerContext.getReporter().getIssues();
+            ArrayList<Issue> existingIssues = currentScannerContext.getReporterIml().getIssues();
 
             if (!existingIssues.isEmpty()) {
                 try {
@@ -92,9 +93,9 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
         }
     }
 
+    // TODO: To be removed ones project API fix is in effect
     // Retrieve the deserialized context from file
     static ArrayList<Issue> getIssues() {
-
         Path serializedContextFilePath = Path.of(SERIALIZE_CONTEXT_FILE);
         if (Files.exists(serializedContextFilePath)) {
             try {

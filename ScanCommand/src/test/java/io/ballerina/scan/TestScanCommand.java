@@ -33,9 +33,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
+
 public class TestScanCommand {
 
-    private static final Type listOfIssuesType = new TypeToken<ArrayList<Issue>>() {
+    private static final Type listOfIssuesType = new TypeToken<ArrayList<IssueIml>>() {
     }.getType();
 
     @AfterEach
@@ -94,7 +96,7 @@ public class TestScanCommand {
             Assertions.assertEquals(
                     "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                     firstIssue.getMessage());
-            Assertions.assertEquals("CHECK_VIOLATION", firstIssue.getIssueType());
+            Assertions.assertEquals(CORE_ISSUE, firstIssue.getIssueType());
         }
     }
 

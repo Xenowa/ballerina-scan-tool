@@ -20,27 +20,6 @@
 
 package io.ballerina.scan;
 
-public interface Issue {
+public class PublicIssueIml {
 
-    int getStartLine();
-
-    int getStartLineOffset();
-
-    int getEndLine();
-
-    int getEndLineOffset();
-
-    String getRuleID();
-
-    String getMessage();
-
-    String getIssueType();
-
-    String getIssueSeverity();
-
-    String getFileName();
-
-    String getReportedFilePath();
-
-    String getReportedSource();
 }

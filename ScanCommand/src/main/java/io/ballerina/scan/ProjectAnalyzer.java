@@ -226,18 +226,19 @@ public class ProjectAnalyzer {
                             + PATH_SEPARATOR
                             + MAIN_BAL)) {
                         // Modify the issue
-                        Issue modifiedExternalIssue = new Issue(
+                        IssueIml modifiedExternalIssue = new IssueIml(
                                 externalIssue.getStartLine() - importCounter.get(),
                                 externalIssue.getStartLineOffset(),
                                 externalIssue.getEndLine() - importCounter.get(),
                                 externalIssue.getEndLineOffset(),
                                 externalIssue.getRuleID(),
                                 externalIssue.getMessage(),
+                                externalIssue.getIssueSeverity(),
                                 externalIssue.getIssueType(),
-                                externalIssue.getType(),
                                 externalIssue.getFileName(),
-                                externalIssue.getReportedFilePath()
-                        );
+                                externalIssue.getReportedFilePath(),
+                                externalIssue.getReportedSource());
+
                         modifiedExternalIssues.add(modifiedExternalIssue);
                     } else {
                         modifiedExternalIssues.add(externalIssue);

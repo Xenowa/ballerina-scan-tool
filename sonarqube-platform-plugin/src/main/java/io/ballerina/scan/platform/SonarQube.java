@@ -45,13 +45,11 @@ public class SonarQube implements ScannerPlatformPlugin {
 
     @Override
     public String platformName() {
-
         return "sonarqube";
     }
 
     @Override
     public void initialize(Map<String, String> platformArgs) {
-
         this.platformArgs.putAll(platformArgs);
 
         // Initializing sonar-scanner cli
@@ -83,7 +81,6 @@ public class SonarQube implements ScannerPlatformPlugin {
 
     @Override
     public void onScan(ArrayList<Issue> issues) {
-
         boolean issuesSaved = saveIssues(ISSUES_FILE_PATH, issues);
 
         if (issuesSaved) {

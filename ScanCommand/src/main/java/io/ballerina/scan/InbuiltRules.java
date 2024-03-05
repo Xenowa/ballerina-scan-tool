@@ -27,13 +27,6 @@ public class InbuiltRules {
     // Map for inbuilt rules
     static final HashMap<String, Rule> INBUILT_RULES = new HashMap<>();
 
-    /**
-     * Custom rules map is populated through
-     * {@link Reporter#generateCustomRuleID(String customRuleMessage)}.
-     */
-    // Map for custom rules
-    static final HashMap<String, Rule> CUSTOM_RULES = new HashMap<>();
-
     // Populating inbuilt rules
     static {
         INBUILT_RULES.put("S107", new Rule("S107",

@@ -32,8 +32,8 @@ import io.ballerina.projects.Project;
 import java.util.List;
 
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
-import static io.ballerina.scan.utilities.ScanToolConstants.CHECK_VIOLATION;
 import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
+import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
 
@@ -50,7 +50,6 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                               SyntaxTree syntaxTree,
                               SemanticModel semanticModel,
                               InternalScannerContext scannerContext) {
-
         this.currentProject = currentProject;
         this.currentModule = currentModule;
         this.currentDocument = currentDocument;
@@ -74,18 +73,19 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         int allowedParametersLimit = 7;
         if (parameterCount > allowedParametersLimit) {
             // Report issue
-            scannerContext.getReporter().reportIssue(
+            scannerContext.getReporter().reportIssue(new IssueIml(
                     functionSignatureNode.lineRange().startLine().line(),
                     functionSignatureNode.lineRange().startLine().offset(),
                     functionSignatureNode.lineRange().endLine().line(),
                     functionSignatureNode.lineRange().endLine().offset(),
                     INBUILT_RULES.get("S107").getRuleID(),
                     INBUILT_RULES.get("S107").getRuleDescription(),
-                    CHECK_VIOLATION,
+                    CORE_ISSUE,
                     CODE_SMELL,
                     currentDocument,
                     currentModule,
-                    currentProject);
+                    currentProject,
+                    scannerContext.getReporter().getReportedSource()));
         }
 
         // Continue visiting other nodes of the syntax tree
@@ -94,26 +94,25 @@ public class StaticCodeAnalyzer extends NodeVisitor {
 
     @Override
     public void visit(FunctionBodyBlockNode functionBodyBlockNode) {
-
         functionBodyBlockNode.statements().forEach(statementNode -> {
             statementNode.children().forEach(childPair -> {
                 List<STToken> tokens = childPair.internalNode().tokens();
                 tokens.forEach(token -> {
                     if (token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
                         // Report the issue
-                        scannerContext.getReporter().reportIssue(
+                        scannerContext.getReporter().reportIssue(new IssueIml(
                                 childPair.lineRange().startLine().line(),
                                 childPair.lineRange().startLine().offset(),
                                 childPair.lineRange().endLine().line(),
                                 childPair.lineRange().endLine().offset(),
                                 INBUILT_RULES.get("S108").getRuleID(),
                                 INBUILT_RULES.get("S108").getRuleDescription(),
-                                CHECK_VIOLATION,
+                                CORE_ISSUE,
                                 CODE_SMELL,
                                 currentDocument,
                                 currentModule,
-                                currentProject
-                        );
+                                currentProject,
+                                scannerContext.getReporter().getReportedSource()));
                     }
                 });
             });
