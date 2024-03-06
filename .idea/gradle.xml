@@ -11,7 +11,7 @@
             <option value="$PROJECT_DIR$/ScanCommand" />
             <option value="$PROJECT_DIR$/custom-rules-plugin" />
             <option value="$PROJECT_DIR$/sonar-ballerina-plugin" />
-            <option value="$PROJECT_DIR$/sonarqube-platform-plugin" />
+            <option value="$PROJECT_DIR$/sonar-platform-plugin" />
           </set>
         </option>
       </GradleProjectSettings>

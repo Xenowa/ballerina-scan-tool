@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SonarQube implements ScannerPlatformPlugin {
+public class SonarPlatformPlugin implements ScannerPlatformPlugin {
 
     private final List<String> arguments = new ArrayList<>();
     private final ProcessBuilder processBuilder = new ProcessBuilder();

@@ -2,7 +2,7 @@ rootProject.name = 'ballerina-scan-tool'
 // Ballerina Scan Tool Extension Plugins
 include 'ScanCommand'
 include 'custom-rules-plugin'
-include 'sonarqube-platform-plugin'
+include 'sonar-platform-plugin'
 
 // Platform specific plugins
 include 'sonar-ballerina-plugin'
