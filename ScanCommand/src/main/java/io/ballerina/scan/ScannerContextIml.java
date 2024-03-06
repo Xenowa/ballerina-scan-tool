@@ -17,30 +17,76 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.projects.plugins.CompilerPluginContext;
+
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ScannerContextIml implements ScannerContext {
 
-    // Instead of all the following we could simply have a reporter hashmap, this is created from scan tool side
-    // Once compiler plugins engage they could create a new reporter through get reporter if it does not already
-    // exist and get the existing reporter if one is made for its name
-    // When a new reporter is created, the name passed from the compiler plugin side can be attached to the issues
-    // reported from it
-    // This will allow all compiler plugins to report issues concurrently during package compilation
-    // Finally we can have another method to retrieve all issues from the reporters and add to its internal issue array
+    private final ArrayList<String> definedRules;
     private final ReporterIml reporter;
+    private final Map<CompilerPluginContext, ReporterIml> reporters = new ConcurrentHashMap<>();
 
-    // Internal constructor and methods
-    ScannerContextIml(ArrayList<Issue> issues) {
-        this.reporter = new ReporterIml(issues);
+    // TODO: to be removed if no concurrent compiler plugin engagements occur
+    //  =============================
+    //  Method 1: Parallel reporting
+    //  =============================
+    //  - getReporter() accepts compiler plugin context parameter
+    //  - There are multiple instances of the reporter depending on the number of compiler plugins
+    ScannerContextIml(ArrayList<String> definedRules) {
+        this.definedRules = definedRules;
+        this.reporter = null;
     }
 
+    @Override
+    public synchronized Reporter getReporter2(CompilerPluginContext compilerPluginContext) {
+        // Return existing reporter
+        if (reporters.containsKey(compilerPluginContext)) {
+            return reporters.get(compilerPluginContext);
+        }
+
+        // create a new reporter and add to hashmap
+        ArrayList<Issue> externalIssues = new ArrayList<>();
+        ReporterIml newReporter = new ReporterIml(externalIssues, definedRules);
+        reporters.put(compilerPluginContext, newReporter);
+        return newReporter;
+    }
+
+    // TODO: to be removed if compiler plugins engage concurrently
+    //  ================================
+    //  Method 2: synchronized reporting (Ideal Approach)
+    //  ================================
+    //  - getReporter() accepts no parameters
+    //  - There is only 1 instance of the reporter
+    ScannerContextIml(ArrayList<Issue> issues, ArrayList<String> definedRules) {
+        this.definedRules = definedRules;
+        this.reporter = new ReporterIml(issues, definedRules);
+    }
+
+    @Override
     public synchronized Reporter getReporter() {
         return reporter;
     }
 
-    // TODO: To be removed ones project API fix is in effect
+    // TODO: NOTES
+    //  - Rules to filter should be passed through the compiler plugin context through scanner context
+    //  - It's plugin developers responsibility to implement visitor checks in a way they can be enabled/disabled by
+    //  the passed rules
+    //  - There is still the problem of identifying which plugins reported which issues to be solved
+
+    // TODO: Internal method To be removed ones project API fix is in effect
     synchronized ReporterIml getReporterIml() {
         return reporter;
+    }
+
+    synchronized ArrayList<Issue> getAllIssues() {
+        ArrayList<Issue> allIssues = new ArrayList<>();
+        reporters.values().forEach(reporterIml -> {
+            allIssues.addAll(reporterIml.getIssues());
+        });
+        
+        return allIssues;
     }
 }

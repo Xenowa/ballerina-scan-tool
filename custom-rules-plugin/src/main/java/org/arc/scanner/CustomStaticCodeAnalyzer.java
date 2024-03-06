@@ -30,11 +30,22 @@ import io.ballerina.scan.Reporter;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
 
-import java.nio.file.Path;
+import java.util.ArrayList;
 
 import static io.ballerina.scan.utilities.ScanToolConstants.EXTERNAL_ISSUE;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
+
+    @Override
+    public ArrayList<String> definedRules() {
+        ArrayList<String> customRules = new ArrayList<>();
+        customRules.add("S109");
+        customRules.add("S110");
+        customRules.add("S111");
+        customRules.add("S112");
+        customRules.add("S113");
+        return customRules;
+    }
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
@@ -51,9 +62,7 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
                     // CUSTOM RULE: if function body is empty then report issue
                     if (functionBodyBlockNode.statements().isEmpty()) {
                         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-                        Reporter reporter = scannerContext.getReporter();
-                        String externalIssuesFilePath = project.documentPath(document.documentId())
-                                .orElse(Path.of(document.name())).toString();
+                        Reporter reporter = scannerContext.getReporter2(compilerPluginContext);
                         reporter.reportIssue(new IssueIml(
                                         functionBodyBlockNode.lineRange().startLine().line(),
                                         functionBodyBlockNode.lineRange().startLine().offset(),

@@ -17,7 +17,12 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.projects.plugins.CompilerPluginContext;
+
 public interface ScannerContext {
 
     Reporter getReporter();
+
+    // TODO: To be removed if there are no concurrent operations
+    Reporter getReporter2(CompilerPluginContext compilerPluginContext);
 }

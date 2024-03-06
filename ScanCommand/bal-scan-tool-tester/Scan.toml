@@ -1,7 +1,7 @@
 # For platform specific properties to get picked up, the path should be valid
 #[[platform]]
 #name = "sonarqube"
-#path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
+#path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonar-platform-plugin-1.0.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
 
 [[plugin]]

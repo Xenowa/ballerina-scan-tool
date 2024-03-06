@@ -22,21 +22,36 @@ import java.util.ArrayList;
 public class ReporterIml implements Reporter {
 
     private final ArrayList<Issue> issues;
+    private final ArrayList<String> definedRules;
 
-    ReporterIml(ArrayList<Issue> issues) {
+    // Initial approach
+//    ReporterIml(ArrayList<Issue> issues) {
+//        this.issues = issues;
+//    }
+//    @Override
+//    public synchronized void reportIssue(Issue issue) {
+//        issues.add(issue);
+//    }
+
+    // TODO: approach to be tested
+    ReporterIml(ArrayList<Issue> issues, ArrayList<String> definedRules) {
         this.issues = issues;
-    }
-
-    // TODO: To be removed once property bag is introduced by project API
-    ArrayList<Issue> getIssues() {
-        ArrayList<Issue> existingIssues = new ArrayList<>(issues);
-        issues.clear();
-        return existingIssues;
+        this.definedRules = definedRules;
     }
 
     @Override
     public synchronized void reportIssue(Issue issue) {
-        issues.add(issue);
+        // Only report if the provided rule is present/activated
+        if (definedRules.contains(issue.getRuleID())) {
+            issues.add(issue);
+        }
+    }
+
+    // TODO: Internal method to be removed once property bag is introduced by project API
+    ArrayList<Issue> getIssues() {
+        ArrayList<Issue> existingIssues = new ArrayList<>(issues);
+        issues.clear();
+        return existingIssues;
     }
 }
 
