@@ -233,8 +233,8 @@ public class ProjectAnalyzer {
                                 externalIssue.getEndLineOffset(),
                                 externalIssue.getRuleID(),
                                 externalIssue.getMessage(),
-                                externalIssue.getIssueSeverity(),
                                 externalIssue.getIssueType(),
+                                externalIssue.getIssueSeverity(),
                                 externalIssue.getFileName(),
                                 externalIssue.getReportedFilePath(),
                                 externalIssue.getReportedSource());
