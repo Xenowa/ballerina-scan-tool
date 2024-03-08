@@ -22,17 +22,17 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.plugins.AnalysisTask;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.projects.plugins.SyntaxNodeAnalysisContext;
 import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Reporter;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
 
 import java.util.ArrayList;
-
-import static io.ballerina.scan.utilities.ScanToolConstants.EXTERNAL_ISSUE;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
 
@@ -52,35 +52,36 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
         compilerPluginContext.addCodeAnalyzer(new CodeAnalyzer() {
             @Override
             public void init(CodeAnalysisContext codeAnalysisContext) {
-                codeAnalysisContext.addSyntaxNodeAnalysisTask(context -> {
-                    Module module = context.currentPackage().module(context.moduleId());
-                    Document document = module.document(context.documentId());
-                    Project project = module.project();
+                codeAnalysisContext.addSyntaxNodeAnalysisTask(new AnalysisTask<SyntaxNodeAnalysisContext>() {
+                    @Override
+                    public void perform(SyntaxNodeAnalysisContext context) {
+                        Module module = context.currentPackage().module(context.moduleId());
+                        Document document = module.document(context.documentId());
+                        Project project = module.project();
 
-                    FunctionBodyBlockNode functionBodyBlockNode = (FunctionBodyBlockNode) context.node();
+                        FunctionBodyBlockNode functionBodyBlockNode = (FunctionBodyBlockNode) context.node();
 
-                    // CUSTOM RULE: if function body is empty then report issue
-                    if (functionBodyBlockNode.statements().isEmpty()) {
-                        ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-                        Reporter reporter = scannerContext.getReporter2(compilerPluginContext);
-                        reporter.reportIssue(new IssueIml(
-                                        functionBodyBlockNode.lineRange().startLine().line(),
-                                        functionBodyBlockNode.lineRange().startLine().offset(),
-                                        functionBodyBlockNode.lineRange().endLine().line(),
-                                        functionBodyBlockNode.lineRange().endLine().offset(),
-                                        "S109",
-                                        "Add a nested comment explaining why" +
-                                                " this function is empty or complete the implementation.",
-                                        EXTERNAL_ISSUE,
-                                        "CODE_SMELL",
-                                        document,
-                                        module,
-                                        project,
-                                        "CustomStaticCodeAnalyzer"
-                                )
-                        );
+                        // CUSTOM RULE: if function body is empty then report issue
+                        if (functionBodyBlockNode.statements().isEmpty()) {
+                            ScannerContext scannerContext = getScannerContext(compilerPluginContext);
+                            Reporter reporter = scannerContext.getReporter2(compilerPluginContext);
+                            
+                            reporter.reportIssue(new IssueIml(
+                                    functionBodyBlockNode.lineRange().startLine().line(),
+                                    functionBodyBlockNode.lineRange().startLine().offset(),
+                                    functionBodyBlockNode.lineRange().endLine().line(),
+                                    functionBodyBlockNode.lineRange().endLine().offset(),
+                                    "S109",
+                                    "Add a nested comment explaining why" +
+                                            " this function is empty or complete the implementation.",
+                                    "CODE_SMELL",
+                                    document,
+                                    module,
+                                    project)
+                            );
 
-                        complete();
+                            complete();
+                        }
                     }
                 }, SyntaxKind.FUNCTION_BODY_BLOCK);
             }

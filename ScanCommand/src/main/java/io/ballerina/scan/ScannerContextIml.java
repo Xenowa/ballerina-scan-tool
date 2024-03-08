@@ -54,6 +54,16 @@ public class ScannerContextIml implements ScannerContext {
         return newReporter;
     }
 
+    // TODO: Internal method To be removed ones project API fix is in effect
+    synchronized ArrayList<Issue> getAllIssues2() {
+        ArrayList<Issue> allIssues = new ArrayList<>();
+        reporters.values().forEach(reporterIml -> {
+            allIssues.addAll(reporterIml.getIssues());
+        });
+
+        return allIssues;
+    }
+
     // TODO: to be removed if compiler plugins engage concurrently
     //  ================================
     //  Method 2: synchronized reporting (Ideal Approach)
@@ -70,23 +80,14 @@ public class ScannerContextIml implements ScannerContext {
         return reporter;
     }
 
-    // TODO: NOTES
+    // TODO: Internal method To be removed ones project API fix is in effect
+    synchronized ArrayList<Issue> getAllIssues() {
+        return reporter == null ? new ArrayList<>() : reporter.getIssues();
+    }
+
+    // NOTES
     //  - Rules to filter should be passed through the compiler plugin context through scanner context
     //  - It's plugin developers responsibility to implement visitor checks in a way they can be enabled/disabled by
     //  the passed rules
     //  - There is still the problem of identifying which plugins reported which issues to be solved
-
-    // TODO: Internal method To be removed ones project API fix is in effect
-    synchronized ReporterIml getReporterIml() {
-        return reporter;
-    }
-
-    synchronized ArrayList<Issue> getAllIssues() {
-        ArrayList<Issue> allIssues = new ArrayList<>();
-        reporters.values().forEach(reporterIml -> {
-            allIssues.addAll(reporterIml.getIssues());
-        });
-        
-        return allIssues;
-    }
 }

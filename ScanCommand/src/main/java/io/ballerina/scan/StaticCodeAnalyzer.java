@@ -33,7 +33,6 @@ import java.util.List;
 
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
 import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
-import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
 
@@ -80,12 +79,10 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                     functionSignatureNode.lineRange().endLine().offset(),
                     INBUILT_RULES.get("S107").getRuleID(),
                     INBUILT_RULES.get("S107").getRuleDescription(),
-                    CORE_ISSUE,
                     CODE_SMELL,
                     currentDocument,
                     currentModule,
-                    currentProject,
-                    scannerContext.getReporter().getReportedSource()));
+                    currentProject));
         }
 
         // Continue visiting other nodes of the syntax tree
@@ -107,12 +104,10 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                                 childPair.lineRange().endLine().offset(),
                                 INBUILT_RULES.get("S108").getRuleID(),
                                 INBUILT_RULES.get("S108").getRuleDescription(),
-                                CORE_ISSUE,
                                 CODE_SMELL,
                                 currentDocument,
                                 currentModule,
-                                currentProject,
-                                scannerContext.getReporter().getReportedSource()));
+                                currentProject));
                     }
                 });
             });

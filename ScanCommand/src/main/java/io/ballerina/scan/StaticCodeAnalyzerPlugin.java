@@ -52,20 +52,20 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
         }
 
         // TODO: To be created from the scan tool side ones project API fix is in effect
-        // ArrayList<Issue> externalIssues = new ArrayList<>();
-        ArrayList<String> definedRules = new ArrayList<>();
+        ArrayList<String> definedRules = new ArrayList<>(); // Ideally collected through service loading scan tool side
         if (definedRules() != null || !definedRules().isEmpty()) {
             definedRules.addAll(definedRules());
         }
-        // currentScannerContext = new ScannerContextIml(externalIssues, definedRules);
         currentScannerContext = new ScannerContextIml(definedRules);
+        // ArrayList<Issue> externalIssues = new ArrayList<>();
+        // currentScannerContext = new ScannerContextIml(externalIssues, definedRules);
         return currentScannerContext;
     }
 
     // TODO: To be removed ones project API fix is in effect
     public synchronized void complete() {
         if (currentScannerContext != null) {
-            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues();
+            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues2();
 
             if (!existingIssues.isEmpty()) {
                 try {

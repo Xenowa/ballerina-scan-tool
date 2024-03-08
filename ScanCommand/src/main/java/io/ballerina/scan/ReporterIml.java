@@ -17,7 +17,18 @@
 
 package io.ballerina.scan;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Optional;
+
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_ORG;
+import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
+import static io.ballerina.scan.utilities.ScanToolConstants.EXTERNAL_ISSUE;
+import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 
 public class ReporterIml implements Reporter {
 
@@ -33,7 +44,7 @@ public class ReporterIml implements Reporter {
 //        issues.add(issue);
 //    }
 
-    // TODO: approach to be tested
+    // Approach for incorporating rule filtering during reporting
     ReporterIml(ArrayList<Issue> issues, ArrayList<String> definedRules) {
         this.issues = issues;
         this.definedRules = definedRules;
@@ -43,7 +54,54 @@ public class ReporterIml implements Reporter {
     public synchronized void reportIssue(Issue issue) {
         // Only report if the provided rule is present/activated
         if (definedRules.contains(issue.getRuleID())) {
-            issues.add(issue);
+
+            // Getting org/name from URL through protection domain
+            URL jarUrl = this.getClass()
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation();
+            URI jarUri;
+            try {
+                jarUri = jarUrl.toURI();
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+
+            Path jarPath = Paths.get(jarUri);
+            String pluginName = Optional.of(jarPath)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .orElse("");
+
+            String pluginOrg = Optional.of(jarPath)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getParent)
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .orElse("");
+
+            // Cast the issue to its implementation format to perform operations
+            IssueIml castedIssue = (IssueIml) issue;
+            castedIssue.setReportedSource(pluginOrg + PATH_SEPARATOR + pluginName);
+
+            // Depending on the source set the issue type
+            if (pluginOrg.equals(BALLERINA_ORG)) {
+                castedIssue.setIssueType(CORE_ISSUE);
+            } else {
+                castedIssue.setIssueType(EXTERNAL_ISSUE);
+            }
+
+            // Add the cast issue reported with the information
+            issues.add(castedIssue);
         }
     }
 

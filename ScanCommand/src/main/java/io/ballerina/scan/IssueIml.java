@@ -23,6 +23,8 @@ import io.ballerina.projects.Project;
 
 import java.nio.file.Path;
 
+import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
+
 public class IssueIml implements Issue {
 
     private final int startLine;
@@ -31,13 +33,13 @@ public class IssueIml implements Issue {
     private final int endLineOffset;
     private final String ruleID;
     private final String message;
-    private final String issueType;
+    private String issueType;
     private final String issueSeverity;
     // There can be more than one ballerina file which has the same name, so we store it in the following format:
     // fileName = "moduleName/main.bal"
     private final String fileName;
     private final String reportedFilePath;
-    private final String reportedSource;
+    private String reportedSource;
 
     public IssueIml(int startLine,
                     int startLineOffset,
@@ -45,12 +47,10 @@ public class IssueIml implements Issue {
                     int endLineOffset,
                     String ruleID,
                     String message,
-                    String issueType,
                     String issueSeverity,
                     Document reportedDocument,
                     Module reportedModule,
-                    Project reportedProject,
-                    String reportedSource) {
+                    Project reportedProject) {
 
         String documentName = reportedDocument.name();
         String moduleName = reportedModule.moduleName().toString();
@@ -63,11 +63,9 @@ public class IssueIml implements Issue {
         this.endLineOffset = endLineOffset;
         this.ruleID = ruleID;
         this.message = message;
-        this.issueType = issueType;
         this.issueSeverity = issueSeverity;
-        this.fileName = moduleName + "/" + documentName;
+        this.fileName = moduleName + PATH_SEPARATOR + documentName;
         this.reportedFilePath = issuesFilePath.toString();
-        this.reportedSource = reportedSource;
     }
 
     IssueIml(int startLine,
@@ -148,5 +146,13 @@ public class IssueIml implements Issue {
     @Override
     public String getReportedSource() {
         return reportedSource;
+    }
+
+    void setReportedSource(String reportedSource) {
+        this.reportedSource = reportedSource;
+    }
+
+    void setIssueType(String issueType) {
+        this.issueType = issueType;
     }
 }
