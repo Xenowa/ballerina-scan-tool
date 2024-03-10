@@ -52,8 +52,4 @@ public class InternalReporter {
 
         issues.addAll(externalIssues);
     }
-
-    public String getReportedSource() {
-        return reportedSource;
-    }
 }

@@ -153,6 +153,7 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
+        // TODO: Service Load compiler plugins and retrieve their rules as well
         if (listAllRules) {
             ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
             return;
