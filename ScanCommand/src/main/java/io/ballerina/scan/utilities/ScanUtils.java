@@ -287,7 +287,7 @@ public class ScanUtils {
         }
     }
 
-    public static void printRulesToConsole(HashMap<String, Rule> rules) {
+    public static void printRulesToConsole(RuleMap rules) {
 
         outputStream.println("Default available rules:");
 
@@ -306,7 +306,7 @@ public class ScanUtils {
         outputStream.println();
     }
 
-    public static boolean activateUserDefinedRule(Map<String, Rule> rules, List<String> userDefinedRules) {
+    public static boolean activateUserDefinedRule(RuleMap rules, List<String> userDefinedRules) {
 
         AtomicBoolean userDefinedRulesActivated = new AtomicBoolean(true);
 

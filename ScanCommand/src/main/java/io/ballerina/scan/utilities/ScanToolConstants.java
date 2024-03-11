@@ -22,9 +22,6 @@ public class ScanToolConstants {
     // Internal and external issues constants
     public static final String CORE_ISSUE = "CORE_ISSUE";
     public static final String EXTERNAL_ISSUE = "EXTERNAL_ISSUE";
-    public static final String CODE_SMELL = "CODE_SMELL";
-    public static final String BUG = "BUG";
-    public static final String VULNERABILITY = "VULNERABILITY";
     public static final String MAIN_BAL = "main.bal";
 
     // Report generation constants

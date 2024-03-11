@@ -18,6 +18,7 @@
 package io.ballerina.scan;
 
 import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.scan.utilities.RuleMap;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ScannerContextIml implements ScannerContext {
 
-    private final ArrayList<String> definedRules;
+    private final RuleMap definedRules;
     private final ReporterIml reporter;
     private final Map<CompilerPluginContext, ReporterIml> reporters = new ConcurrentHashMap<>();
 
@@ -35,7 +36,7 @@ public class ScannerContextIml implements ScannerContext {
     //  =============================
     //  - getReporter() accepts compiler plugin context parameter
     //  - There are multiple instances of the reporter depending on the number of compiler plugins
-    ScannerContextIml(ArrayList<String> definedRules) {
+    ScannerContextIml(RuleMap definedRules) {
         this.definedRules = definedRules;
         this.reporter = null;
     }
@@ -71,7 +72,7 @@ public class ScannerContextIml implements ScannerContext {
     //  ================================
     //  - getReporter() accepts no parameters
     //  - There is only 1 instance of the reporter
-    ScannerContextIml(ArrayList<Issue> issues, ArrayList<String> definedRules) {
+    ScannerContextIml(ArrayList<Issue> issues, RuleMap definedRules) {
         this.definedRules = definedRules;
         this.reporter = new ReporterIml(issues, definedRules);
     }

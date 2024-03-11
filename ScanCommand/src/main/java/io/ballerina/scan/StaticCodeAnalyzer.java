@@ -32,7 +32,6 @@ import io.ballerina.projects.Project;
 import java.util.List;
 
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
-import static io.ballerina.scan.utilities.ScanToolConstants.CODE_SMELL;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
 
@@ -77,9 +76,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                     functionSignatureNode.lineRange().startLine().offset(),
                     functionSignatureNode.lineRange().endLine().line(),
                     functionSignatureNode.lineRange().endLine().offset(),
-                    INBUILT_RULES.get("S107").getRuleID(),
-                    INBUILT_RULES.get("S107").getRuleDescription(),
-                    CODE_SMELL,
+                    INBUILT_RULES.get("S107"),
                     currentDocument,
                     currentModule,
                     currentProject));
@@ -102,9 +99,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                                 childPair.lineRange().startLine().offset(),
                                 childPair.lineRange().endLine().line(),
                                 childPair.lineRange().endLine().offset(),
-                                INBUILT_RULES.get("S108").getRuleID(),
-                                INBUILT_RULES.get("S108").getRuleDescription(),
-                                CODE_SMELL,
+                                INBUILT_RULES.get("S108"),
                                 currentDocument,
                                 currentModule,
                                 currentProject));

@@ -29,22 +29,32 @@ import io.ballerina.projects.plugins.CompilerPluginContext;
 import io.ballerina.projects.plugins.SyntaxNodeAnalysisContext;
 import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Reporter;
+import io.ballerina.scan.Rule;
+import io.ballerina.scan.RuleSeverity;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
-
-import java.util.ArrayList;
+import io.ballerina.scan.utilities.RuleMap;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
 
+    private final RuleMap customRules;
+
+    public CustomStaticCodeAnalyzer() {
+        RuleMap customRules = new RuleMap();
+        customRules.put("S109", new Rule("S109", "Add a nested comment explaining why" +
+                " this function is empty or complete the implementation.", RuleSeverity.CODE_SMELL, true));
+        customRules.put("S110", new Rule("S110", "rule 110",
+                RuleSeverity.CODE_SMELL, true));
+        customRules.put("S111", new Rule("S111", "rule 111",
+                RuleSeverity.CODE_SMELL, true));
+        customRules.put("S112", new Rule("S112", "rule 112",
+                RuleSeverity.CODE_SMELL, true));
+        this.customRules = customRules;
+    }
+
     @Override
-    public ArrayList<String> definedRules() {
-        ArrayList<String> customRules = new ArrayList<>();
-        customRules.add("S109");
-        customRules.add("S110");
-        customRules.add("S111");
-        customRules.add("S112");
-        customRules.add("S113");
-        return customRules;
+    public RuleMap definedRules() {
+        return customRules.copy();
     }
 
     @Override
@@ -71,10 +81,7 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
                                     functionBodyBlockNode.lineRange().startLine().offset(),
                                     functionBodyBlockNode.lineRange().endLine().line(),
                                     functionBodyBlockNode.lineRange().endLine().offset(),
-                                    "S109",
-                                    "Add a nested comment explaining why" +
-                                            " this function is empty or complete the implementation.",
-                                    "CODE_SMELL",
+                                    customRules.get("S109"),
                                     document,
                                     module,
                                     project)

@@ -17,6 +17,8 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.scan.utilities.RuleMap;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -33,7 +35,7 @@ import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 public class ReporterIml implements Reporter {
 
     private final ArrayList<Issue> issues;
-    private final ArrayList<String> definedRules;
+    private final RuleMap definedRules;
 
     // Initial approach
 //    ReporterIml(ArrayList<Issue> issues) {
@@ -45,7 +47,7 @@ public class ReporterIml implements Reporter {
 //    }
 
     // Approach for incorporating rule filtering during reporting
-    ReporterIml(ArrayList<Issue> issues, ArrayList<String> definedRules) {
+    ReporterIml(ArrayList<Issue> issues, RuleMap definedRules) {
         this.issues = issues;
         this.definedRules = definedRules;
     }
@@ -53,7 +55,7 @@ public class ReporterIml implements Reporter {
     @Override
     public synchronized void reportIssue(Issue issue) {
         // Only report if the provided rule is present/activated
-        if (definedRules.contains(issue.getRuleID())) {
+        if (definedRules.containsKey(issue.getRuleID()) && definedRules.get(issue.getRuleID()).ruleIsActivated()) {
 
             // Getting org/name from URL through protection domain
             URL jarUrl = this.getClass()

@@ -17,23 +17,23 @@
 
 package io.ballerina.scan;
 
-import io.ballerina.scan.utilities.Rule;
-
-import java.util.HashMap;
+import io.ballerina.scan.utilities.RuleMap;
 
 public class InbuiltRules {
 
     // Initializing the inbuilt rules
     // Map for inbuilt rules
-    static final HashMap<String, Rule> INBUILT_RULES = new HashMap<>();
+    static final RuleMap INBUILT_RULES = new RuleMap();
 
     // Populating inbuilt rules
     static {
         INBUILT_RULES.put("S107", new Rule("S107",
                 "Functions should not have too many parameters!",
+                RuleSeverity.CODE_SMELL,
                 true));
         INBUILT_RULES.put("S108", new Rule("S108",
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
+                RuleSeverity.CODE_SMELL,
                 true));
     }
 }

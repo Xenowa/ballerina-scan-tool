@@ -45,9 +45,7 @@ public class IssueIml implements Issue {
                     int startLineOffset,
                     int endLine,
                     int endLineOffset,
-                    String ruleID,
-                    String message,
-                    String issueSeverity,
+                    Rule rule,
                     Document reportedDocument,
                     Module reportedModule,
                     Project reportedProject) {
@@ -61,9 +59,9 @@ public class IssueIml implements Issue {
         this.startLineOffset = startLineOffset;
         this.endLine = endLine;
         this.endLineOffset = endLineOffset;
-        this.ruleID = ruleID;
-        this.message = message;
-        this.issueSeverity = issueSeverity;
+        this.ruleID = rule.getRuleID();
+        this.message = rule.getRuleDescription();
+        this.issueSeverity = rule.getRuleSeverity();
         this.fileName = moduleName + PATH_SEPARATOR + documentName;
         this.reportedFilePath = issuesFilePath.toString();
     }

@@ -23,6 +23,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.ballerina.projects.plugins.CompilerPlugin;
 import io.ballerina.projects.plugins.CompilerPluginContext;
+import io.ballerina.scan.utilities.RuleMap;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -44,7 +45,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     private ScannerContextIml currentScannerContext = null;
     private CompilerPluginContext currentCompilerPluginContext = null;
 
-    public abstract ArrayList<String> definedRules();
+    public abstract RuleMap definedRules();
 
     public synchronized ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
         // Implementations here will change once scanner context can be retrieved from compilerPluginContext
@@ -53,9 +54,9 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
         }
 
         // TODO: To be created from the scan tool side ones project API fix is in effect
-        ArrayList<String> definedRules = new ArrayList<>(); // Ideally collected through service loading scan tool side
+        RuleMap definedRules = new RuleMap(); // Ideally collected through service loading scan tool side
         if (definedRules() != null || !definedRules().isEmpty()) {
-            definedRules.addAll(definedRules());
+            definedRules.putAll(definedRules());
         }
         currentScannerContext = new ScannerContextIml(definedRules);
         currentCompilerPluginContext = compilerPluginContext;

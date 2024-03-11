@@ -180,6 +180,7 @@ public class ScanCommand implements BLauncherCmd {
                 userRules.add(ruleToFilter.getId());
             });
 
+            // TODO: Pass compiler plugin rules to be activated ones projectAPI fix is in effect
             boolean userDefinedRulesActivated = ScanUtils.activateUserDefinedRule(InbuiltRules.INBUILT_RULES,
                     userRules);
             if (!userDefinedRulesActivated) {
