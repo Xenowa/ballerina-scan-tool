@@ -42,6 +42,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     private static final Type listOfIssuesType = new TypeToken<ArrayList<IssueIml>>() {
     }.getType();
     private ScannerContextIml currentScannerContext = null;
+    private CompilerPluginContext currentCompilerPluginContext = null;
 
     public abstract ArrayList<String> definedRules();
 
@@ -57,6 +58,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
             definedRules.addAll(definedRules());
         }
         currentScannerContext = new ScannerContextIml(definedRules);
+        currentCompilerPluginContext = compilerPluginContext;
         // ArrayList<Issue> externalIssues = new ArrayList<>();
         // currentScannerContext = new ScannerContextIml(externalIssues, definedRules);
         return currentScannerContext;
@@ -65,7 +67,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     // TODO: To be removed ones project API fix is in effect
     public synchronized void complete() {
         if (currentScannerContext != null) {
-            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues2();
+            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues(currentCompilerPluginContext);
 
             if (!existingIssues.isEmpty()) {
                 try {

@@ -41,7 +41,7 @@ public class ScannerContextIml implements ScannerContext {
     }
 
     @Override
-    public synchronized Reporter getReporter2(CompilerPluginContext compilerPluginContext) {
+    public synchronized Reporter getReporter(CompilerPluginContext compilerPluginContext) {
         // Return existing reporter
         if (reporters.containsKey(compilerPluginContext)) {
             return reporters.get(compilerPluginContext);
@@ -55,11 +55,12 @@ public class ScannerContextIml implements ScannerContext {
     }
 
     // TODO: Internal method To be removed ones project API fix is in effect
-    synchronized ArrayList<Issue> getAllIssues2() {
+    synchronized ArrayList<Issue> getAllIssues(CompilerPluginContext compilerPluginContext) {
         ArrayList<Issue> allIssues = new ArrayList<>();
-        reporters.values().forEach(reporterIml -> {
-            allIssues.addAll(reporterIml.getIssues());
-        });
+
+        if (reporters.containsKey(compilerPluginContext)) {
+            allIssues.addAll(reporters.get(compilerPluginContext).getIssues());
+        }
 
         return allIssues;
     }

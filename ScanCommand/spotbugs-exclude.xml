@@ -28,4 +28,8 @@
             <Bug pattern="URF_UNREAD_FIELD"/>
         </or>
     </Match>
+    <Match>
+        <Class name="io.ballerina.scan.StaticCodeAnalyzerPlugin"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
 </FindBugsFilter>

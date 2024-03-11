@@ -43,6 +43,9 @@ EXAMPLES
         Run analysis and generate an analysis report.
                 $ bal scan --scan-report
 
+        View all available core rules
+                $ bal scan --list-rules
+
         Run analysis for a specified core rule.
                 $ bal scan --rules=S107
 
