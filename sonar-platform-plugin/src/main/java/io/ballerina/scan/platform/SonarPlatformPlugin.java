@@ -44,7 +44,7 @@ public class SonarPlatformPlugin implements ScannerPlatformPlugin {
     private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
 
     @Override
-    public String platformName() {
+    public String platform() {
         return "sonarqube";
     }
 

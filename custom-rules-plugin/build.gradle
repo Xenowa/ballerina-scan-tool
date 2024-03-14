@@ -326,7 +326,7 @@ artifacts {
     archives shadowJar
 }
 
-// Configurations to automatically build and deploy scan tool
+// Configurations to automatically build and deploy custom static code analyzer compiler plugin
 def packageName = "custom_static_code_analyzer"
 def tomlVersion = "${project.pluginVersion}"
 def ballerinaTomlFilePlaceHolder = new File("${projectDir}/custom-static-code-analyzer/Ballerina.toml")

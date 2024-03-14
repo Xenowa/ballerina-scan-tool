@@ -20,7 +20,7 @@
 
 package io.ballerina.scan;
 
-public enum RuleSeverity {
+public enum Severity {
     CODE_SMELL,
     BUG,
     VULNERABILITY

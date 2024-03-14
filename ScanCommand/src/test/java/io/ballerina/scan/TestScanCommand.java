@@ -20,6 +20,7 @@ package io.ballerina.scan;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import io.ballerina.tools.text.LineRange;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -32,8 +33,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
 
 public class TestScanCommand {
 
@@ -88,15 +87,16 @@ public class TestScanCommand {
 
             // Assert first issue
             Issue firstIssue = reportedIssues.get(0);
-            Assertions.assertEquals(7, firstIssue.getStartLine());
-            Assertions.assertEquals(22, firstIssue.getStartLineOffset());
-            Assertions.assertEquals(7, firstIssue.getEndLine());
-            Assertions.assertEquals(34, firstIssue.getEndLineOffset());
+            LineRange lineRange = firstIssue.getLocation().lineRange();
+            Assertions.assertEquals(7, lineRange.startLine().line());
+            Assertions.assertEquals(22, lineRange.startLine().offset());
+            Assertions.assertEquals(7, lineRange.endLine().line());
+            Assertions.assertEquals(34, lineRange.endLine().offset());
             Assertions.assertEquals("S108", firstIssue.getRuleID());
             Assertions.assertEquals(
                     "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                     firstIssue.getMessage());
-            Assertions.assertEquals(CORE_ISSUE, firstIssue.getIssueType());
+            Assertions.assertEquals(IssueType.CORE_ISSUE, firstIssue.getIssueType());
         }
     }
 

@@ -30,6 +30,7 @@ import io.ballerina.projects.internal.model.Target;
 import io.ballerina.scan.Issue;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
+import io.ballerina.tools.text.LineRange;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -180,15 +181,16 @@ public class ScanUtils {
                 jsonScanReportFile.addProperty("fileContent", fileContent);
 
                 JsonObject jsonScanReportIssueTextRange = new JsonObject();
-                jsonScanReportIssueTextRange.addProperty("startLine", issue.getStartLine());
-                jsonScanReportIssueTextRange.addProperty("startLineOffset", issue.getStartLineOffset());
-                jsonScanReportIssueTextRange.addProperty("endLine", issue.getEndLine());
-                jsonScanReportIssueTextRange.addProperty("endLineOffset", issue.getEndLineOffset());
+                LineRange lineRange = issue.getLocation().lineRange();
+                jsonScanReportIssueTextRange.addProperty("startLine", lineRange.startLine().line());
+                jsonScanReportIssueTextRange.addProperty("startLineOffset", lineRange.startLine().offset());
+                jsonScanReportIssueTextRange.addProperty("endLine", lineRange.endLine().line());
+                jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity());
-                jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
+                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity().toString());
+                jsonScanReportIssue.addProperty("issueType", issue.getIssueType().toString());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 
@@ -201,15 +203,16 @@ public class ScanUtils {
                 JsonObject jsonScanReportFile = jsonScanReportPathAndFile.get(filePath);
 
                 JsonObject jsonScanReportIssueTextRange = new JsonObject();
-                jsonScanReportIssueTextRange.addProperty("startLine", issue.getStartLine());
-                jsonScanReportIssueTextRange.addProperty("startLineOffset", issue.getStartLineOffset());
-                jsonScanReportIssueTextRange.addProperty("endLine", issue.getEndLine());
-                jsonScanReportIssueTextRange.addProperty("endLineOffset", issue.getEndLineOffset());
+                LineRange lineRange = issue.getLocation().lineRange();
+                jsonScanReportIssueTextRange.addProperty("startLine", lineRange.startLine().line());
+                jsonScanReportIssueTextRange.addProperty("startLineOffset", lineRange.startLine().offset());
+                jsonScanReportIssueTextRange.addProperty("endLine", lineRange.endLine().line());
+                jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
                 jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity());
-                jsonScanReportIssue.addProperty("issueType", issue.getIssueType());
+                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity().toString());
+                jsonScanReportIssue.addProperty("issueType", issue.getIssueType().toString());
                 jsonScanReportIssue.addProperty("message", issue.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 

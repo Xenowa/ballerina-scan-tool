@@ -13,7 +13,7 @@ version = "0.1.0"
 org = "org3"
 name = "name3"
 version = "version"
-
+a-b-c = "Hello world"
 [rule]
 ids = "S107, S108"
 

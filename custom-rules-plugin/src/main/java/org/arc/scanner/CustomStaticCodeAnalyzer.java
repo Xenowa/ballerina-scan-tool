@@ -17,21 +17,10 @@
 
 package org.arc.scanner;
 
-import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
-import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import io.ballerina.projects.Document;
-import io.ballerina.projects.Module;
-import io.ballerina.projects.Project;
-import io.ballerina.projects.plugins.AnalysisTask;
-import io.ballerina.projects.plugins.CodeAnalysisContext;
-import io.ballerina.projects.plugins.CodeAnalyzer;
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import io.ballerina.projects.plugins.SyntaxNodeAnalysisContext;
-import io.ballerina.scan.IssueIml;
-import io.ballerina.scan.Reporter;
 import io.ballerina.scan.Rule;
-import io.ballerina.scan.RuleSeverity;
 import io.ballerina.scan.ScannerContext;
+import io.ballerina.scan.Severity;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
 import io.ballerina.scan.utilities.RuleMap;
 
@@ -40,58 +29,28 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
     private final RuleMap customRules;
 
     public CustomStaticCodeAnalyzer() {
-        RuleMap customRules = new RuleMap();
+        this.customRules = new RuleMap();
+
         customRules.put("S109", new Rule("S109", "Add a nested comment explaining why" +
-                " this function is empty or complete the implementation.", RuleSeverity.CODE_SMELL, true));
+                " this function is empty or complete the implementation.", Severity.CODE_SMELL, true));
         customRules.put("S110", new Rule("S110", "rule 110",
-                RuleSeverity.CODE_SMELL, true));
+                Severity.CODE_SMELL, true));
         customRules.put("S111", new Rule("S111", "rule 111",
-                RuleSeverity.CODE_SMELL, true));
+                Severity.CODE_SMELL, true));
         customRules.put("S112", new Rule("S112", "rule 112",
-                RuleSeverity.CODE_SMELL, true));
-        this.customRules = customRules;
+                Severity.CODE_SMELL, true));
     }
 
     @Override
-    public RuleMap definedRules() {
+    public RuleMap rules() {
         return customRules.copy();
     }
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
-        compilerPluginContext.addCodeAnalyzer(new CodeAnalyzer() {
-            @Override
-            public void init(CodeAnalysisContext codeAnalysisContext) {
-                codeAnalysisContext.addSyntaxNodeAnalysisTask(new AnalysisTask<SyntaxNodeAnalysisContext>() {
-                    @Override
-                    public void perform(SyntaxNodeAnalysisContext context) {
-                        Module module = context.currentPackage().module(context.moduleId());
-                        Document document = module.document(context.documentId());
-                        Project project = module.project();
+        ScannerContext scannerContext = getScannerContext(compilerPluginContext);
 
-                        FunctionBodyBlockNode functionBodyBlockNode = (FunctionBodyBlockNode) context.node();
-
-                        // CUSTOM RULE: if function body is empty then report issue
-                        if (functionBodyBlockNode.statements().isEmpty()) {
-                            ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-                            Reporter reporter = scannerContext.getReporter(compilerPluginContext);
-
-                            reporter.reportIssue(new IssueIml(
-                                    functionBodyBlockNode.lineRange().startLine().line(),
-                                    functionBodyBlockNode.lineRange().startLine().offset(),
-                                    functionBodyBlockNode.lineRange().endLine().line(),
-                                    functionBodyBlockNode.lineRange().endLine().offset(),
-                                    customRules.get("S109"),
-                                    document,
-                                    module,
-                                    project)
-                            );
-
-                            complete();
-                        }
-                    }
-                }, SyntaxKind.FUNCTION_BODY_BLOCK);
-            }
-        });
+        compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(this, scannerContext,
+                customRules));
     }
 }

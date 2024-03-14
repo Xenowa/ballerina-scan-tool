@@ -20,7 +20,6 @@ package io.ballerina.scan;
 import java.util.ArrayList;
 
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
-import static io.ballerina.scan.utilities.ScanToolConstants.CORE_ISSUE;
 
 public class InternalReporter {
 
@@ -42,7 +41,7 @@ public class InternalReporter {
             castedIssue.setReportedSource(reportedSource);
 
             // Set issue type
-            castedIssue.setIssueType(CORE_ISSUE);
+            castedIssue.setIssueType(IssueType.CORE_ISSUE);
 
             issues.add(castedIssue);
         }

@@ -22,7 +22,7 @@ import java.util.Map;
 
 public interface ScannerPlatformPlugin {
 
-    String platformName();
+    String platform();
 
     void initialize(Map<String, String> platformArgs);
 

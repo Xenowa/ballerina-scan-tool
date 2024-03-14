@@ -20,8 +20,6 @@ package io.ballerina.scan.utilities;
 public class ScanToolConstants {
 
     // Internal and external issues constants
-    public static final String CORE_ISSUE = "CORE_ISSUE";
-    public static final String EXTERNAL_ISSUE = "EXTERNAL_ISSUE";
     public static final String MAIN_BAL = "main.bal";
 
     // Report generation constants

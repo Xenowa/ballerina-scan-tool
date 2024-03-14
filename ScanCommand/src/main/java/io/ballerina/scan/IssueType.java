@@ -20,23 +20,7 @@
 
 package io.ballerina.scan;
 
-import io.ballerina.tools.diagnostics.Location;
-
-public interface Issue {
-
-    Location getLocation();
-
-    String getRuleID();
-
-    String getMessage();
-
-    IssueType getIssueType();
-
-    Severity getIssueSeverity();
-
-    String getFileName();
-
-    String getReportedFilePath();
-
-    String getReportedSource();
+public enum IssueType {
+    CORE_ISSUE,
+    EXTERNAL_ISSUE
 }

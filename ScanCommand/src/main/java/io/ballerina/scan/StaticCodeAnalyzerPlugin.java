@@ -43,9 +43,11 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     private static final Type listOfIssuesType = new TypeToken<ArrayList<IssueIml>>() {
     }.getType();
     private ScannerContextIml currentScannerContext = null;
-    private CompilerPluginContext currentCompilerPluginContext = null;
 
-    public abstract RuleMap definedRules();
+    /**
+     * Used for loading custom rules from compiler plugins to the scan tool.
+     */
+    public abstract RuleMap rules();
 
     public synchronized ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
         // Implementations here will change once scanner context can be retrieved from compilerPluginContext
@@ -54,21 +56,15 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
         }
 
         // TODO: To be created from the scan tool side ones project API fix is in effect
-        RuleMap definedRules = new RuleMap(); // Ideally collected through service loading scan tool side
-        if (definedRules() != null || !definedRules().isEmpty()) {
-            definedRules.putAll(definedRules());
-        }
-        currentScannerContext = new ScannerContextIml(definedRules);
-        currentCompilerPluginContext = compilerPluginContext;
-        // ArrayList<Issue> externalIssues = new ArrayList<>();
-        // currentScannerContext = new ScannerContextIml(externalIssues, definedRules);
+        ArrayList<Issue> externalIssues = new ArrayList<>();
+        currentScannerContext = new ScannerContextIml(externalIssues);
         return currentScannerContext;
     }
 
     // TODO: To be removed ones project API fix is in effect
     public synchronized void complete() {
         if (currentScannerContext != null) {
-            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues(currentCompilerPluginContext);
+            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues();
 
             if (!existingIssues.isEmpty()) {
                 try {

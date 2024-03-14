@@ -266,13 +266,13 @@ public class ScanCommand implements BLauncherCmd {
         // Proceed reporting to platforms if plugins exists
         if (scannerPlatformPlugins.stream().findAny().isPresent()) {
             scannerPlatformPlugins.forEach(scannerPlatformPlugin -> {
-                if (platforms.contains(scannerPlatformPlugin.platformName())) {
-                    Map<String, String> platformSpecificArgs = platformArgs.get(scannerPlatformPlugin.platformName());
+                if (platforms.contains(scannerPlatformPlugin.platform())) {
+                    Map<String, String> platformSpecificArgs = platformArgs.get(scannerPlatformPlugin.platform());
 
                     scannerPlatformPlugin.initialize(platformSpecificArgs);
                     scannerPlatformPlugin.onScan(issues);
 
-                    platforms.removeAll(Collections.singleton(scannerPlatformPlugin.platformName()));
+                    platforms.removeAll(Collections.singleton(scannerPlatformPlugin.platform()));
                 }
             });
         }

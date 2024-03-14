@@ -29,11 +29,11 @@ public class InbuiltRules {
     static {
         INBUILT_RULES.put("S107", new Rule("S107",
                 "Functions should not have too many parameters!",
-                RuleSeverity.CODE_SMELL,
+                Severity.CODE_SMELL,
                 true));
         INBUILT_RULES.put("S108", new Rule("S108",
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
-                RuleSeverity.CODE_SMELL,
+                Severity.CODE_SMELL,
                 true));
     }
 }

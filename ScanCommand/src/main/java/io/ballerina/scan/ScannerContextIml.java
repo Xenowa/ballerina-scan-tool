@@ -17,64 +17,14 @@
 
 package io.ballerina.scan;
 
-import io.ballerina.projects.plugins.CompilerPluginContext;
-import io.ballerina.scan.utilities.RuleMap;
-
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ScannerContextIml implements ScannerContext {
 
-    private final RuleMap definedRules;
     private final ReporterIml reporter;
-    private final Map<CompilerPluginContext, ReporterIml> reporters = new ConcurrentHashMap<>();
 
-    // TODO: to be removed if no concurrent compiler plugin engagements occur
-    //  =============================
-    //  Method 1: Parallel reporting
-    //  =============================
-    //  - getReporter() accepts compiler plugin context parameter
-    //  - There are multiple instances of the reporter depending on the number of compiler plugins
-    ScannerContextIml(RuleMap definedRules) {
-        this.definedRules = definedRules;
-        this.reporter = null;
-    }
-
-    @Override
-    public synchronized Reporter getReporter(CompilerPluginContext compilerPluginContext) {
-        // Return existing reporter
-        if (reporters.containsKey(compilerPluginContext)) {
-            return reporters.get(compilerPluginContext);
-        }
-
-        // create a new reporter and add to hashmap
-        ArrayList<Issue> externalIssues = new ArrayList<>();
-        ReporterIml newReporter = new ReporterIml(externalIssues, definedRules);
-        reporters.put(compilerPluginContext, newReporter);
-        return newReporter;
-    }
-
-    // TODO: Internal method To be removed ones project API fix is in effect
-    synchronized ArrayList<Issue> getAllIssues(CompilerPluginContext compilerPluginContext) {
-        ArrayList<Issue> allIssues = new ArrayList<>();
-
-        if (reporters.containsKey(compilerPluginContext)) {
-            allIssues.addAll(reporters.get(compilerPluginContext).getIssues());
-        }
-
-        return allIssues;
-    }
-
-    // TODO: to be removed if compiler plugins engage concurrently
-    //  ================================
-    //  Method 2: synchronized reporting (Ideal Approach)
-    //  ================================
-    //  - getReporter() accepts no parameters
-    //  - There is only 1 instance of the reporter
-    ScannerContextIml(ArrayList<Issue> issues, RuleMap definedRules) {
-        this.definedRules = definedRules;
-        this.reporter = new ReporterIml(issues, definedRules);
+    ScannerContextIml(ArrayList<Issue> issues) {
+        this.reporter = new ReporterIml(issues);
     }
 
     @Override
@@ -84,7 +34,7 @@ public class ScannerContextIml implements ScannerContext {
 
     // TODO: Internal method To be removed ones project API fix is in effect
     synchronized ArrayList<Issue> getAllIssues() {
-        return reporter == null ? new ArrayList<>() : reporter.getIssues();
+        return reporter.getIssues();
     }
 
     // NOTES

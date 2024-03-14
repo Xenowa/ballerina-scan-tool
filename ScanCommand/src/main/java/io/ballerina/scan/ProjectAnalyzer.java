@@ -40,6 +40,7 @@ import io.ballerina.projects.environment.ResolutionRequest;
 import io.ballerina.projects.environment.ResolutionResponse;
 import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.scan.utilities.ScanTomlFile;
+import io.ballerina.tools.text.LineRange;
 
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -129,27 +130,21 @@ public class ProjectAnalyzer {
         SemanticModel semanticModel = compilation.getSemanticModel();
 
         // Perform core scans
-        runInternalScans(currentProject,
-                currentModule,
-                currentDocument,
+        runInternalScans(currentDocument,
                 syntaxTree,
                 semanticModel,
                 internalScannerContext);
 
         // Perform external scans
-        runCustomScans(currentProject, currentModule, currentDocument, internalScannerContext);
+        runCustomScans(currentDocument, internalScannerContext);
     }
 
-    public void runInternalScans(Project currentProject,
-                                 Module currentModule,
-                                 Document currentDocument,
+    public void runInternalScans(Document currentDocument,
                                  SyntaxTree syntaxTree,
                                  SemanticModel semanticModel,
                                  InternalScannerContext scannerContext) {
 
-        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentProject,
-                currentModule,
-                currentDocument,
+        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentDocument,
                 syntaxTree,
                 semanticModel,
                 scannerContext);
@@ -157,13 +152,11 @@ public class ProjectAnalyzer {
         analyzer.initialize();
     }
 
-    public void runCustomScans(Project currentProject,
-                               Module currentModule,
-                               Document currentDocument,
-                               InternalScannerContext internalScannerContext) {
+    public void runCustomScans(Document currentDocument, InternalScannerContext internalScannerContext) {
 
         // Run custom scans once
-        if (currentModule.isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
+        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
+            Project currentProject = currentDocument.module().project();
             // TODO: External Scanner context will be used after property bag feature is introduced by project API
             //  External issues store
             //  ArrayList<Issue> externalIssues = new ArrayList<>();
@@ -226,11 +219,12 @@ public class ProjectAnalyzer {
                             + PATH_SEPARATOR
                             + MAIN_BAL)) {
                         // Modify the issue
+                        LineRange lineRange = externalIssue.getLocation().lineRange();
                         IssueIml modifiedExternalIssue = new IssueIml(
-                                externalIssue.getStartLine() - importCounter.get(),
-                                externalIssue.getStartLineOffset(),
-                                externalIssue.getEndLine() - importCounter.get(),
-                                externalIssue.getEndLineOffset(),
+                                lineRange.startLine().line() - importCounter.get(),
+                                lineRange.startLine().offset(),
+                                lineRange.endLine().line() - importCounter.get(),
+                                lineRange.endLine().offset(),
                                 externalIssue.getRuleID(),
                                 externalIssue.getMessage(),
                                 externalIssue.getIssueType(),

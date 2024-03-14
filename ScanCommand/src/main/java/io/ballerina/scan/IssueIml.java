@@ -18,8 +18,9 @@
 package io.ballerina.scan;
 
 import io.ballerina.projects.Document;
-import io.ballerina.projects.Module;
-import io.ballerina.projects.Project;
+import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.LineRange;
+import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 
 import java.nio.file.Path;
 
@@ -33,32 +34,28 @@ public class IssueIml implements Issue {
     private final int endLineOffset;
     private final String ruleID;
     private final String message;
-    private String issueType;
-    private final String issueSeverity;
+    private IssueType issueType;
+    private final Severity issueSeverity;
     // There can be more than one ballerina file which has the same name, so we store it in the following format:
     // fileName = "moduleName/main.bal"
     private final String fileName;
     private final String reportedFilePath;
     private String reportedSource;
 
-    public IssueIml(int startLine,
-                    int startLineOffset,
-                    int endLine,
-                    int endLineOffset,
+    public IssueIml(Location location,
                     Rule rule,
-                    Document reportedDocument,
-                    Module reportedModule,
-                    Project reportedProject) {
+                    Document reportedDocument) {
 
         String documentName = reportedDocument.name();
-        String moduleName = reportedModule.moduleName().toString();
-        Path issuesFilePath = reportedProject.documentPath(reportedDocument.documentId())
+        String moduleName = reportedDocument.module().moduleName().toString();
+        Path issuesFilePath = reportedDocument.module().project().documentPath(reportedDocument.documentId())
                 .orElse(Path.of(documentName));
 
-        this.startLine = startLine;
-        this.startLineOffset = startLineOffset;
-        this.endLine = endLine;
-        this.endLineOffset = endLineOffset;
+        LineRange lineRange = location.lineRange();
+        this.startLine = lineRange.startLine().line();
+        this.startLineOffset = lineRange.startLine().offset();
+        this.endLine = lineRange.endLine().line();
+        this.endLineOffset = lineRange.endLine().offset();
         this.ruleID = rule.getRuleID();
         this.message = rule.getRuleDescription();
         this.issueSeverity = rule.getRuleSeverity();
@@ -72,8 +69,8 @@ public class IssueIml implements Issue {
              int endLineOffset,
              String ruleID,
              String message,
-             String issueType,
-             String issueSeverity,
+             IssueType issueType,
+             Severity issueSeverity,
              String fileName,
              String reportedFilePath,
              String reportedSource) {
@@ -92,23 +89,9 @@ public class IssueIml implements Issue {
     }
 
     @Override
-    public int getStartLine() {
-        return startLine;
-    }
-
-    @Override
-    public int getStartLineOffset() {
-        return startLineOffset;
-    }
-
-    @Override
-    public int getEndLine() {
-        return endLine;
-    }
-
-    @Override
-    public int getEndLineOffset() {
-        return endLineOffset;
+    public Location getLocation() {
+        return new BLangDiagnosticLocation(fileName, startLine, endLine, startLineOffset, endLineOffset, 0,
+                0);
     }
 
     @Override
@@ -122,7 +105,7 @@ public class IssueIml implements Issue {
     }
 
     @Override
-    public String getIssueType() {
+    public IssueType getIssueType() {
         return issueType;
     }
 
@@ -137,7 +120,7 @@ public class IssueIml implements Issue {
     }
 
     @Override
-    public String getIssueSeverity() {
+    public Severity getIssueSeverity() {
         return issueSeverity;
     }
 
@@ -150,7 +133,7 @@ public class IssueIml implements Issue {
         this.reportedSource = reportedSource;
     }
 
-    void setIssueType(String issueType) {
+    void setIssueType(IssueType issueType) {
         this.issueType = issueType;
     }
 }

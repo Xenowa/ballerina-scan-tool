@@ -24,13 +24,13 @@ public class Rule {
 
     private final String ruleID;
     private final String ruleDescription;
-    private final RuleSeverity ruleSeverity;
+    private final Severity severity;
     private boolean ruleActivated;
 
-    public Rule(String ruleID, String ruleDescription, RuleSeverity ruleSeverity, boolean ruleActivated) {
+    public Rule(String ruleID, String ruleDescription, Severity severity, boolean ruleActivated) {
         this.ruleID = ruleID;
         this.ruleDescription = ruleDescription;
-        this.ruleSeverity = ruleSeverity;
+        this.severity = severity;
         this.ruleActivated = ruleActivated;
     }
 
@@ -46,8 +46,8 @@ public class Rule {
         return ruleActivated;
     }
 
-    public String getRuleSeverity() {
-        return ruleSeverity.toString();
+    public Severity getRuleSeverity() {
+        return severity;
     }
 
     public void setRuleIsActivated(boolean ruleActivated) {
