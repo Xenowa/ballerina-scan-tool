@@ -17,11 +17,17 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.projects.Document;
+import io.ballerina.scan.utilities.ScanToolConstants;
+import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.LineRange;
+
+import java.nio.file.Path;
 import java.util.ArrayList;
 
-import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
-
 public class InternalReporter {
+
+    private static final String BALLERINA_RULE_PREFIX = "S";
 
     private final ArrayList<Issue> issues;
     private final String reportedSource;
@@ -32,19 +38,28 @@ public class InternalReporter {
         this.reportedSource = reportedSource;
     }
 
-    void reportIssue(Issue issue) {
-        if (INBUILT_RULES.containsKey(issue.getRuleID()) && INBUILT_RULES.get(issue.getRuleID()).ruleIsActivated()) {
-            // Cast the issue to its implementation format to perform operations
-            IssueIml castedIssue = (IssueIml) issue;
+    void reportIssue(Document reportedDocument, Location location, Rule rule) {
+        String documentName = reportedDocument.name();
+        String moduleName = reportedDocument.module().moduleName().toString();
+        Path issuesFilePath = reportedDocument.module().project().documentPath(reportedDocument.documentId())
+                .orElse(Path.of(documentName));
 
-            // Set the issue reported source
-            castedIssue.setReportedSource(reportedSource);
+        LineRange lineRange = location.lineRange();
 
-            // Set issue type
-            castedIssue.setIssueType(IssueType.CORE_ISSUE);
+        // Create a new Issue
+        IssueIml issue = new IssueIml(lineRange.startLine().line(),
+                lineRange.startLine().offset(),
+                lineRange.endLine().line(),
+                lineRange.endLine().offset(),
+                BALLERINA_RULE_PREFIX + rule.getId(), // Generate the prefix when reporting the issue
+                rule.getDescription(),
+                rule.getSeverity(),
+                IssueType.CORE_ISSUE,
+                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
+                issuesFilePath.toString(),
+                reportedSource);
 
-            issues.add(castedIssue);
-        }
+        issues.add(issue);
     }
 
     void addExternalIssues(ArrayList<Issue> externalIssues) {

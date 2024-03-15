@@ -19,38 +19,34 @@ package org.arc.scanner;
 
 import io.ballerina.projects.plugins.CompilerPluginContext;
 import io.ballerina.scan.Rule;
+import io.ballerina.scan.RuleIml;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.Severity;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
-import io.ballerina.scan.utilities.RuleMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
 
-    private final RuleMap customRules;
-
-    public CustomStaticCodeAnalyzer() {
-        this.customRules = new RuleMap();
-
-        customRules.put("S109", new Rule("S109", "Add a nested comment explaining why" +
-                " this function is empty or complete the implementation.", Severity.CODE_SMELL, true));
-        customRules.put("S110", new Rule("S110", "rule 110",
-                Severity.CODE_SMELL, true));
-        customRules.put("S111", new Rule("S111", "rule 111",
-                Severity.CODE_SMELL, true));
-        customRules.put("S112", new Rule("S112", "rule 112",
-                Severity.CODE_SMELL, true));
-    }
-
     @Override
-    public RuleMap rules() {
-        return customRules.copy();
+    public List<Rule> rules() {
+        List<Rule> customRules = new ArrayList<>();
+
+        customRules.add(new RuleIml(109, "Add a nested comment explaining why" +
+                " this function is empty or complete the implementation.", Severity.CODE_SMELL));
+        customRules.add(new RuleIml(110, "rule 110", Severity.CODE_SMELL));
+        customRules.add(new RuleIml(111, "rule 111", Severity.CODE_SMELL));
+        customRules.add(new RuleIml(112, "rule 112", Severity.CODE_SMELL));
+
+        return customRules;
     }
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
         ScannerContext scannerContext = getScannerContext(compilerPluginContext);
 
-        compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(this, scannerContext,
-                customRules));
+        compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(scannerContext, rules(),
+                this));
     }
 }

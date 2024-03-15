@@ -17,14 +17,8 @@
 
 package io.ballerina.scan;
 
-import io.ballerina.projects.Document;
 import io.ballerina.tools.diagnostics.Location;
-import io.ballerina.tools.text.LineRange;
 import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
-
-import java.nio.file.Path;
-
-import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 
 public class IssueIml implements Issue {
 
@@ -34,34 +28,13 @@ public class IssueIml implements Issue {
     private final int endLineOffset;
     private final String ruleID;
     private final String message;
-    private IssueType issueType;
+    private final IssueType issueType;
     private final Severity issueSeverity;
     // There can be more than one ballerina file which has the same name, so we store it in the following format:
     // fileName = "moduleName/main.bal"
     private final String fileName;
     private final String reportedFilePath;
-    private String reportedSource;
-
-    public IssueIml(Location location,
-                    Rule rule,
-                    Document reportedDocument) {
-
-        String documentName = reportedDocument.name();
-        String moduleName = reportedDocument.module().moduleName().toString();
-        Path issuesFilePath = reportedDocument.module().project().documentPath(reportedDocument.documentId())
-                .orElse(Path.of(documentName));
-
-        LineRange lineRange = location.lineRange();
-        this.startLine = lineRange.startLine().line();
-        this.startLineOffset = lineRange.startLine().offset();
-        this.endLine = lineRange.endLine().line();
-        this.endLineOffset = lineRange.endLine().offset();
-        this.ruleID = rule.getRuleID();
-        this.message = rule.getRuleDescription();
-        this.issueSeverity = rule.getRuleSeverity();
-        this.fileName = moduleName + PATH_SEPARATOR + documentName;
-        this.reportedFilePath = issuesFilePath.toString();
-    }
+    private final String reportedSource;
 
     IssueIml(int startLine,
              int startLineOffset,
@@ -69,8 +42,8 @@ public class IssueIml implements Issue {
              int endLineOffset,
              String ruleID,
              String message,
-             IssueType issueType,
              Severity issueSeverity,
+             IssueType issueType,
              String fileName,
              String reportedFilePath,
              String reportedSource) {
@@ -81,8 +54,8 @@ public class IssueIml implements Issue {
         this.endLineOffset = endLineOffset;
         this.ruleID = ruleID;
         this.message = message;
-        this.issueType = issueType;
         this.issueSeverity = issueSeverity;
+        this.issueType = issueType;
         this.fileName = fileName;
         this.reportedFilePath = reportedFilePath;
         this.reportedSource = reportedSource;
@@ -110,30 +83,19 @@ public class IssueIml implements Issue {
     }
 
     @Override
-    public String getReportedFilePath() {
-        return reportedFilePath;
-    }
-
-    @Override
-    public String getFileName() {
-        return fileName;
-    }
-
-    @Override
     public Severity getIssueSeverity() {
         return issueSeverity;
     }
 
-    @Override
+    public String getReportedFilePath() {
+        return reportedFilePath;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
     public String getReportedSource() {
         return reportedSource;
-    }
-
-    void setReportedSource(String reportedSource) {
-        this.reportedSource = reportedSource;
-    }
-
-    void setIssueType(IssueType issueType) {
-        this.issueType = issueType;
     }
 }

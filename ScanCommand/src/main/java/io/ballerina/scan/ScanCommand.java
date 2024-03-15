@@ -172,27 +172,25 @@ public class ScanCommand implements BLauncherCmd {
         // Retrieve scan.toml file configurations
         scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(userPath);
 
-        // filter user defined rules if present in Scan.toml file
-        Set<ScanTomlFile.RuleToFilter> rulesToFilter = scanTomlFile.getRulesToFilter();
+        // Retrieve user defined rules in Scan.toml file
+        Set<ScanTomlFile.RuleToFilter> allRules = scanTomlFile.getRulesToFilter();
 
-        if (!userRules.isEmpty() || !rulesToFilter.isEmpty()) {
-            rulesToFilter.forEach(ruleToFilter -> {
-                userRules.add(ruleToFilter.getId());
-            });
+        // Convert the rules to a String list
+        List<String> rulesToFilter = allRules.stream()
+                .map(ScanTomlFile.RuleToFilter::getId)
+                .collect(Collectors.toCollection(ArrayList::new));
 
-            // TODO: Pass compiler plugin rules to be activated ones projectAPI fix is in effect
-            boolean userDefinedRulesActivated = ScanUtils.activateUserDefinedRule(InbuiltRules.INBUILT_RULES,
-                    userRules);
-            if (!userDefinedRulesActivated) {
-                outputStream.println("Invalid rules list: " + userRules);
-                return;
-            }
-            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
-        }
+        // Add user defined rules in the console to the rule filtering list
+        rulesToFilter.addAll(userRules);
 
         // Perform scan on ballerina file/project
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
         ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
+
+        // Remove rules that are not in the user specified rules list
+        if (!rulesToFilter.isEmpty()) {
+            issues.removeIf(issue -> !rulesToFilter.contains(issue.getRuleID()));
+        }
 
         // Stop reporting if there is no issues array
         if (issues == null) {

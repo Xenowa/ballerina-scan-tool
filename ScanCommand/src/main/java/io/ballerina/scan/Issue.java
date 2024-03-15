@@ -33,10 +33,5 @@ public interface Issue {
     IssueType getIssueType();
 
     Severity getIssueSeverity();
-
-    String getFileName();
-
-    String getReportedFilePath();
-
-    String getReportedSource();
 }
+

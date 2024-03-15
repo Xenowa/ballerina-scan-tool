@@ -25,26 +25,29 @@ import io.ballerina.projects.Document;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.plugins.AnalysisTask;
 import io.ballerina.projects.plugins.SyntaxNodeAnalysisContext;
-import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Reporter;
+import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
-import io.ballerina.scan.utilities.RuleMap;
+
+import java.util.List;
+import java.util.Objects;
 
 public class CustomAnalysisTask implements AnalysisTask<SyntaxNodeAnalysisContext> {
 
     private final CustomStaticCodeAnalyzer customStaticCodeAnalyzer;
-    private final ScannerContext scannerContext;
-    private final RuleMap customRules;
+    private final Reporter reporter;
+    private final List<Rule> customRules;
 
-    public CustomAnalysisTask(CustomStaticCodeAnalyzer customStaticCodeAnalyzer, ScannerContext scannerContext,
-                              RuleMap customRules) {
+    public CustomAnalysisTask(ScannerContext scannerContext, List<Rule> customRules,
+                              CustomStaticCodeAnalyzer customStaticCodeAnalyzer) {
         this.customStaticCodeAnalyzer = customStaticCodeAnalyzer;
-        this.scannerContext = scannerContext;
-        this.customRules = customRules.copy();
+        this.reporter = scannerContext.getReporter();
+        this.customRules = customRules.stream().toList();
     }
 
     @Override
     public void perform(SyntaxNodeAnalysisContext context) {
+
         Module module = context.currentPackage().module(context.moduleId());
         Document document = module.document(context.documentId());
 
@@ -52,8 +55,10 @@ public class CustomAnalysisTask implements AnalysisTask<SyntaxNodeAnalysisContex
 
         // CUSTOM RULE: if function body is empty then report issue
         if (functionBodyBlockNode.statements().isEmpty()) {
-            Reporter reporter = scannerContext.getReporter();
-            reporter.reportIssue(new IssueIml(functionBodyBlockNode.location(), customRules.get("S109"), document));
+            reporter.reportIssue(document, functionBodyBlockNode.location(),
+                    Objects.requireNonNull(customRules.stream()
+                            .filter(rule -> rule.getNumericId() == 109)
+                            .findFirst().orElse(null)));
 
             customStaticCodeAnalyzer.complete();
         }

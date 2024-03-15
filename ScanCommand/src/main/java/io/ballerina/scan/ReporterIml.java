@@ -17,6 +17,11 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.projects.Document;
+import io.ballerina.scan.utilities.ScanToolConstants;
+import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.LineRange;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -30,6 +35,8 @@ import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 
 public class ReporterIml implements Reporter {
 
+    private static final String BALLERINA_RULE_PREFIX = "S";
+
     private final ArrayList<Issue> issues;
 
     ReporterIml(ArrayList<Issue> issues) {
@@ -37,7 +44,7 @@ public class ReporterIml implements Reporter {
     }
 
     @Override
-    public synchronized void reportIssue(Issue issue) {
+    public synchronized void reportIssue(Document reportedDocument, Location location, Rule rule) {
 
         // Getting org/name from URL through protection domain
         URL jarUrl = this.getClass()
@@ -73,19 +80,35 @@ public class ReporterIml implements Reporter {
                 .map(Path::toString)
                 .orElse("");
 
-        // Cast the issue to its implementation format to perform operations
-        IssueIml castedIssue = (IssueIml) issue;
-        castedIssue.setReportedSource(pluginOrg + PATH_SEPARATOR + pluginName);
+        // generate issue reported location information
+        String documentName = reportedDocument.name();
+        String moduleName = reportedDocument.module().moduleName().toString();
+        Path issuesFilePath = reportedDocument.module().project().documentPath(reportedDocument.documentId())
+                .orElse(Path.of(documentName));
 
-        // Depending on the source set the issue type
-        if (pluginOrg.equals(BALLERINA_ORG)) {
-            castedIssue.setIssueType(IssueType.CORE_ISSUE);
-        } else {
-            castedIssue.setIssueType(IssueType.EXTERNAL_ISSUE);
-        }
+        LineRange lineRange = location.lineRange();
 
-        // Add the cast issue reported with the information
-        issues.add(castedIssue);
+        // Depending on the org name of the compiler plugin set the issue type
+        IssueType issueType = pluginOrg.equals(BALLERINA_ORG) ? IssueType.CORE_ISSUE : IssueType.EXTERNAL_ISSUE;
+
+        // Construct the issue reported compiler plugin source
+        String reportedSource = pluginOrg + PATH_SEPARATOR + pluginName;
+
+        // Create a new Issue
+        IssueIml issue = new IssueIml(lineRange.startLine().line(),
+                lineRange.startLine().offset(),
+                lineRange.endLine().line(),
+                lineRange.endLine().offset(),
+                BALLERINA_RULE_PREFIX + rule.getId(), // Generate the prefix when reporting the issue
+                rule.getDescription(),
+                rule.getSeverity(),
+                issueType,
+                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
+                issuesFilePath.toString(),
+                reportedSource);
+
+        // Add the issue reported with the information
+        issues.add(issue);
     }
 
     // TODO: Internal method to be removed once property bag is introduced by project API

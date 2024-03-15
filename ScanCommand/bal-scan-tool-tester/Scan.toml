@@ -4,6 +4,18 @@
 #path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonar-platform-plugin-1.0.jar"
 #sonarProjectPropertiesPath = "sonar-project.properties"
 
+# TODO: Central repo and Local repo plugins should be definable as
+#   Local repository plugins
+#   [[plugin]]
+#   org = "tharana_wanigaratne"
+#   name = "custom_static_code_analyzer"
+#   version = "0.1.0"
+#   repository = "local"
+#   Central repository plugins ()
+#   [[plugin]]
+#   org = "tharana_wanigaratne"
+#   name = "custom_static_code_analyzer"
+
 [[plugin]]
 org = "tharana_wanigaratne"
 name = "custom_static_code_analyzer"
@@ -13,9 +25,15 @@ version = "0.1.0"
 org = "org3"
 name = "name3"
 version = "version"
-a-b-c = "Hello world"
+
+# TODO: Rule inclusions and exclusions should be supported as
+#   [include_rules]
+#   ids = "S107, S108"
+#   [exclude_rules]
+#   ids = "S107, S108"
+
 [rule]
-ids = "S107, S108"
+ids = "S107, S108, S109"
 
 # ================================================
 # Invalid use cases which are ignored by scan tool

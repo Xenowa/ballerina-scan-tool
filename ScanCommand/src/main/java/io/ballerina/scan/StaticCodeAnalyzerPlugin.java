@@ -23,7 +23,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.ballerina.projects.plugins.CompilerPlugin;
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import io.ballerina.scan.utilities.RuleMap;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -35,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
 
@@ -47,7 +47,9 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     /**
      * Used for loading custom rules from compiler plugins to the scan tool.
      */
-    public abstract RuleMap rules();
+    // It's not just to display the rules. This is what we will rely on in the final report for description, kind,
+    // severity, etc. too.
+    public abstract List<Rule> rules();
 
     public synchronized ScannerContext getScannerContext(CompilerPluginContext compilerPluginContext) {
         // Implementations here will change once scanner context can be retrieved from compilerPluginContext

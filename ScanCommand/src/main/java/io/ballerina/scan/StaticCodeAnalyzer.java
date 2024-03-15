@@ -28,6 +28,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.Document;
 
 import java.util.List;
+import java.util.Objects;
 
 import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
 
@@ -63,9 +64,11 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         int allowedParametersLimit = 7;
         if (parameterCount > allowedParametersLimit) {
             // Report issue
-            scannerContext.getReporter().reportIssue(new IssueIml(functionSignatureNode.location(),
-                    INBUILT_RULES.get("S107"),
-                    currentDocument));
+            scannerContext.getReporter().reportIssue(currentDocument,
+                    functionSignatureNode.location(),
+                    Objects.requireNonNull(INBUILT_RULES.stream()
+                            .filter(rule -> rule.getNumericId() == 107)
+                            .findFirst().orElse(null)));
         }
 
         // Continue visiting other nodes of the syntax tree
@@ -80,9 +83,11 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                 tokens.forEach(token -> {
                     if (token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
                         // Report the issue
-                        scannerContext.getReporter().reportIssue(new IssueIml(childPair.location(),
-                                INBUILT_RULES.get("S108"),
-                                currentDocument));
+                        scannerContext.getReporter().reportIssue(currentDocument,
+                                childPair.location(),
+                                Objects.requireNonNull(INBUILT_RULES.stream()
+                                        .filter(rule -> rule.getNumericId() == 108)
+                                        .findFirst().orElse(null)));
                     }
                 });
             });

@@ -54,7 +54,6 @@ public class ScanTomlFile {
     }
 
     public Set<RuleToFilter> getRulesToFilter() {
-
         return rules;
     }
 

@@ -17,8 +17,11 @@
 
 package io.ballerina.scan;
 
+import io.ballerina.projects.Document;
+import io.ballerina.tools.diagnostics.Location;
+
 public interface Reporter {
 
-    void reportIssue(Issue issue);
+    void reportIssue(Document reportedDocument, Location location, Rule rule);
 }
 

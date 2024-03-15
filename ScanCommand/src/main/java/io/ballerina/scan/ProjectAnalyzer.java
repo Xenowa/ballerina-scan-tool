@@ -162,7 +162,7 @@ public class ProjectAnalyzer {
             //  ArrayList<Issue> externalIssues = new ArrayList<>();
             //  ScannerContext scannerContext = new ScannerContext(externalIssues);
 
-            // Checking if compiler plugins provided in Scan.toml exists
+            // Checking if compiler plugins provided in Scan.toml exists (This might not be mandatory)
             Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
             Pattern versionPattern = Pattern.compile(CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN);
             scanTomlFile.getPlugins().forEach(plugin -> {
@@ -214,24 +214,26 @@ public class ProjectAnalyzer {
                 // reported issues and create a modified external issues array
                 ArrayList<Issue> modifiedExternalIssues = new ArrayList<>();
                 externalIssues.forEach(externalIssue -> {
-                    if (externalIssue.getFileName().equals(currentProject.currentPackage()
+                    // Cast the external issue to its implementation to retrieve additional getters
+                    IssueIml externalIssueIml = (IssueIml) externalIssue;
+                    if (externalIssueIml.getFileName().equals(currentProject.currentPackage()
                             .packageName()
                             + PATH_SEPARATOR
                             + MAIN_BAL)) {
                         // Modify the issue
-                        LineRange lineRange = externalIssue.getLocation().lineRange();
+                        LineRange lineRange = externalIssueIml.getLocation().lineRange();
                         IssueIml modifiedExternalIssue = new IssueIml(
                                 lineRange.startLine().line() - importCounter.get(),
                                 lineRange.startLine().offset(),
                                 lineRange.endLine().line() - importCounter.get(),
                                 lineRange.endLine().offset(),
-                                externalIssue.getRuleID(),
-                                externalIssue.getMessage(),
-                                externalIssue.getIssueType(),
-                                externalIssue.getIssueSeverity(),
-                                externalIssue.getFileName(),
-                                externalIssue.getReportedFilePath(),
-                                externalIssue.getReportedSource());
+                                externalIssueIml.getRuleID(),
+                                externalIssueIml.getMessage(),
+                                externalIssueIml.getIssueSeverity(),
+                                externalIssueIml.getIssueType(),
+                                externalIssueIml.getFileName(),
+                                externalIssueIml.getReportedFilePath(),
+                                externalIssueIml.getReportedSource());
 
                         modifiedExternalIssues.add(modifiedExternalIssue);
                     } else {

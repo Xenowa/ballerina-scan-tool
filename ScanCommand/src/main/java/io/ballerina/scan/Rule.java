@@ -20,37 +20,13 @@
 
 package io.ballerina.scan;
 
-public class Rule {
+public interface Rule {
 
-    private final String ruleID;
-    private final String ruleDescription;
-    private final Severity severity;
-    private boolean ruleActivated;
+    String getId();
 
-    public Rule(String ruleID, String ruleDescription, Severity severity, boolean ruleActivated) {
-        this.ruleID = ruleID;
-        this.ruleDescription = ruleDescription;
-        this.severity = severity;
-        this.ruleActivated = ruleActivated;
-    }
+    int getNumericId();
 
-    public String getRuleID() {
-        return ruleID;
-    }
+    String getDescription();
 
-    public String getRuleDescription() {
-        return ruleDescription;
-    }
-
-    public boolean ruleIsActivated() {
-        return ruleActivated;
-    }
-
-    public Severity getRuleSeverity() {
-        return severity;
-    }
-
-    public void setRuleIsActivated(boolean ruleActivated) {
-        this.ruleActivated = ruleActivated;
-    }
+    Severity getSeverity();
 }

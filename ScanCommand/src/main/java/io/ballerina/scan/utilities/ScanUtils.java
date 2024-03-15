@@ -28,6 +28,8 @@ import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.scan.Issue;
+import io.ballerina.scan.IssueIml;
+import io.ballerina.scan.Rule;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import io.ballerina.tools.text.LineRange;
@@ -50,7 +52,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -164,11 +165,13 @@ public class ScanUtils {
 
         Map<String, JsonObject> jsonScanReportPathAndFile = new HashMap<>();
         issues.forEach((issue) -> {
-            String filePath = issue.getReportedFilePath();
+            // Cast to issue implementation to access additional info
+            IssueIml issueIml = (IssueIml) issue;
+            String filePath = issueIml.getReportedFilePath();
             if (!jsonScanReportPathAndFile.containsKey(filePath)) {
                 JsonObject jsonScanReportFile = new JsonObject();
 
-                jsonScanReportFile.addProperty("fileName", issue.getFileName());
+                jsonScanReportFile.addProperty("fileName", issueIml.getFileName());
                 jsonScanReportFile.addProperty("filePath", filePath);
 
                 // Get the contents of the file through a file reader
@@ -181,17 +184,17 @@ public class ScanUtils {
                 jsonScanReportFile.addProperty("fileContent", fileContent);
 
                 JsonObject jsonScanReportIssueTextRange = new JsonObject();
-                LineRange lineRange = issue.getLocation().lineRange();
+                LineRange lineRange = issueIml.getLocation().lineRange();
                 jsonScanReportIssueTextRange.addProperty("startLine", lineRange.startLine().line());
                 jsonScanReportIssueTextRange.addProperty("startLineOffset", lineRange.startLine().offset());
                 jsonScanReportIssueTextRange.addProperty("endLine", lineRange.endLine().line());
                 jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
-                jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity().toString());
-                jsonScanReportIssue.addProperty("issueType", issue.getIssueType().toString());
-                jsonScanReportIssue.addProperty("message", issue.getMessage());
+                jsonScanReportIssue.addProperty("ruleID", issueIml.getRuleID());
+                jsonScanReportIssue.addProperty("issueSeverity", issueIml.getIssueSeverity().toString());
+                jsonScanReportIssue.addProperty("issueType", issueIml.getIssueType().toString());
+                jsonScanReportIssue.addProperty("message", issueIml.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 
                 JsonArray jsonIssues = new JsonArray();
@@ -203,17 +206,17 @@ public class ScanUtils {
                 JsonObject jsonScanReportFile = jsonScanReportPathAndFile.get(filePath);
 
                 JsonObject jsonScanReportIssueTextRange = new JsonObject();
-                LineRange lineRange = issue.getLocation().lineRange();
+                LineRange lineRange = issueIml.getLocation().lineRange();
                 jsonScanReportIssueTextRange.addProperty("startLine", lineRange.startLine().line());
                 jsonScanReportIssueTextRange.addProperty("startLineOffset", lineRange.startLine().offset());
                 jsonScanReportIssueTextRange.addProperty("endLine", lineRange.endLine().line());
                 jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
-                jsonScanReportIssue.addProperty("ruleID", issue.getRuleID());
-                jsonScanReportIssue.addProperty("issueSeverity", issue.getIssueSeverity().toString());
-                jsonScanReportIssue.addProperty("issueType", issue.getIssueType().toString());
-                jsonScanReportIssue.addProperty("message", issue.getMessage());
+                jsonScanReportIssue.addProperty("ruleID", issueIml.getRuleID());
+                jsonScanReportIssue.addProperty("issueSeverity", issueIml.getIssueSeverity().toString());
+                jsonScanReportIssue.addProperty("issueType", issueIml.getIssueType().toString());
+                jsonScanReportIssue.addProperty("message", issueIml.getMessage());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 
                 JsonArray jsonIssues = jsonScanReportFile.getAsJsonArray("issues");
@@ -290,44 +293,22 @@ public class ScanUtils {
         }
     }
 
-    public static void printRulesToConsole(RuleMap rules) {
+    public static void printRulesToConsole(List<Rule> rules) {
 
         outputStream.println("Default available rules:");
 
         outputStream.println("\t" + "RuleID" + "\t"
-                + " | " + "Rule Activated" + "\t"
+                + " | " + "Rule Severity" + "\t"
                 + " | " + "Rule Description" + "\n" + "\t"
                 + "---------------------------------------------------");
 
-        rules.forEach((ruleID, rule) -> {
-            outputStream.println("\t" + ruleID + "\t"
-                    + " | " + rule.ruleIsActivated()
-                    + (rule.ruleIsActivated() ? "\t" + "\t" + "\t" : "\t" + "\t")
-                    + " | " + rule.getRuleDescription());
+        rules.forEach(rule -> {
+            outputStream.println("\t" + rule.getId() + "\t"
+                    + " | " + rule.getSeverity().toString() + "\t"
+                    + " | " + rule.getDescription());
         });
 
         outputStream.println();
-    }
-
-    public static boolean activateUserDefinedRule(RuleMap rules, List<String> userDefinedRules) {
-
-        AtomicBoolean userDefinedRulesActivated = new AtomicBoolean(true);
-
-        // Disable all inbuilt rules
-        rules.values().forEach(inbuiltRule -> {
-            inbuiltRule.setRuleIsActivated(false);
-        });
-
-        userDefinedRules.forEach(userDefinedRule -> {
-            // If even a single user defined rule does not exist in the inbuilt rules return false
-            if (!rules.containsKey(userDefinedRule)) {
-                userDefinedRulesActivated.set(false);
-            } else {
-                rules.get(userDefinedRule).setRuleIsActivated(true);
-            }
-        });
-
-        return userDefinedRulesActivated.get();
     }
 
     public static ScanTomlFile retrieveScanTomlConfigurations(String projectPath) {
