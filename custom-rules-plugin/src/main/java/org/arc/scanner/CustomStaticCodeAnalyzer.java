@@ -19,7 +19,7 @@ package org.arc.scanner;
 
 import io.ballerina.projects.plugins.CompilerPluginContext;
 import io.ballerina.scan.Rule;
-import io.ballerina.scan.RuleIml;
+import io.ballerina.scan.RuleFactory;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.Severity;
 import io.ballerina.scan.StaticCodeAnalyzerPlugin;
@@ -32,12 +32,12 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
     @Override
     public List<Rule> rules() {
         List<Rule> customRules = new ArrayList<>();
-
-        customRules.add(new RuleIml(109, "Add a nested comment explaining why" +
+        customRules.add(RuleFactory.createRule(109, "Add a nested comment explaining why" +
                 " this function is empty or complete the implementation.", Severity.CODE_SMELL));
-        customRules.add(new RuleIml(110, "rule 110", Severity.CODE_SMELL));
-        customRules.add(new RuleIml(111, "rule 111", Severity.CODE_SMELL));
-        customRules.add(new RuleIml(112, "rule 112", Severity.CODE_SMELL));
+        
+        customRules.add(RuleFactory.createRule(110, "rule 110", Severity.CODE_SMELL));
+        customRules.add(RuleFactory.createRule(111, "rule 111", Severity.CODE_SMELL));
+        customRules.add(RuleFactory.createRule(112, "rule 112", Severity.CODE_SMELL));
 
         return customRules;
     }

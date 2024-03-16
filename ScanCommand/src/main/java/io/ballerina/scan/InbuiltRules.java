@@ -28,10 +28,10 @@ public class InbuiltRules {
 
     // Populating inbuilt rules
     static {
-        INBUILT_RULES.add(new RuleIml(107,
+        INBUILT_RULES.add(RuleFactory.createRule(107,
                 "Functions should not have too many parameters!",
                 Severity.CODE_SMELL));
-        INBUILT_RULES.add(new RuleIml(108,
+        INBUILT_RULES.add(RuleFactory.createRule(108,
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                 Severity.CODE_SMELL));
     }

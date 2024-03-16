@@ -27,15 +27,10 @@ import java.util.ArrayList;
 
 public class InternalReporter {
 
-    private static final String BALLERINA_RULE_PREFIX = "S";
-
     private final ArrayList<Issue> issues;
-    private final String reportedSource;
 
-    InternalReporter(ArrayList<Issue> issues, String reportedSource) {
-
+    InternalReporter(ArrayList<Issue> issues) {
         this.issues = issues;
-        this.reportedSource = reportedSource;
     }
 
     void reportIssue(Document reportedDocument, Location location, Rule rule) {
@@ -46,12 +41,19 @@ public class InternalReporter {
 
         LineRange lineRange = location.lineRange();
 
+        // Split the fully qualified id to its source and prefixed ID
+        // i.e: org/name:B109
+        String fullyQualifiedRuleId = rule.getId();
+        String[] parts = fullyQualifiedRuleId.split(":");
+        String reportedSource = parts[0];
+        String ruleWithPrefix = parts[1];
+
         // Create a new Issue
         IssueIml issue = new IssueIml(lineRange.startLine().line(),
                 lineRange.startLine().offset(),
                 lineRange.endLine().line(),
                 lineRange.endLine().offset(),
-                BALLERINA_RULE_PREFIX + rule.getId(), // Generate the prefix when reporting the issue
+                ruleWithPrefix,
                 rule.getDescription(),
                 rule.getSeverity(),
                 IssueType.CORE_ISSUE,

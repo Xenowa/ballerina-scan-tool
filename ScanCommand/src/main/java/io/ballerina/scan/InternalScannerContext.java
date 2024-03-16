@@ -25,7 +25,7 @@ public class InternalScannerContext {
 
     InternalScannerContext(ArrayList<Issue> issues) {
 
-        this.reporter = new InternalReporter(issues, "internalReporter");
+        this.reporter = new InternalReporter(issues);
     }
 
     InternalReporter getReporter() {

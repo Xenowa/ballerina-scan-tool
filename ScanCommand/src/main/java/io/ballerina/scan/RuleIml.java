@@ -27,10 +27,9 @@ public class RuleIml implements Rule {
     private final String description;
     private final Severity severity;
 
-    // TODO: Identify a way to generate the rule from a rule Factory as opposed to directly allowing plugin developer
-//  Create the rule
-    public RuleIml(int numericId, String description, Severity severity) {
-        this.id = Integer.toString(numericId);
+    // For external rules
+    RuleIml(String id, int numericId, String description, Severity severity) {
+        this.id = id;
         this.numericId = numericId;
         this.description = description;
         this.severity = severity;

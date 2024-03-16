@@ -22,16 +22,11 @@ import io.ballerina.scan.utilities.ScanToolConstants;
 import io.ballerina.tools.diagnostics.Location;
 import io.ballerina.tools.text.LineRange;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_ORG;
-import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 
 public class ReporterIml implements Reporter {
 
@@ -45,41 +40,6 @@ public class ReporterIml implements Reporter {
 
     @Override
     public synchronized void reportIssue(Document reportedDocument, Location location, Rule rule) {
-
-        // Getting org/name from URL through protection domain
-        URL jarUrl = this.getClass()
-                .getProtectionDomain()
-                .getCodeSource()
-                .getLocation();
-        URI jarUri;
-        try {
-            jarUri = jarUrl.toURI();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-
-        Path jarPath = Paths.get(jarUri);
-        String pluginName = Optional.of(jarPath)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .orElse("");
-
-        String pluginOrg = Optional.of(jarPath)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .orElse("");
-
         // generate issue reported location information
         String documentName = reportedDocument.name();
         String moduleName = reportedDocument.module().moduleName().toString();
@@ -88,18 +48,25 @@ public class ReporterIml implements Reporter {
 
         LineRange lineRange = location.lineRange();
 
+        // Split the fully qualified id to its source and prefixed ID
+        // i.e: org/name:B109
+        String fullyQualifiedRuleId = rule.getId();
+        String[] parts = fullyQualifiedRuleId.split(":");
+        String reportedSource = parts[0];
+        String ruleWithPrefix = parts[1];
+
         // Depending on the org name of the compiler plugin set the issue type
+        String pluginOrg = reportedSource.split(Pattern.quote(System.getProperty("file.separator")))[0];
         IssueType issueType = pluginOrg.equals(BALLERINA_ORG) ? IssueType.CORE_ISSUE : IssueType.EXTERNAL_ISSUE;
 
         // Construct the issue reported compiler plugin source
-        String reportedSource = pluginOrg + PATH_SEPARATOR + pluginName;
 
         // Create a new Issue
         IssueIml issue = new IssueIml(lineRange.startLine().line(),
                 lineRange.startLine().offset(),
                 lineRange.endLine().line(),
                 lineRange.endLine().offset(),
-                BALLERINA_RULE_PREFIX + rule.getId(), // Generate the prefix when reporting the issue
+                ruleWithPrefix,
                 rule.getDescription(),
                 rule.getSeverity(),
                 issueType,

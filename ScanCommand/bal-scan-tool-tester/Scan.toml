@@ -6,13 +6,13 @@
 
 # TODO: Central repo and Local repo plugins should be definable as
 #   Local repository plugins
-#   [[plugin]]
+#   [[analyzer]]
 #   org = "tharana_wanigaratne"
 #   name = "custom_static_code_analyzer"
 #   version = "0.1.0"
 #   repository = "local"
 #   Central repository plugins ()
-#   [[plugin]]
+#   [[analyzer]]
 #   org = "tharana_wanigaratne"
 #   name = "custom_static_code_analyzer"
 
@@ -25,6 +25,20 @@ version = "0.1.0"
 org = "org3"
 name = "name3"
 version = "version"
+
+[[plugin]]
+org = ""
+name = ""
+version = ""
+repository = ""
+
+[[plugin]]
+org = 20
+name = 10
+version = 30
+repository = 40
+
+[[plugin]]
 
 # TODO: Rule inclusions and exclusions should be supported as
 #   [include_rules]
@@ -47,17 +61,3 @@ name = 10
 path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonarqube-platform-plugin-1.0.jar"
 
 [[platform]]
-
-[[plugin]]
-org = ""
-name = ""
-version = ""
-repository = ""
-
-[[plugin]]
-org = 20
-name = 10
-version = 30
-repository = 40
-
-[[plugin]]
