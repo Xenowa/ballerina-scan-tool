@@ -5,55 +5,65 @@ SYNOPSIS
         bal scan [OPTIONS] [<package>|<source-file>]
 
 DESCRIPTION
-        Compiles and performs static code analysis and reports the analysis issues.
-        Analyze source code defined in each module of a package when compiling the current package.
-        It analyzes the given source file when compiling a single '.bal' file.
+        Compiles and performs static code analysis, prints results to the console,  and reports results.
 
-        Note: Analyzing individual '.bal' files of a package is not allowed.
+        Analyze the source code defined in each module when compiling a package or analyze the given source file
+        when compiling a single BAL file.
+
+        Note: Analyzing individual BAL files of a package is not allowed.
 
 
 OPTIONS
         --target-dir=<path>
-                Target directory path.
+                Target directory path for saving analysis reports. (only for ballerina build projects)
 
         --scan-report
-                Generates an HTML report containing the analysis results.
-
-        --rules=<rule1, ...>
-                Specify a subset of core rules to perform the scan against.
+        	    Generates an HTML report containing the analysis results. (only for ballerina build projects)
 
         --list-rules
-                List all core rules available in the Ballerina scan tool.
+                List all available rules.
+
+        --include-rules=<rule1, …>
+	            Run analysis for a specific set of rules.
+
+        --exclude-rules=<rule1, …>
+	            Exclude analysis for a specific set of rules.
 
         --platforms=<platformName1, ...>
-                Define platform to report analysis results to. The user is able to define
-                more than one platform
+                Define platform(s) to report results. The user can define more than one platform.
 
 EXAMPLES
-        Run analysis against all Ballerina documents in the current package
+        Run analysis against all Ballerina documents in the current package, print results to the console,
+        and save results in JSON file format in the target directory.
                 $ bal scan
 
-        Run analysis against a standalone Ballerina file. The file path can be
-        relative or absolute.
+        Run analysis against a standalone Ballerina file and print results to the console. The file path of
+        the Ballerina file can be relative or absolute.
                 $ bal scan main.bal
 
-        Run analysis and save analysis results in specified directory.
-                $ bal scan --target-dir='results'
+        Run analysis and save analysis results in a specified directory.
+                $ bal scan --target-dir="results"
 
-        Run analysis and generate an analysis report.
+        Run analysis and generate an HTML report in the target directory.
                 $ bal scan --scan-report
 
-        View all available core rules
+        View all available rules.
                 $ bal scan --list-rules
 
-        Run analysis for a specified core rule.
-                $ bal scan --rules=S107
+        Run analysis for a specific rule.
+                $ bal scan --include-rules="ballerina/io:B107"
 
-        Run analysis for a subset of specified core rules.
-                $ bal scan --rules='S107, S108'
+        Run analysis for a specific set of rules.
+                $ bal scan --include-rules="B101, ballerina/io:B107"
+
+        Exclude analysis for a specific rule.
+                $ bal scan --exclude-rules="ballerina/io:B107"
+
+        Exclude analysis for a specific set of rules.
+                $ bal scan --exclude-rules="B101, ballerina/io:B107"
 
         Run analysis and report to sonarqube
                 $ bal scan --platforms=sonarqube
 
         Run analysis and report to multiple platforms
-                $ bal scan --platforms='sonarqube, semgrep, codeql'
+                $ bal scan --platforms="sonarqube, semgrep, codeql"

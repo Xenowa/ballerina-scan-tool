@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import io.ballerina.scan.Issue;
-import io.ballerina.scan.ScannerPlatformPlugin;
+import io.ballerina.scan.StaticCodeAnalysisPlatformPlugin;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SonarPlatformPlugin implements ScannerPlatformPlugin {
+public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
 
     private final List<String> arguments = new ArrayList<>();
     private final ProcessBuilder processBuilder = new ProcessBuilder();
@@ -49,7 +49,7 @@ public class SonarPlatformPlugin implements ScannerPlatformPlugin {
     }
 
     @Override
-    public void initialize(Map<String, String> platformArgs) {
+    public void init(Map<String, String> platformArgs) {
         this.platformArgs.putAll(platformArgs);
 
         // Initializing sonar-scanner cli
@@ -80,7 +80,7 @@ public class SonarPlatformPlugin implements ScannerPlatformPlugin {
     }
 
     @Override
-    public void onScan(ArrayList<Issue> issues) {
+    public void onScan(List<Issue> issues) {
         boolean issuesSaved = saveIssues(ISSUES_FILE_PATH, issues);
 
         if (issuesSaved) {
@@ -116,7 +116,7 @@ public class SonarPlatformPlugin implements ScannerPlatformPlugin {
         }
     }
 
-    private boolean saveIssues(String fileName, ArrayList<Issue> issues) {
+    private boolean saveIssues(String fileName, List<Issue> issues) {
         // Convert the output to a string
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();

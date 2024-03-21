@@ -26,35 +26,39 @@ public class ScanTomlFile {
 
     private final ArrayList<Platform> platforms = new ArrayList<>();
     private final Set<Plugin> plugins = new HashSet<>();
-    private final Set<RuleToFilter> rules = new HashSet<>();
+    private final Set<RuleToFilter> rulesToInclude = new HashSet<>();
+    private final Set<RuleToFilter> rulesToExclude = new HashSet<>();
 
     public void setPlatform(Platform platform) {
-
         platforms.add(platform);
     }
 
     public ArrayList<Platform> getPlatforms() {
-
         return platforms;
     }
 
     public void setPlugin(Plugin plugin) {
-
         plugins.add(plugin);
     }
 
     public Set<Plugin> getPlugins() {
-
         return plugins;
     }
 
-    public void setRuleToFilter(RuleToFilter rule) {
-
-        rules.add(rule);
+    public void setRuleToInclude(RuleToFilter rule) {
+        rulesToInclude.add(rule);
     }
 
-    public Set<RuleToFilter> getRulesToFilter() {
-        return rules;
+    public Set<RuleToFilter> getRulesToInclude() {
+        return rulesToInclude;
+    }
+
+    public void setRuleToExclude(RuleToFilter rule) {
+        rulesToExclude.add(rule);
+    }
+
+    public Set<RuleToFilter> getRulesToExclude() {
+        return rulesToExclude;
     }
 
     public static class Platform {
@@ -71,17 +75,14 @@ public class ScanTomlFile {
         }
 
         public String getName() {
-
             return name;
         }
 
         public String getPath() {
-
             return path;
         }
 
         public Map<String, Object> getArguments() {
-
             return arguments;
         }
     }
@@ -102,22 +103,18 @@ public class ScanTomlFile {
         }
 
         public String getOrg() {
-
             return org;
         }
 
         public String getName() {
-
             return name;
         }
 
         public String getVersion() {
-
             return version;
         }
 
         public String getRepository() {
-
             return repository;
         }
     }
@@ -127,12 +124,10 @@ public class ScanTomlFile {
         private String id;
 
         public RuleToFilter(String id) {
-
             this.id = id;
         }
 
         public String getId() {
-
             return id;
         }
     }

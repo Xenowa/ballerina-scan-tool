@@ -35,7 +35,7 @@ public class ScanToolConstants {
     public static final String SCAN_TABLE = "scan";
     public static final String SCAN_FILE_FIELD = "configPath";
     public static final String PLATFORM_TABLE = "platform";
-    public static final String PLUGIN_TABLE = "plugin";
+    public static final String ANALYZER_TABLE = "analyzer";
     public static final String RULES_TABLE = "rule";
     public static final String JAR_PREDICATE = ".jar";
 

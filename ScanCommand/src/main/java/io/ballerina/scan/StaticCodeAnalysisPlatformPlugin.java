@@ -17,14 +17,14 @@
 
 package io.ballerina.scan;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public interface ScannerPlatformPlugin {
+public interface StaticCodeAnalysisPlatformPlugin {
 
     String platform();
 
-    void initialize(Map<String, String> platformArgs);
+    void init(Map<String, String> platformArgs);
 
-    void onScan(ArrayList<Issue> issues);
+    void onScan(List<Issue> issues);
 }

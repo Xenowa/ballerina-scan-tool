@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 public class ScanCommand implements BLauncherCmd {
 
     private final PrintStream outputStream;
-    private final PrintStream errorStream;
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
     private String projectPath = null;
@@ -67,14 +66,19 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--scan-report"}, description = "Enable scan report generation")
     private boolean scanReport;
 
-    @CommandLine.Option(names = {"--rules"},
+    @CommandLine.Option(names = {"--include-rules"},
             converter = StringToListConverter.class,
-            description = "Specify the comma separated list of rules to filter specific analysis issues")
-    private List<String> userRules = new ArrayList<>();
+            description = "Specify the comma separated list of rules to include specific analysis issues")
+    private List<String> includeRules = new ArrayList<>();
+
+    @CommandLine.Option(names = {"--exclude-rules"},
+            converter = StringToListConverter.class,
+            description = "Specify the comma separated list of rules to exclude specific analysis issues")
+    private List<String> excludeRules = new ArrayList<>();
 
     @CommandLine.Option(names = {"--list-rules"},
             description = "List the internal rules available in the Ballerina scan tool.")
-    private boolean listAllRules;
+    private boolean listRules;
 
     @CommandLine.Option(names = {"--platforms"},
             converter = StringToListConverter.class,
@@ -83,38 +87,30 @@ public class ScanCommand implements BLauncherCmd {
     private List<String> platforms = new ArrayList<>();
 
     public ScanCommand() {
-
         this.outputStream = System.out;
-        this.errorStream = System.err;
     }
 
     public ScanCommand(PrintStream outputStream) {
-
         this.outputStream = outputStream;
-        this.errorStream = outputStream;
     }
 
     @Override
     public String getName() {
-
         return "scan";
     }
 
     @Override
     public void printLongDesc(StringBuilder out) {
-
         StringBuilder builder = helpMessage();
         out.append(builder);
     }
 
     @Override
     public void printUsage(StringBuilder out) {
-
         out.append("Tool for providing static code analysis results for Ballerina projects");
     }
 
     public StringBuilder helpMessage() {
-
         InputStream inputStream = ScanCommand.class.getResourceAsStream("/ballerina-scan.help");
         StringBuilder builder = new StringBuilder();
         if (inputStream != null) {
@@ -146,7 +142,6 @@ public class ScanCommand implements BLauncherCmd {
     // ========================
     @Override
     public void execute() {
-
         if (helpFlag) {
             StringBuilder builder = helpMessage();
             outputStream.println(builder);
@@ -154,11 +149,12 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         // TODO: Service Load compiler plugins and retrieve their rules as well
-        if (listAllRules) {
+        if (listRules) {
             ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
             return;
         }
 
+        // TODO: Optimize project loading behaviour
         // Retrieve project location
         String userPath;
         userPath = checkPath();
@@ -172,24 +168,42 @@ public class ScanCommand implements BLauncherCmd {
         // Retrieve scan.toml file configurations
         scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(userPath);
 
-        // Retrieve user defined rules in Scan.toml file
-        Set<ScanTomlFile.RuleToFilter> allRules = scanTomlFile.getRulesToFilter();
+        // Get all rules to include
+        // From Scan.toml file
+        Set<ScanTomlFile.RuleToFilter> rulesToInclude = scanTomlFile.getRulesToInclude();
 
-        // Convert the rules to a String list
-        List<String> rulesToFilter = allRules.stream()
+        // Convert to String list
+        List<String> allRulesToInclude = rulesToInclude.stream()
                 .map(ScanTomlFile.RuleToFilter::getId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Add user defined rules in the console to the rule filtering list
-        rulesToFilter.addAll(userRules);
+        // Add console defined rules
+        allRulesToInclude.addAll(includeRules);
+
+        // Get all rules to exclude
+        // From Scan.toml file
+        Set<ScanTomlFile.RuleToFilter> rulesToExclude = scanTomlFile.getRulesToExclude();
+
+        // Convert to String list
+        List<String> allRulesToExclude = rulesToExclude.stream()
+                .map(ScanTomlFile.RuleToFilter::getId)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Add console defined rules
+        allRulesToExclude.addAll(excludeRules);
 
         // Perform scan on ballerina file/project
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
         ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
 
-        // Remove rules that are not in the user specified rules list
-        if (!rulesToFilter.isEmpty()) {
-            issues.removeIf(issue -> !rulesToFilter.contains(issue.getRuleID()));
+        // Remove rules not in include list
+        if (!allRulesToInclude.isEmpty()) {
+            issues.removeIf(issue -> !allRulesToInclude.contains(issue.getRuleID()));
+        }
+
+        // Remove rules in exclude list
+        if (!allRulesToExclude.isEmpty()) {
+            issues.removeIf(issue -> allRulesToExclude.contains(issue.getRuleID()));
         }
 
         // Stop reporting if there is no issues array
@@ -198,6 +212,7 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
+        // TODO: Remove quiet flag with platformTriggered flag and move logic to platform plugin side
         // Produce analysis results locally if 'local' platform is given
         if (platforms.contains("local") && quietFlag) {
             // Save results to directory quietly
@@ -211,7 +226,6 @@ public class ScanCommand implements BLauncherCmd {
         } else if (platforms.contains("local")) {
             // Print results to console
             ScanUtils.printToConsole(issues);
-
             if (scanReport) {
                 Path scanReportPath;
                 outputStream.println();
@@ -258,19 +272,21 @@ public class ScanCommand implements BLauncherCmd {
 
         URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
 
-        ServiceLoader<ScannerPlatformPlugin> scannerPlatformPlugins = ServiceLoader.load(ScannerPlatformPlugin.class,
+        ServiceLoader<StaticCodeAnalysisPlatformPlugin> scannerPlatformPlugins = ServiceLoader.load(
+                StaticCodeAnalysisPlatformPlugin.class,
                 ucl);
 
         // Proceed reporting to platforms if plugins exists
         if (scannerPlatformPlugins.stream().findAny().isPresent()) {
-            scannerPlatformPlugins.forEach(scannerPlatformPlugin -> {
-                if (platforms.contains(scannerPlatformPlugin.platform())) {
-                    Map<String, String> platformSpecificArgs = platformArgs.get(scannerPlatformPlugin.platform());
+            scannerPlatformPlugins.forEach(staticCodeAnalysisPlatformPlugin -> {
+                if (platforms.contains(staticCodeAnalysisPlatformPlugin.platform())) {
+                    Map<String, String> platformSpecificArgs =
+                            platformArgs.get(staticCodeAnalysisPlatformPlugin.platform());
 
-                    scannerPlatformPlugin.initialize(platformSpecificArgs);
-                    scannerPlatformPlugin.onScan(issues);
+                    staticCodeAnalysisPlatformPlugin.init(platformSpecificArgs);
+                    staticCodeAnalysisPlatformPlugin.onScan(issues);
 
-                    platforms.removeAll(Collections.singleton(scannerPlatformPlugin.platform()));
+                    platforms.removeAll(Collections.singleton(staticCodeAnalysisPlatformPlugin.platform()));
                 }
             });
         }

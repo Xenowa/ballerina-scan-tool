@@ -31,6 +31,8 @@ import io.ballerina.scan.Issue;
 import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Rule;
 import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.semantic.TomlType;
+import io.ballerina.toml.semantic.ast.TomlArrayValueNode;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
 import io.ballerina.tools.text.LineRange;
 import org.apache.commons.io.FileUtils;
@@ -48,7 +50,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +59,9 @@ import java.util.zip.ZipInputStream;
 import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPORT_DIR_NAME;
+import static io.ballerina.scan.utilities.ScanToolConstants.ANALYZER_TABLE;
 import static io.ballerina.scan.utilities.ScanToolConstants.JAR_PREDICATE;
 import static io.ballerina.scan.utilities.ScanToolConstants.PLATFORM_TABLE;
-import static io.ballerina.scan.utilities.ScanToolConstants.PLUGIN_TABLE;
 import static io.ballerina.scan.utilities.ScanToolConstants.RESULTS_JSON_FILE;
 import static io.ballerina.scan.utilities.ScanToolConstants.RULES_TABLE;
 import static io.ballerina.scan.utilities.ScanToolConstants.SCAN_FILE;
@@ -267,7 +268,6 @@ public class ScanUtils {
     }
 
     public static void unzipReportResources(InputStream source, File target) throws IOException {
-
         final ZipInputStream zipStream = new ZipInputStream(source);
         ZipEntry nextEntry;
         while ((nextEntry = zipStream.getNextEntry()) != null) {
@@ -294,7 +294,6 @@ public class ScanUtils {
     }
 
     public static void printRulesToConsole(List<Rule> rules) {
-
         outputStream.println("Default available rules:");
 
         outputStream.println("\t" + "RuleID" + "\t"
@@ -312,7 +311,6 @@ public class ScanUtils {
     }
 
     public static ScanTomlFile retrieveScanTomlConfigurations(String projectPath) {
-
         Path root = Path.of(projectPath);
         Project project = ProjectLoader.loadProject(root);
 
@@ -434,10 +432,10 @@ public class ScanUtils {
             }
         });
 
-        // Retrieve all custom rule compiler plugin tables
-        List<Toml> compilerPluginTables = scanTomlDocumentContent.getTables(PLUGIN_TABLE);
-        compilerPluginTables.forEach(compilerPluginTable -> {
-            Map<String, Object> properties = compilerPluginTable.toMap();
+        // Retrieve all custom rule static code analyzer compiler plugin tables
+        List<Toml> staticCodeAnalyzerTables = scanTomlDocumentContent.getTables(ANALYZER_TABLE);
+        staticCodeAnalyzerTables.forEach(staticCodeAnalyzer -> {
+            Map<String, Object> properties = staticCodeAnalyzer.toMap();
             String org = !(properties.get("org") instanceof String) ? null :
                     properties.get("org").toString();
             String name = !(properties.get("name") instanceof String) ? null :
@@ -447,10 +445,12 @@ public class ScanUtils {
             String repository = !(properties.get("repository") instanceof String) ? null :
                     properties.get("repository").toString();
 
+            // TODO: Identify way to remove version and load the plugins
             if (org != null && !org.isEmpty() &&
                     name != null && !name.isEmpty() &&
                     version != null && !version.isEmpty()) {
                 ScanTomlFile.Plugin plugin;
+
                 if (repository != null) {
                     plugin = new ScanTomlFile.Plugin(org,
                             name,
@@ -464,22 +464,50 @@ public class ScanUtils {
                             version,
                             null);
                 }
+
                 scanTomlFile.setPlugin(plugin);
             }
         });
 
         // Retrieve all filter rule tables
         // [rules]
-        // ids = "S107, S108"
+        // include = ["B101", "ballerina/io:B107"]
+        // exclude = ["B101", "ballerina/io:B107"]
         Toml rulesTable = scanTomlDocumentContent.getTable(RULES_TABLE).orElse(null);
         if (rulesTable != null) {
-            TomlValueNode ids = rulesTable.get("ids").orElse(null);
-            if (ids != null) {
-                String stringIds = ids.toNativeValue().toString();
-                List<String> rules = Arrays.asList(stringIds.split("\\s*,\\s*"));
-                rules.forEach(rule -> {
-                    ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(rule);
-                    scanTomlFile.setRuleToFilter(ruleToFilter);
+            // Get rules to include
+            TomlValueNode include = rulesTable.get("include").orElse(null);
+            TomlArrayValueNode includeArray = null;
+            if (include != null && include.kind().equals(TomlType.ARRAY)) {
+                includeArray = (TomlArrayValueNode) include;
+
+                // Convert every rule in array to a string
+                List<String> rulesToInclude = includeArray.toNativeValue()
+                        .stream()
+                        .map(Object::toString)
+                        .toList();
+
+                rulesToInclude.forEach(ruleToInclude -> {
+                    ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(ruleToInclude);
+                    scanTomlFile.setRuleToInclude(ruleToFilter);
+                });
+            }
+
+            // Get rules to exclude
+            TomlValueNode exclude = rulesTable.get("exclude").orElse(null);
+            TomlArrayValueNode excludeArray = null;
+            if (exclude != null && exclude.kind().equals(TomlType.ARRAY)) {
+                excludeArray = (TomlArrayValueNode) exclude;
+
+                // Convert every rule in array to a string
+                List<String> rulesToExclude = excludeArray.toNativeValue()
+                        .stream()
+                        .map(Object::toString)
+                        .toList();
+
+                rulesToExclude.forEach(ruleToExclude -> {
+                    ScanTomlFile.RuleToFilter ruleToFilter = new ScanTomlFile.RuleToFilter(ruleToExclude);
+                    scanTomlFile.setRuleToExclude(ruleToFilter);
                 });
             }
         }
