@@ -67,7 +67,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
             scannerContext.getReporter().reportIssue(currentDocument,
                     functionSignatureNode.location(),
                     Objects.requireNonNull(INBUILT_RULES.stream()
-                            .filter(rule -> rule.getNumericId() == 107)
+                            .filter(rule -> rule.numericId() == 107)
                             .findFirst().orElse(null)));
         }
 
@@ -86,7 +86,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
                         scannerContext.getReporter().reportIssue(currentDocument,
                                 childPair.location(),
                                 Objects.requireNonNull(INBUILT_RULES.stream()
-                                        .filter(rule -> rule.getNumericId() == 108)
+                                        .filter(rule -> rule.numericId() == 108)
                                         .findFirst().orElse(null)));
                     }
                 });

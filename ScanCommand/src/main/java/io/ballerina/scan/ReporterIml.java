@@ -30,8 +30,6 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_ORG;
 
 public class ReporterIml implements Reporter {
 
-    private static final String BALLERINA_RULE_PREFIX = "S";
-
     private final ArrayList<Issue> issues;
 
     ReporterIml(ArrayList<Issue> issues) {
@@ -50,7 +48,7 @@ public class ReporterIml implements Reporter {
 
         // Split the fully qualified id to its source and prefixed ID
         // i.e: org/name:B109
-        String fullyQualifiedRuleId = rule.getId();
+        String fullyQualifiedRuleId = rule.id();
         String[] parts = fullyQualifiedRuleId.split(":");
         String reportedSource = parts[0];
         String ruleWithPrefix = parts[1];
@@ -67,8 +65,8 @@ public class ReporterIml implements Reporter {
                 lineRange.endLine().line(),
                 lineRange.endLine().offset(),
                 ruleWithPrefix,
-                rule.getDescription(),
-                rule.getSeverity(),
+                rule.description(),
+                rule.severity(),
                 issueType,
                 moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
                 issuesFilePath.toString(),

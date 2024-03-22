@@ -18,6 +18,8 @@
 package io.ballerina.scan;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.scan.utilities.ScanToolConstants;
@@ -26,7 +28,6 @@ import io.ballerina.scan.utilities.StringToListConverter;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,8 +53,6 @@ public class ScanCommand implements BLauncherCmd {
     private final PrintStream outputStream;
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
-    private String projectPath = null;
-    private ScanTomlFile scanTomlFile;
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
@@ -66,6 +65,10 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--scan-report"}, description = "Enable scan report generation")
     private boolean scanReport;
 
+    @CommandLine.Option(names = {"--list-rules"},
+            description = "List the internal rules available in the Ballerina scan tool.")
+    private boolean listRules;
+
     @CommandLine.Option(names = {"--include-rules"},
             converter = StringToListConverter.class,
             description = "Specify the comma separated list of rules to include specific analysis issues")
@@ -75,10 +78,6 @@ public class ScanCommand implements BLauncherCmd {
             converter = StringToListConverter.class,
             description = "Specify the comma separated list of rules to exclude specific analysis issues")
     private List<String> excludeRules = new ArrayList<>();
-
-    @CommandLine.Option(names = {"--list-rules"},
-            description = "List the internal rules available in the Ballerina scan tool.")
-    private boolean listRules;
 
     @CommandLine.Option(names = {"--platforms"},
             converter = StringToListConverter.class,
@@ -92,6 +91,25 @@ public class ScanCommand implements BLauncherCmd {
 
     public ScanCommand(PrintStream outputStream) {
         this.outputStream = outputStream;
+    }
+
+    private Project getProject() {
+        Path userFilePath;
+
+        // retrieve the user passed argument or the current working directory
+        if (argList.isEmpty()) {
+            userFilePath = Paths.get(System.getProperty(ProjectConstants.USER_DIR));
+        } else {
+            userFilePath = Paths.get(argList.get(0));
+        }
+
+        // Return the loaded project or the relevant error message
+        try {
+            return ProjectLoader.loadProject(userFilePath);
+        } catch (RuntimeException e) {
+            outputStream.println(e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -148,17 +166,17 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // TODO: Service Load compiler plugins and retrieve their rules as well
-        if (listRules) {
-            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
+        // Load the project
+        Project project = getProject();
+
+        // Stop further execution if project is null
+        if (project == null) {
             return;
         }
 
-        // TODO: Optimize project loading behaviour
-        // Retrieve project location
-        String userPath;
-        userPath = checkPath();
-        if (userPath.equals("")) {
+        // TODO: Service Load compiler plugins and retrieve their rules as well
+        if (listRules) {
+            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
             return;
         }
 
@@ -166,7 +184,7 @@ public class ScanCommand implements BLauncherCmd {
         outputStream.println("Running Scans");
 
         // Retrieve scan.toml file configurations
-        scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(userPath);
+        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
         // Get all rules to include
         // From Scan.toml file
@@ -194,7 +212,7 @@ public class ScanCommand implements BLauncherCmd {
 
         // Perform scan on ballerina file/project
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
-        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(Path.of(userPath));
+        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(project);
 
         // Remove rules not in include list
         if (!allRulesToInclude.isEmpty()) {
@@ -206,20 +224,14 @@ public class ScanCommand implements BLauncherCmd {
             issues.removeIf(issue -> allRulesToExclude.contains(issue.getRuleID()));
         }
 
-        // Stop reporting if there is no issues array
-        if (issues == null) {
-            outputStream.println("ballerina: The source file '" + userPath + "' belongs to a Ballerina package.");
-            return;
-        }
-
         // TODO: Remove quiet flag with platformTriggered flag and move logic to platform plugin side
         // Produce analysis results locally if 'local' platform is given
         if (platforms.contains("local") && quietFlag) {
             // Save results to directory quietly
             if (targetDir != null) {
-                ScanUtils.saveToDirectory(issues, userPath, targetDir);
+                ScanUtils.saveToDirectory(issues, project, targetDir);
             } else {
-                ScanUtils.saveToDirectory(issues, userPath, null);
+                ScanUtils.saveToDirectory(issues, project, null);
             }
 
             return; // Stop further execution after generating the report
@@ -231,9 +243,9 @@ public class ScanCommand implements BLauncherCmd {
                 outputStream.println();
                 outputStream.println("Generating scan report...");
                 if (targetDir != null) {
-                    scanReportPath = ScanUtils.generateScanReport(issues, userPath, targetDir);
+                    scanReportPath = ScanUtils.generateScanReport(issues, project, targetDir);
                 } else {
-                    scanReportPath = ScanUtils.generateScanReport(issues, userPath, null);
+                    scanReportPath = ScanUtils.generateScanReport(issues, project, null);
                 }
                 outputStream.println();
                 outputStream.println("View scan report at:");
@@ -243,9 +255,9 @@ public class ScanCommand implements BLauncherCmd {
             // Save results to directory
             Path reportPath;
             if (targetDir != null) {
-                reportPath = ScanUtils.saveToDirectory(issues, userPath, targetDir);
+                reportPath = ScanUtils.saveToDirectory(issues, project, targetDir);
             } else {
-                reportPath = ScanUtils.saveToDirectory(issues, userPath, null);
+                reportPath = ScanUtils.saveToDirectory(issues, project, null);
             }
 
             outputStream.println();
@@ -283,6 +295,7 @@ public class ScanCommand implements BLauncherCmd {
                     Map<String, String> platformSpecificArgs =
                             platformArgs.get(staticCodeAnalysisPlatformPlugin.platform());
 
+                    // TODO: PlatformPluginContext to hold platform specific properties to be introduced to init()
                     staticCodeAnalysisPlatformPlugin.init(platformSpecificArgs);
                     staticCodeAnalysisPlatformPlugin.onScan(issues);
 
@@ -306,57 +319,6 @@ public class ScanCommand implements BLauncherCmd {
                 }
             }
         });
-    }
-
-    private String checkPath() {
-
-        if (!argList.isEmpty()) {
-            this.projectPath = String.valueOf(Paths.get(argList.get(0)));
-        }
-
-        // retrieve the user passed argument or the current working directory
-        String userFilePath = this.projectPath != null ? this.projectPath : System.getProperty("user.dir");
-
-        // Check if the user provided path is a file or a directory
-        File file = new File(userFilePath);
-        if (file.exists()) {
-            if (file.isFile()) {
-                // Check if the file extension is '.bal'
-                if (!userFilePath.endsWith(ProjectConstants.BLANG_SOURCE_EXT)) {
-                    this.outputStream.println("Invalid file format received!\n File format should be of type '.bal'");
-                    return "";
-                } else {
-                    // Perform check if the user has provided the file in "./balFileName.bal" format and if so remove
-                    // the trailing slash
-                    if (userFilePath.startsWith("./") || userFilePath.startsWith(".\\")) {
-                        userFilePath = userFilePath.substring(2);
-                    }
-
-                    return userFilePath;
-                }
-            } else {
-                // If it's a directory, validate it's a ballerina build project
-                File ballerinaTomlFile = new File(userFilePath, ProjectConstants.BALLERINA_TOML);
-                if (!ballerinaTomlFile.exists() || !ballerinaTomlFile.isFile()) {
-                    this.outputStream.println("ballerina: Invalid Ballerina package directory: " +
-                            userFilePath +
-                            ", cannot find 'Ballerina.toml' file.");
-                    return "";
-                } else {
-                    // Following is to mitigate the issue when "." is encountered in the scanning process
-                    if (userFilePath.equals(".")) {
-                        Path parentPath = Path.of(userFilePath).toAbsolutePath().getParent();
-                        return parentPath != null ? parentPath.toString() : "";
-                    }
-
-                    return userFilePath;
-                }
-            }
-        } else {
-            this.outputStream.println("No such file or directory exists!\n Please check the file path and" +
-                    "then re-run the command.");
-            return "";
-        }
     }
 
     private URLClassLoader loadExternalJars(ArrayList<String> jarPaths) {

@@ -43,7 +43,7 @@ public class InternalReporter {
 
         // Split the fully qualified id to its source and prefixed ID
         // i.e: org/name:B109
-        String fullyQualifiedRuleId = rule.getId();
+        String fullyQualifiedRuleId = rule.id();
         String[] parts = fullyQualifiedRuleId.split(":");
         String reportedSource = parts[0];
         String ruleWithPrefix = parts[1];
@@ -54,8 +54,8 @@ public class InternalReporter {
                 lineRange.endLine().line(),
                 lineRange.endLine().offset(),
                 ruleWithPrefix,
-                rule.getDescription(),
-                rule.getSeverity(),
+                rule.description(),
+                rule.severity(),
                 IssueType.CORE_ISSUE,
                 moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
                 issuesFilePath.toString(),

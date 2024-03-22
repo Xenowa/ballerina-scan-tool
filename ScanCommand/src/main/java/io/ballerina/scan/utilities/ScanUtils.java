@@ -25,7 +25,6 @@ import io.ballerina.projects.BallerinaToml;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.TomlDocument;
-import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.IssueIml;
@@ -125,9 +124,8 @@ public class ScanUtils {
         return target;
     }
 
-    public static Path saveToDirectory(ArrayList<Issue> issues, String projectPath, String directoryName) {
+    public static Path saveToDirectory(ArrayList<Issue> issues, Project project, String directoryName) {
         // Create folder to save issues to
-        Project project = ProjectLoader.loadProject(Path.of(projectPath));
         Target target = getTargetPath(project, directoryName);
 
         // Retrieve path where report is saved
@@ -158,9 +156,8 @@ public class ScanUtils {
     }
 
     // Save scan results in the HTML template
-    public static Path generateScanReport(ArrayList<Issue> issues, String projectPath, String directoryName) {
+    public static Path generateScanReport(ArrayList<Issue> issues, Project project, String directoryName) {
         // Convert existing issues to the structure required by the scan report
-        Project project = ProjectLoader.loadProject(Path.of(projectPath));
         JsonObject jsonScannedProject = new JsonObject();
         jsonScannedProject.addProperty("projectName", project.currentPackage().packageName().toString());
 
@@ -302,17 +299,16 @@ public class ScanUtils {
                 + "---------------------------------------------------");
 
         rules.forEach(rule -> {
-            outputStream.println("\t" + rule.getId() + "\t"
-                    + " | " + rule.getSeverity().toString() + "\t"
-                    + " | " + rule.getDescription());
+            outputStream.println("\t" + rule.id() + "\t"
+                    + " | " + rule.severity().toString() + "\t"
+                    + " | " + rule.description());
         });
 
         outputStream.println();
     }
 
-    public static ScanTomlFile retrieveScanTomlConfigurations(String projectPath) {
-        Path root = Path.of(projectPath);
-        Project project = ProjectLoader.loadProject(root);
+    public static ScanTomlFile retrieveScanTomlConfigurations(Project project) {
+        Path root = project.sourceRoot();
 
         if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
             // Retrieve the Ballerina.toml from the Ballerina project
@@ -413,6 +409,7 @@ public class ScanUtils {
             String path = !(properties.get("path") instanceof String) ? null :
                     properties.remove("path").toString();
 
+            // TODO: Create feature to download platform plugin JARs developed by B7a team if path is not specified
             // Check if Path exists locally, if not try to load it from remote source and cache
             if (name != null && !name.isEmpty() && path != null) {
                 if (!(new File(path).exists())) {

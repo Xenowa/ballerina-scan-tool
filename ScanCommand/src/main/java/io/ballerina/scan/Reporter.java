@@ -22,6 +22,7 @@ import io.ballerina.tools.diagnostics.Location;
 
 public interface Reporter {
 
+    // TODO: introduce feature to report issues only with numeric ID of rule (int numericID)
     void reportIssue(Document reportedDocument, Location location, Rule rule);
 }
 

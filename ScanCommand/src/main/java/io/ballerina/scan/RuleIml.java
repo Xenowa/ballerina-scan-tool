@@ -35,19 +35,19 @@ public class RuleIml implements Rule {
         this.severity = severity;
     }
 
-    public String getId() {
+    public String id() {
         return id;
     }
 
-    public int getNumericId() {
+    public int numericId() {
         return numericId;
     }
 
-    public String getDescription() {
+    public String description() {
         return description;
     }
 
-    public Severity getSeverity() {
+    public Severity severity() {
         return severity;
     }
 }

@@ -57,7 +57,7 @@ public class CustomAnalysisTask implements AnalysisTask<SyntaxNodeAnalysisContex
         if (functionBodyBlockNode.statements().isEmpty()) {
             reporter.reportIssue(document, functionBodyBlockNode.location(),
                     Objects.requireNonNull(customRules.stream()
-                            .filter(rule -> rule.getNumericId() == 109)
+                            .filter(rule -> rule.numericId() == 109)
                             .findFirst().orElse(null)));
 
             customStaticCodeAnalyzer.complete();

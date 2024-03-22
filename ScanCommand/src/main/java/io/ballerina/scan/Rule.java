@@ -22,11 +22,11 @@ package io.ballerina.scan;
 
 public interface Rule {
 
-    String getId();
+    String id();
 
-    int getNumericId();
+    int numericId();
 
-    String getDescription();
+    String description();
 
-    Severity getSeverity();
+    Severity severity();
 }

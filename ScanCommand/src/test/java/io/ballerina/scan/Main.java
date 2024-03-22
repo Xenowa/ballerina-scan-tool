@@ -19,10 +19,13 @@ package io.ballerina.scan;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.scan.utilities.ScanUtils;
 
 import java.io.PrintStream;
+import java.nio.file.Path;
 
 public class Main {
 
@@ -32,8 +35,10 @@ public class Main {
 
         System.setProperty("ballerina.home", System.getProperty("ballerina.home").split("\\\\bin")[0]);
 
-        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations("ScanCommand/" +
-                "bal-scan-tool-tester");
+        Project project =
+                ProjectLoader.loadProject(
+                        Path.of("ScanCommand" + System.getProperty("file.separator") + "bal-scan-tool-tester"));
+        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonOutput = gson.toJson(scanTomlFile, ScanTomlFile.class);

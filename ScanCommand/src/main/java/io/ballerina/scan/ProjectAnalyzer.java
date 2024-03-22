@@ -32,7 +32,6 @@ import io.ballerina.projects.PackageVersion;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.SemanticVersion;
-import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.projects.environment.EnvironmentBuilder;
 import io.ballerina.projects.environment.PackageResolver;
 import io.ballerina.projects.environment.ResolutionOptions;
@@ -69,30 +68,20 @@ public class ProjectAnalyzer {
     private final PrintStream outputStream;
 
     ProjectAnalyzer(ScanTomlFile scanTomlFile, PrintStream outputStream) {
-
         this.scanTomlFile = scanTomlFile;
         this.outputStream = outputStream;
     }
 
-    public ArrayList<Issue> analyzeProject(Path userPath) {
-
+    public ArrayList<Issue> analyzeProject(Project project) {
         // Issues store
         ArrayList<Issue> allIssues = new ArrayList<>();
         InternalScannerContext internalScannerContext = new InternalScannerContext(allIssues);
 
-        // Get access to the project API
-        Project project = ProjectLoader.loadProject(userPath);
-
-        // For single file inputs with bal scan
-        if (!userPath.toFile().isDirectory()) {
-            // if the user provided file path belongs to a build project stop the analysis
-            if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
-                return null;
-            }
-
+        if (project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
             Module tempModule = project.currentPackage().getDefaultModule();
-            DocumentId documentId = project.documentId(userPath);
-            analyzeDocument(project, tempModule, documentId, internalScannerContext);
+            tempModule.documentIds().forEach(documentId -> {
+                analyzeDocument(project, tempModule, documentId, internalScannerContext);
+            });
         } else {
             // Iterate through each module of the project
             project.currentPackage().moduleIds().forEach(moduleId -> {
@@ -143,7 +132,6 @@ public class ProjectAnalyzer {
                                  SyntaxTree syntaxTree,
                                  SemanticModel semanticModel,
                                  InternalScannerContext scannerContext) {
-
         StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentDocument,
                 syntaxTree,
                 semanticModel,
@@ -153,7 +141,6 @@ public class ProjectAnalyzer {
     }
 
     public void runCustomScans(Document currentDocument, InternalScannerContext internalScannerContext) {
-
         // Run custom scans once
         if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
             Project currentProject = currentDocument.module().project();
