@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import io.ballerina.scan.Issue;
+import io.ballerina.scan.PlatformPluginContext;
 import io.ballerina.scan.StaticCodeAnalysisPlatformPlugin;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -31,15 +32,13 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
 
-    private final List<String> arguments = new ArrayList<>();
+    private PlatformPluginContext platformPluginContext;
+    private final List<String> processBuilderArguments = new ArrayList<>();
     private final ProcessBuilder processBuilder = new ProcessBuilder();
-    private final Map<String, String> platformArgs = new HashMap<>();
     private final PrintStream outputStream = System.out;
     private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
 
@@ -49,21 +48,21 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
     }
 
     @Override
-    public void init(Map<String, String> platformArgs) {
-        this.platformArgs.putAll(platformArgs);
+    public void init(PlatformPluginContext platformPluginContext) {
+        this.platformPluginContext = platformPluginContext;
 
         // Initializing sonar-scanner cli
         if (SystemUtils.IS_OS_WINDOWS) {
-            arguments.add("cmd");
-            arguments.add("/c");
+            processBuilderArguments.add("cmd");
+            processBuilderArguments.add("/c");
         } else {
-            arguments.add("sh");
-            arguments.add("-c");
+            processBuilderArguments.add("sh");
+            processBuilderArguments.add("-c");
         }
-        arguments.add("sonar-scanner");
+        processBuilderArguments.add("sonar-scanner");
 
         // Set the property to only scan ballerina files when the scan is triggered
-        arguments.add("-Dsonar.exclusions=" +
+        processBuilderArguments.add("-Dsonar.exclusions=" +
                 "'" +
                 "**/*.java," +
                 "**/*.xml," +
@@ -83,17 +82,21 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
     public void onScan(List<Issue> issues) {
         boolean issuesSaved = saveIssues(ISSUES_FILE_PATH, issues);
 
-        if (issuesSaved) {
-            arguments.add("-DanalyzedResultsPath=" + Path.of(ISSUES_FILE_PATH).toAbsolutePath());
+        if (issuesSaved && platformPluginContext.initiatedByPlatform()) {
+            return;
+        }
 
-            String sonarProjectPropertiesPath = platformArgs.getOrDefault("sonarProjectPropertiesPath",
-                    null);
+        if (issuesSaved) {
+            processBuilderArguments.add("-DanalyzedResultsPath=" + Path.of(ISSUES_FILE_PATH).toAbsolutePath());
+
+            String sonarProjectPropertiesPath = platformPluginContext.platformArgs()
+                    .getOrDefault("sonarProjectPropertiesPath", null);
             if (sonarProjectPropertiesPath != null) {
-                arguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
+                processBuilderArguments.add("-Dproject.settings=" + sonarProjectPropertiesPath);
             }
 
             // Add all arguments to the process
-            processBuilder.command(arguments);
+            processBuilder.command(processBuilderArguments);
 
             // To redirect output of the scanning process to the initiated console
             processBuilder.inheritIO();
@@ -111,9 +114,10 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            outputStream.println("Unable to save issues to file!");
+            return;
         }
+
+        outputStream.println("Unable to save issues to file!");
     }
 
     private boolean saveIssues(String fileName, List<Issue> issues) {

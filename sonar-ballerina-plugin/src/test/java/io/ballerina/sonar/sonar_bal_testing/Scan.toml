@@ -1,0 +1,3 @@
+[[platform]]
+name = "sonarqube"
+path = "sonar-platform-plugin-1.0.jar"

@@ -18,13 +18,12 @@
 package io.ballerina.scan;
 
 import java.util.List;
-import java.util.Map;
 
 public interface StaticCodeAnalysisPlatformPlugin {
 
     String platform();
 
-    void init(Map<String, String> platformArgs);
+    void init(PlatformPluginContext platformArgs);
 
     void onScan(List<Issue> issues);
 }

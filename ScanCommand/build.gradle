@@ -32,7 +32,7 @@ plugins {
 }
 
 group = 'io.ballerina.scan'
-version = '1.0.0'
+version = "${scanToolVersion}"
 
 repositories {
     mavenLocal()
@@ -211,7 +211,7 @@ application {
 
 // Configurations to automatically build and deploy scan tool
 def packageName = "tool_scan"
-def tomlVersion = "${project.toolVersion}"
+def tomlVersion = "${project.scanToolVersion}"
 def ballerinaTomlFilePlaceHolder = new File("${projectDir}/tool-scan/Ballerina.toml")
 def balToolTomlFilePlaceHolder = new File("${projectDir}/tool-scan/BalTool.toml")
 def ballerinaTomlFile = new File("${projectDir}/tool-scan/Ballerina.toml")
@@ -225,11 +225,11 @@ def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.co
 task updateTomlFiles {
     // Update the Ballerina.toml and Dependencies.toml files
     doLast {
-        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@project.toolVersion@", project.toolVersion)
+        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@project.scanToolVersion@", project.scanToolVersion)
         newConfig = newConfig.replace("@toml.version@", tomlVersion)
         ballerinaTomlFile.text = newConfig
 
-        def newToolConfig = balToolTomlFilePlaceHolder.text.replace("@project.toolVersion@", project.toolVersion)
+        def newToolConfig = balToolTomlFilePlaceHolder.text.replace("@project.scanToolVersion@", project.scanToolVersion)
         newToolConfig = newToolConfig.replace("@toml.version@", tomlVersion)
         balToolTomlFile.text = newToolConfig
     }
@@ -242,7 +242,7 @@ task createBallerinaToolConfigFile {
         id = "scan"
         org = "ballerina"
         name = "tool_scan"
-        version = "${project.toolVersion}"
+        version = "${project.scanToolVersion}"
         active = true
     """.stripIndent()
 

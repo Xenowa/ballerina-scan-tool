@@ -19,7 +19,9 @@ package io.ballerina.scan;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.scan.utilities.ScanToolConstants;
@@ -56,8 +58,8 @@ public class ScanCommand implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--quiet"}, hidden = true)
-    private boolean quietFlag;
+    @CommandLine.Option(names = {"--platform-triggered"}, hidden = true)
+    private boolean platformTriggered;
 
     @CommandLine.Option(names = "--target-dir", description = "Target directory path")
     private String targetDir;
@@ -93,25 +95,6 @@ public class ScanCommand implements BLauncherCmd {
         this.outputStream = outputStream;
     }
 
-    private Project getProject() {
-        Path userFilePath;
-
-        // retrieve the user passed argument or the current working directory
-        if (argList.isEmpty()) {
-            userFilePath = Paths.get(System.getProperty(ProjectConstants.USER_DIR));
-        } else {
-            userFilePath = Paths.get(argList.get(0));
-        }
-
-        // Return the loaded project or the relevant error message
-        try {
-            return ProjectLoader.loadProject(userFilePath);
-        } catch (RuntimeException e) {
-            outputStream.println(e.getMessage());
-            return null;
-        }
-    }
-
     @Override
     public String getName() {
         return "scan";
@@ -129,7 +112,7 @@ public class ScanCommand implements BLauncherCmd {
     }
 
     public StringBuilder helpMessage() {
-        InputStream inputStream = ScanCommand.class.getResourceAsStream("/ballerina-scan.help");
+        InputStream inputStream = ScanCommand.class.getResourceAsStream("/cli-help/ballerina-scan.help");
         StringBuilder builder = new StringBuilder();
         if (inputStream != null) {
             try (
@@ -155,6 +138,32 @@ public class ScanCommand implements BLauncherCmd {
 
     }
 
+    private Project getProject() {
+        // retrieve the user passed argument or the current working directory
+        if (argList.isEmpty()) {
+            // Return the loaded project or the relevant error message
+            try {
+                return BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
+            } catch (RuntimeException e) {
+                outputStream.println(e.getMessage());
+                return null;
+            }
+        } else {
+            // Return the loaded project or the relevant error message
+            Path path = Paths.get(argList.get(0));
+            try {
+                if (path.toFile().isDirectory()) {
+                    return BuildProject.load(path);
+                } else {
+                    return SingleFileProject.load(Paths.get(argList.get(0)));
+                }
+            } catch (RuntimeException e) {
+                outputStream.println(e.getMessage());
+                return null;
+            }
+        }
+    }
+
     // ========================
     // Scan Command Main Method
     // ========================
@@ -174,7 +183,7 @@ public class ScanCommand implements BLauncherCmd {
             return;
         }
 
-        // TODO: Service Load compiler plugins and retrieve their rules as well
+        // TODO: Class Load json resource files that contains external rules from compiler plugins
         if (listRules) {
             ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
             return;
@@ -183,11 +192,10 @@ public class ScanCommand implements BLauncherCmd {
         outputStream.println();
         outputStream.println("Running Scans");
 
-        // Retrieve scan.toml file configurations
+        // Retrieve Scan.toml file configurations
         ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
-        // Get all rules to include
-        // From Scan.toml file
+        // Get all rules to include from Scan.toml file
         Set<ScanTomlFile.RuleToFilter> rulesToInclude = scanTomlFile.getRulesToInclude();
 
         // Convert to String list
@@ -198,8 +206,7 @@ public class ScanCommand implements BLauncherCmd {
         // Add console defined rules
         allRulesToInclude.addAll(includeRules);
 
-        // Get all rules to exclude
-        // From Scan.toml file
+        // Get all rules to exclude from Scan.toml file
         Set<ScanTomlFile.RuleToFilter> rulesToExclude = scanTomlFile.getRulesToExclude();
 
         // Convert to String list
@@ -226,98 +233,94 @@ public class ScanCommand implements BLauncherCmd {
 
         // TODO: Remove quiet flag with platformTriggered flag and move logic to platform plugin side
         // Produce analysis results locally if 'local' platform is given
-        if (platforms.contains("local") && quietFlag) {
-            // Save results to directory quietly
-            if (targetDir != null) {
-                ScanUtils.saveToDirectory(issues, project, targetDir);
-            } else {
-                ScanUtils.saveToDirectory(issues, project, null);
-            }
-
-            return; // Stop further execution after generating the report
-        } else if (platforms.contains("local")) {
+        if (platforms.contains("local") && !platformTriggered) {
             // Print results to console
             ScanUtils.printToConsole(issues);
-            if (scanReport) {
-                Path scanReportPath;
-                outputStream.println();
-                outputStream.println("Generating scan report...");
-                if (targetDir != null) {
-                    scanReportPath = ScanUtils.generateScanReport(issues, project, targetDir);
-                } else {
-                    scanReportPath = ScanUtils.generateScanReport(issues, project, null);
+
+            // Generate reports only if scan is on a build project
+            if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
+                if (scanReport) {
+                    Path scanReportPath;
+                    outputStream.println();
+                    outputStream.println("Generating scan report...");
+                    if (targetDir != null) {
+                        scanReportPath = ScanUtils.generateScanReport(issues, project, targetDir);
+                    } else {
+                        scanReportPath = ScanUtils.generateScanReport(issues, project, null);
+                    }
+                    outputStream.println();
+                    outputStream.println("View scan report at:");
+                    outputStream.println("\t" + ScanToolConstants.FILE_PROTOCOL + scanReportPath + "\n");
                 }
+
+                // Save results to directory
+                Path reportPath;
+                if (targetDir != null) {
+                    reportPath = ScanUtils.saveToDirectory(issues, project, targetDir);
+                } else {
+                    reportPath = ScanUtils.saveToDirectory(issues, project, null);
+                }
+
                 outputStream.println();
-                outputStream.println("View scan report at:");
-                outputStream.println("\t" + ScanToolConstants.FILE_PROTOCOL + scanReportPath + "\n");
+                outputStream.println("View scan results at:");
+                outputStream.println("\t" + reportPath + "\n");
             }
-
-            // Save results to directory
-            Path reportPath;
-            if (targetDir != null) {
-                reportPath = ScanUtils.saveToDirectory(issues, project, targetDir);
-            } else {
-                reportPath = ScanUtils.saveToDirectory(issues, project, null);
-            }
-
-            outputStream.println();
-            outputStream.println("View scan results at:");
-            outputStream.println("\t" + reportPath + "\n");
 
             platforms.removeAll(Collections.singleton("local"));
         }
 
         // Retrieve the platform JAR file paths and arguments from Scan.toml
         ArrayList<String> externalJarFilePaths = new ArrayList<>();
-        Map<String, Map<String, String>> platformArgs = new HashMap<>();
+        Map<String, PlatformPluginContext> platformContexts = new HashMap<>();
         scanTomlFile.getPlatforms().forEach(platform -> {
-            platforms.add(platform.getName());
-            externalJarFilePaths.add(platform.getPath());
+            if (platformTriggered && platforms.size() == 1 && platforms.contains(platform.getName())) {
+                externalJarFilePaths.add(platform.getPath());
 
-            // Map object map to string properties map
-            platformArgs.put(platform.getName(),
-                    platform.getArguments()
-                            .entrySet()
-                            .stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey, value -> value.getValue().toString())));
+                Map<String, String> platformArgs = platform.getArguments()
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, value -> value.getValue().toString()));
+
+                platformContexts.put(platform.getName(), new PlatformPluginContextIml(
+                        (HashMap<String, String>) platformArgs, platformTriggered));
+            } else {
+                platforms.add(platform.getName());
+                externalJarFilePaths.add(platform.getPath());
+
+                Map<String, String> platformArgs = platform.getArguments()
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, value -> value.getValue().toString()));
+
+                platformContexts.put(platform.getName(), new PlatformPluginContextIml(
+                        (HashMap<String, String>) platformArgs, platformTriggered));
+            }
         });
 
         URLClassLoader ucl = loadExternalJars(externalJarFilePaths);
 
         ServiceLoader<StaticCodeAnalysisPlatformPlugin> scannerPlatformPlugins = ServiceLoader.load(
-                StaticCodeAnalysisPlatformPlugin.class,
-                ucl);
+                StaticCodeAnalysisPlatformPlugin.class, ucl);
 
         // Proceed reporting to platforms if plugins exists
-        if (scannerPlatformPlugins.stream().findAny().isPresent()) {
-            scannerPlatformPlugins.forEach(staticCodeAnalysisPlatformPlugin -> {
-                if (platforms.contains(staticCodeAnalysisPlatformPlugin.platform())) {
-                    Map<String, String> platformSpecificArgs =
-                            platformArgs.get(staticCodeAnalysisPlatformPlugin.platform());
+        scannerPlatformPlugins.forEach(staticCodeAnalysisPlatformPlugin -> {
+            if (platforms.contains(staticCodeAnalysisPlatformPlugin.platform())) {
+                PlatformPluginContext platformPluginContext = platformContexts.get(
+                        staticCodeAnalysisPlatformPlugin.platform());
 
-                    // TODO: PlatformPluginContext to hold platform specific properties to be introduced to init()
-                    staticCodeAnalysisPlatformPlugin.init(platformSpecificArgs);
-                    staticCodeAnalysisPlatformPlugin.onScan(issues);
+                staticCodeAnalysisPlatformPlugin.init(platformPluginContext);
+                staticCodeAnalysisPlatformPlugin.onScan(issues);
 
-                    platforms.removeAll(Collections.singleton(staticCodeAnalysisPlatformPlugin.platform()));
-                }
-            });
-        }
+                platforms.removeAll(Collections.singleton(staticCodeAnalysisPlatformPlugin.platform()));
+            }
+        });
 
         // If there are any platforms remaining which were not found in platform plugin JARs
         platforms.forEach(remainingPlatform -> {
-            switch (remainingPlatform) {
-                case "semgrep", "codeql" -> {
-                    outputStream.println();
-                    outputStream.println(remainingPlatform + " platform support is not available yet!");
-                }
-                default -> {
-                    outputStream.println();
-                    outputStream.println("Error: The specified platform '" + remainingPlatform + "' is not available.");
-                    outputStream.println("Please ensure that the required platform plugin is installed and its path" +
-                            " is correctly specified in Scan.toml.");
-                }
-            }
+            outputStream.println();
+            outputStream.println("Error: The specified platform '" + remainingPlatform + "' is not available.");
+            outputStream.println("Please ensure that the required platform plugin is installed and its path" +
+                    " is correctly specified in Scan.toml.");
         });
     }
 

@@ -50,11 +50,11 @@ public class TestScanCommand {
         if (SystemUtils.IS_OS_WINDOWS) {
             arguments.add("cmd");
             arguments.add("/c");
-            arguments.add("cd bal-scan-tool-tester & bal scan --quiet");
+            arguments.add("cd bal-scan-tool-tester & bal scan");
         } else {
             arguments.add("sh");
             arguments.add("-c");
-            arguments.add("cd bal-scan-tool-tester ; bal scan --quiet");
+            arguments.add("cd bal-scan-tool-tester ; bal scan");
         }
 
         processBuilder.command(arguments);

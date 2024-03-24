@@ -31,9 +31,7 @@ import java.nio.file.Paths;
 
 class BallerinaSensorTest extends AbstractSensorTest {
 
-    private static final String TARGET_FOLDER = "target";
-    private static final String REPORT_FOLDER = "report";
-    private static final String ANALYZED_RESULTS_FILE = "scan_results.json";
+    private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
 
     @AfterEach
     @Test
@@ -71,11 +69,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
 
         // Assert if a results file was generated during the process
         Assertions.assertThat(Files.exists(Paths.get(context.fileSystem()
-                        .baseDir()
-                        .getPath())
-                .resolve(TARGET_FOLDER)
-                .resolve(REPORT_FOLDER)
-                .resolve(ANALYZED_RESULTS_FILE))).isEqualTo(true);
+                .baseDir().getPath()).resolve(ISSUES_FILE_PATH))).isEqualTo(true);
     }
 
     private BallerinaSensor sensor(CheckFactory checkFactory) {

@@ -1,0 +1,28 @@
+[
+  {
+    "startLine": 0,
+    "startLineOffset": 25,
+    "endLine": 0,
+    "endLineOffset": 93,
+    "ruleID": "S107",
+    "message": "Functions should not have too many parameters!",
+    "issueType": "CORE_ISSUE",
+    "issueSeverity": "CODE_SMELL",
+    "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal",
+    "reportedSource": "ballerina\\tool_scan"
+  },
+  {
+    "startLine": 1,
+    "startLineOffset": 24,
+    "endLine": 1,
+    "endLineOffset": 44,
+    "ruleID": "S108",
+    "message": "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
+    "issueType": "CORE_ISSUE",
+    "issueSeverity": "CODE_SMELL",
+    "fileName": "sonar_bal_testing.panicChecker/panicChecker.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal",
+    "reportedSource": "ballerina\\tool_scan"
+  }
+]

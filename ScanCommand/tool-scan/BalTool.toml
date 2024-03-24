@@ -2,4 +2,4 @@
 id = "scan" # need to be same as picoclie name in java file
 
 [[dependency]]
-path = "../build/libs/ScanCommand-1.0.0.jar"
+path = "../build/libs/ScanCommand-0.1.0.jar"

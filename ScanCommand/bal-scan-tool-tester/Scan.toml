@@ -2,7 +2,6 @@
 #[[platform]]
 #name = "sonarqube"
 #path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonar-platform-plugin-1.0.jar"
-#sonarProjectPropertiesPath = "sonar-project.properties"
 
 # TODO: Central repo and Local repo plugins should be definable as
 #   Local repository plugins

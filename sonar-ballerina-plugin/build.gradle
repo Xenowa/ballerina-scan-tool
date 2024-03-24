@@ -98,6 +98,9 @@ dependencies {
     // Required for determining the platform a java process is running on
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
+    // For building platform plugin before running tests
+    testImplementation project(":sonar-platform-plugin")
+
     // Required dependencies for testing the plugin before building and deploying
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.8.2'
@@ -226,6 +229,20 @@ spotbugsMain.finalizedBy validateSpotbugs
 // =======================================
 // Required to run tests relevant to the plugin
 tasks.test {
+    // For copying the platform plugin JAR into sonar-ballerina module
+    doFirst {
+        def targetJar = file("/src/test/java/io/ballerina/sonar/sonar_bal_testing/sonar-platform-plugin-1.0.jar")
+        if (!targetJar.exists()) {
+            // Replace "build" with the actual build task name if different
+            def platformPluginJar = project(":sonar-platform-plugin").buildDir.toPath()
+                    .resolve("libs/sonar-platform-plugin-1.0.jar").toFile()
+            copy {
+                from platformPluginJar
+                into "/src/test/java/io/ballerina/sonar/sonar_bal_testing"
+            }
+        }
+    }
+
     useJUnitPlatform()
 }
 

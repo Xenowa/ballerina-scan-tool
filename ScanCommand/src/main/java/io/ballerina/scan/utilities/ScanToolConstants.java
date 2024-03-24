@@ -21,6 +21,7 @@ public class ScanToolConstants {
 
     // Internal and external issues constants
     public static final String MAIN_BAL = "main.bal";
+    public static final String SCAN_COMMAND = "scan";
 
     // Report generation constants
     public static final String RESULTS_HTML_FILE = "index.html";

@@ -53,7 +53,7 @@ class BallerinaSensor implements Sensor {
 
     private static final String TARGET_FOLDER = "target";
     private static final String REPORT_FOLDER = "report";
-    private static final String ANALYZED_RESULTS_FILE = "scan_results.json";
+    private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
     private static final String CORE_ISSUE = "CORE_ISSUE";
     private static final String EXTERNAL_ISSUE = "EXTERNAL_ISSUE";
     private static final Logger LOG = Loggers.get(BallerinaSensor.class);
@@ -139,7 +139,7 @@ class BallerinaSensor implements Sensor {
             arguments.add("-c");
         }
 
-        arguments.add("bal scan --quiet");
+        arguments.add("bal scan --platform-triggered --platforms=sonarqube");
 
         fileScan.command(arguments);
 
@@ -156,9 +156,7 @@ class BallerinaSensor implements Sensor {
             // If file creation was successful proceed reporting
             if (exitCode == 0) {
                 String analyzedResultsFilePath = Paths.get(context.fileSystem().baseDir().getPath())
-                        .resolve(TARGET_FOLDER)
-                        .resolve(REPORT_FOLDER)
-                        .resolve(ANALYZED_RESULTS_FILE)
+                        .resolve(ISSUES_FILE_PATH)
                         .toString();
                 String fileContent = getFileContent(analyzedResultsFilePath);
                 reportFileContent(context, pathAndInputFiles, fileContent);

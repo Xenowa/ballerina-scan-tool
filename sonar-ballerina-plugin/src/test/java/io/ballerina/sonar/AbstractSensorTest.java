@@ -48,21 +48,15 @@ public abstract class AbstractSensorTest {
     @BeforeEach
     public void setup() throws IOException {
         // Pointing the testing directory
-        baseDir = Path.of(System.getProperty("user.dir")
-                + "/"
+        baseDir = Path.of(System.getProperty("user.dir") + "/"
                 + "src/test/java/io/ballerina/sonar/sonar_bal_testing");
 
         // Setting the context for the testing directory
         context = SensorContextTester.create(baseDir);
 
         FileLinesContext fileLinesContext = Mockito.mock(FileLinesContext.class);
-        Mockito.when(
-                fileLinesContextFactory.createFor(
-                        ArgumentMatchers.any(
-                                InputFile.class
-                        )
-                )
-        ).thenReturn(fileLinesContext);
+        Mockito.when(fileLinesContextFactory.createFor(ArgumentMatchers.any(InputFile.class)))
+                .thenReturn(fileLinesContext);
     }
 
     protected CheckFactory checkFactory(String... ruleKeys) {
