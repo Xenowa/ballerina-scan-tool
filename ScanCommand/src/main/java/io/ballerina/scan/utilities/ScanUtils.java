@@ -52,13 +52,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPORT_DIR_NAME;
 import static io.ballerina.scan.utilities.ScanToolConstants.ANALYZER_TABLE;
+import static io.ballerina.scan.utilities.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
 import static io.ballerina.scan.utilities.ScanToolConstants.JAR_PREDICATE;
 import static io.ballerina.scan.utilities.ScanToolConstants.PLATFORM_TABLE;
 import static io.ballerina.scan.utilities.ScanToolConstants.RESULTS_JSON_FILE;
@@ -437,32 +438,27 @@ public class ScanUtils {
                     properties.get("org").toString();
             String name = !(properties.get("name") instanceof String) ? null :
                     properties.get("name").toString();
-            String version = !(properties.get("version") instanceof String) ? null :
-                    properties.get("version").toString();
+
+            Pattern versionPattern = Pattern.compile(CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN);
+            Object providedVersion = properties.get("version");
+            String version = (providedVersion instanceof String) &&
+                    versionPattern.matcher(providedVersion.toString()).matches() ? providedVersion.toString() : null;
             String repository = !(properties.get("repository") instanceof String) ? null :
                     properties.get("repository").toString();
 
             // TODO: Identify way to remove version and load the plugins
-            if (org != null && !org.isEmpty() &&
-                    name != null && !name.isEmpty() &&
-                    version != null && !version.isEmpty()) {
-                ScanTomlFile.Plugin plugin;
+            if (org != null && !org.isEmpty() && name != null && !name.isEmpty()) {
+                ScanTomlFile.Analyzer analyzer;
 
-                if (repository != null) {
-                    plugin = new ScanTomlFile.Plugin(org,
-                            name,
-                            version,
-                            repository.equals(LOCAL_REPOSITORY_NAME) ||
-                                    repository.equals(CENTRAL_REPOSITORY_CACHE_NAME) ?
-                                    repository : null);
+                // If repository is specified, check for version
+                if (repository != null && repository.equals(LOCAL_REPOSITORY_NAME) && version != null &&
+                        !version.isEmpty()) {
+                    analyzer = new ScanTomlFile.Analyzer(org, name, version, repository);
                 } else {
-                    plugin = new ScanTomlFile.Plugin(org,
-                            name,
-                            version,
-                            null);
+                    analyzer = new ScanTomlFile.Analyzer(org, name, version, null);
                 }
 
-                scanTomlFile.setPlugin(plugin);
+                scanTomlFile.setAnalyzer(analyzer);
             }
         });
 

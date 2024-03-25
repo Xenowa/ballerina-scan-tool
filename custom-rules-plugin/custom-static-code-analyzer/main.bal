@@ -16,5 +16,5 @@
 
 import ballerina/io;
 public function main() {
-    io:println("Ballerina custom static code analyzer compiler plugin");
+    io:println("Ballerina custom static code analyzer compiler analyzer");
 }

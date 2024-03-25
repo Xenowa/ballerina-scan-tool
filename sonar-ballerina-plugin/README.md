@@ -1,6 +1,6 @@
 # SonarQube Plugin
 
-## Other ways to create a SonarQube plugin
+## Other ways to create a SonarQube analyzer
 
 - Using SSLR (SonarSource Language Recognizer)
 
@@ -15,7 +15,7 @@
 
 - Using SonarQube Java Plugin API
 
-    - [SonarQube Java Plugin API documentation](https://docs.sonarsource.com/sonarqube/9.9/extension-guide/developing-a-plugin/plugin-basics/)
+    - [SonarQube Java Plugin API documentation](https://docs.sonarsource.com/sonarqube/9.9/extension-guide/developing-a-analyzer/analyzer-basics/)
     - [SonarQube Kotlin Plugin](https://github.com/SonarSource/SonarJS)
     - [SonarQube JavaScript Plugin](https://github.com/SonarSource/SonarJS)
 
@@ -23,9 +23,9 @@
 
 Steps will be added soon...
 
-## SonarQube plugin integration steps
+## SonarQube analyzer integration steps
 
-1. Run the gradle command to build a jar of the plugin
+1. Run the gradle command to build a jar of the analyzer
 
 - With tests
 
@@ -42,7 +42,7 @@ gradlew clean build -x check -x test
 2. The generated jar file can be found in the libs directory as follows:
 
 ```
-📦sonar-ballerina-plugin
+📦sonar-ballerina-analyzer
  ┣ 📂.gradle
  ┣ 📂.idea
  ┗ 📂build

@@ -25,7 +25,7 @@ import java.util.Set;
 public class ScanTomlFile {
 
     private final ArrayList<Platform> platforms = new ArrayList<>();
-    private final Set<Plugin> plugins = new HashSet<>();
+    private final Set<Analyzer> analyzers = new HashSet<>();
     private final Set<RuleToFilter> rulesToInclude = new HashSet<>();
     private final Set<RuleToFilter> rulesToExclude = new HashSet<>();
 
@@ -37,12 +37,12 @@ public class ScanTomlFile {
         return platforms;
     }
 
-    public void setPlugin(Plugin plugin) {
-        plugins.add(plugin);
+    public void setAnalyzer(Analyzer analyzer) {
+        analyzers.add(analyzer);
     }
 
-    public Set<Plugin> getPlugins() {
-        return plugins;
+    public Set<Analyzer> getAnalyzers() {
+        return analyzers;
     }
 
     public void setRuleToInclude(RuleToFilter rule) {
@@ -87,14 +87,14 @@ public class ScanTomlFile {
         }
     }
 
-    public static class Plugin {
+    public static class Analyzer {
 
         private String org;
         private String name;
         private String version;
         private String repository;
 
-        public Plugin(String org, String name, String version, String repository) {
+        public Analyzer(String org, String name, String version, String repository) {
 
             this.org = org;
             this.name = name;

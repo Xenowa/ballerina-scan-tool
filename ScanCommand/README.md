@@ -22,7 +22,7 @@ bal scan [--platforms=<option>] [<ballerina-file/ballerina-build-project-folder>
 
 ## Features
 
-- Generate a SonarQube plugin API analysis output
+- Generate a SonarQube analyzer API analysis output
 - Generate a CodeQL analysis output (coming soon...)
 - Generate a SemGrep analysis output (coming soon...)
 

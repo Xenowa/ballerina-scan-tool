@@ -24,40 +24,16 @@ import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
-import io.ballerina.projects.Package;
-import io.ballerina.projects.PackageDescriptor;
-import io.ballerina.projects.PackageName;
-import io.ballerina.projects.PackageOrg;
-import io.ballerina.projects.PackageVersion;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
-import io.ballerina.projects.SemanticVersion;
-import io.ballerina.projects.environment.EnvironmentBuilder;
-import io.ballerina.projects.environment.PackageResolver;
-import io.ballerina.projects.environment.ResolutionOptions;
-import io.ballerina.projects.environment.ResolutionRequest;
-import io.ballerina.projects.environment.ResolutionResponse;
-import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.tools.text.LineRange;
 
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
-import static io.ballerina.projects.util.ProjectConstants.CENTRAL_REPOSITORY_CACHE_NAME;
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
-import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
-import static io.ballerina.projects.util.ProjectConstants.REPOSITORIES_DIR;
-import static io.ballerina.projects.util.ProjectConstants.REPO_BALA_DIR_NAME;
-import static io.ballerina.scan.utilities.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
 import static io.ballerina.scan.utilities.ScanToolConstants.MAIN_BAL;
 import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
 import static io.ballerina.scan.utilities.ScanToolConstants.USE_IMPORT_AS_SERVICE;
@@ -143,52 +119,52 @@ public class ProjectAnalyzer {
     public void runCustomScans(Document currentDocument, InternalScannerContext internalScannerContext) {
         // Run custom scans once
         if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
-            Project currentProject = currentDocument.module().project();
-            // TODO: External Scanner context will be used after property bag feature is introduced by project API
-            //  External issues store
-            //  ArrayList<Issue> externalIssues = new ArrayList<>();
-            //  ScannerContext scannerContext = new ScannerContext(externalIssues);
-
-            // Checking if compiler plugins provided in Scan.toml exists (This might not be mandatory)
-            Map<String, ScanTomlFile.Plugin> compilerPluginImports = new HashMap<>();
-            Pattern versionPattern = Pattern.compile(CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN);
-            scanTomlFile.getPlugins().forEach(plugin -> {
-                if (versionPattern.matcher(plugin.getVersion()).matches()) {
-                    SemanticVersion version = SemanticVersion.from(plugin.getVersion());
-                    compilerPluginImports.putAll(resolvePackage(plugin, version));
-                }
-            });
-
-            // Converting compiler plugins as imports and dependencies
+            // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
             StringBuilder newImports = new StringBuilder();
             StringBuilder tomlDependencies = new StringBuilder();
             AtomicInteger importCounter = new AtomicInteger(0);
-            compilerPluginImports.forEach((pluginImport, plugin) -> {
-                newImports.append(pluginImport).append("\n");
-                importCounter.getAndIncrement();
-                if (plugin.getRepository() != null && plugin.getRepository().equals(LOCAL_REPOSITORY_NAME)) {
+
+            scanTomlFile.getAnalyzers().forEach(analyzer -> {
+                // Generate analyzer as import
+                String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
+                        + USE_IMPORT_AS_SERVICE;
+                newImports.append(analyzerImport).append("\n");
+
+                // Generate toml dependencies if version provided
+                if (analyzer.getVersion() != null) {
                     tomlDependencies.append("\n");
                     tomlDependencies.append("[[dependency]]" + "\n");
-                    tomlDependencies.append("version='" + plugin.getVersion() + "'\n");
-                    tomlDependencies.append("org='" + plugin.getOrg() + "'\n");
-                    tomlDependencies.append("name='" + plugin.getName() + "'\n");
-                    tomlDependencies.append("repository='" + plugin.getRepository() + "'\n");
+                    tomlDependencies.append("org='" + analyzer.getOrg() + "'\n");
+                    tomlDependencies.append("name='" + analyzer.getName() + "'\n");
+                    tomlDependencies.append("version='" + analyzer.getVersion() + "'\n");
+
+                    if (analyzer.getRepository() != null) {
+                        tomlDependencies.append("repository='" + analyzer.getRepository() + "'\n");
+                    }
+
                     tomlDependencies.append("\n");
                 }
+
+                // Increment the imports counter
+                importCounter.getAndIncrement();
             });
 
             // Generating imports
-
-            // Since there can multiple files in default module
             String documentContent = currentDocument.textDocument().toString();
             currentDocument.modify().withContent(newImports + documentContent).apply();
 
             // Generating dependencies
+            Project currentProject = currentDocument.module().project();
             BallerinaToml ballerinaToml = currentProject.currentPackage().ballerinaToml().orElse(null);
             if (ballerinaToml != null) {
                 documentContent = ballerinaToml.tomlDocument().textDocument().toString();
                 ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
             }
+
+            // TODO: External Scanner context will be used after property bag feature is introduced by project API
+            //  External issues store
+            //  ArrayList<Issue> externalIssues = new ArrayList<>();
+            //  ScannerContext scannerContext = new ScannerContext(externalIssues);
 
             // Engage custom compiler plugins through module compilation
             currentProject.currentPackage().getCompilation();
@@ -232,74 +208,5 @@ public class ProjectAnalyzer {
                 outputStream.println("Running custom scanner plugins...");
             }
         }
-    }
-
-    private Map<String, ScanTomlFile.Plugin> resolvePackage(ScanTomlFile.Plugin plugin, SemanticVersion version) {
-
-        Map<String, ScanTomlFile.Plugin> importAndPlugin = new HashMap<>();
-        Path localRepoPath = ProjectUtils.createAndGetHomeReposPath();
-        Path centralCachePath = localRepoPath.resolve(REPOSITORIES_DIR)
-                .resolve(CENTRAL_REPOSITORY_CACHE_NAME);
-
-        // Avoids pulling from central if user has provided the repository as local
-        if (plugin.getRepository() != null && plugin.getRepository().equals(LOCAL_REPOSITORY_NAME)) {
-            Path packagePathInLocalRepo = localRepoPath.resolve(REPOSITORIES_DIR)
-                    .resolve(LOCAL_REPOSITORY_NAME)
-                    .resolve(REPO_BALA_DIR_NAME)
-                    .resolve(plugin.getOrg())
-                    .resolve(plugin.getName())
-                    .resolve(version.toString());
-            if (Files.exists(packagePathInLocalRepo) && Files.isDirectory(packagePathInLocalRepo)) {
-                importAndPlugin.put(IMPORT_PREFIX
-                        + plugin.getOrg()
-                        + PATH_SEPARATOR
-                        + plugin.getName()
-                        + USE_IMPORT_AS_SERVICE, plugin);
-                return importAndPlugin;
-            }
-        }
-
-        // Avoids pulling from central if the package version already available in the local central cache.
-        Path packagePathInCentralCache = centralCachePath.resolve(plugin.getOrg())
-                .resolve(plugin.getName())
-                .resolve(version.toString());
-        if (Files.exists(packagePathInCentralCache) && Files.isDirectory(packagePathInCentralCache)) {
-            importAndPlugin.put(IMPORT_PREFIX
-                    + plugin.getOrg()
-                    + PATH_SEPARATOR
-                    + plugin.getName()
-                    + USE_IMPORT_AS_SERVICE, plugin);
-            return importAndPlugin;
-        }
-
-        return resolveBalaPath(plugin, version);
-    }
-
-    private Map<String, ScanTomlFile.Plugin> resolveBalaPath(ScanTomlFile.Plugin plugin, SemanticVersion version) {
-
-        Map<String, ScanTomlFile.Plugin> importAndPlugin = new HashMap<>();
-        PackageDescriptor packageDescriptor = PackageDescriptor.from(PackageOrg.from(plugin.getOrg()),
-                PackageName.from(plugin.getName()),
-                PackageVersion.from(version), LOCAL_REPOSITORY_NAME);
-        ResolutionRequest resolutionRequest = ResolutionRequest.from(packageDescriptor);
-
-        PackageResolver packageResolver = EnvironmentBuilder.buildDefault().getService(PackageResolver.class);
-        Collection<ResolutionResponse> resolutionResponses = packageResolver.resolvePackages(
-                Collections.singletonList(resolutionRequest), ResolutionOptions.builder().setOffline(false).build());
-        ResolutionResponse resolutionResponse = resolutionResponses.stream().findFirst().orElse(null);
-
-        if (resolutionResponse != null &&
-                resolutionResponse.resolutionStatus().equals(ResolutionResponse.ResolutionStatus.RESOLVED)) {
-            Package resolvedPackage = resolutionResponse.resolvedPackage();
-            if (resolvedPackage != null) {
-                importAndPlugin.put(IMPORT_PREFIX
-                        + plugin.getOrg()
-                        + PATH_SEPARATOR
-                        + plugin.getName()
-                        + USE_IMPORT_AS_SERVICE, plugin);
-                return importAndPlugin;
-            }
-        }
-        return importAndPlugin;
     }
 }

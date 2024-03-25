@@ -2,9 +2,9 @@
 
 SonarQube plugins allow developers to provide static code analysis support for new languages.
 
-This plugin consist of 2 parts to function, the bal scan tool and the SonarQube ballerina plugin.
+This analyzer consist of 2 parts to function, the bal scan tool and the SonarQube ballerina analyzer.
 The SonarQube Ballerina Plugin is dependent on the bal scan tool, as the scanner is responsible
-for performing the static code analysis for ballerina projects and the plugin is responsible for
+for performing the static code analysis for ballerina projects and the analyzer is responsible for
 aggregating and reporting the results on the scan to the SonarQube server.
 
 ## Prerequisites
@@ -21,6 +21,6 @@ The following software should be installed locally
 1. Create the bal scan tool by following the
    instructions [here](https://github.com/Xenowa/ballerina-scan-tool/tree/main/ScanCommand)
 2. Create the SonarQube Ballerina Plugin by following the
-   instructions [here](https://github.com/Xenowa/ballerina-scan-tool/tree/main/sonar-ballerina-plugin)
+   instructions [here](https://github.com/Xenowa/ballerina-scan-tool/tree/main/sonar-ballerina-analyzer)
 3. Run SonarQube server instance
 4. Initialize a sonar scan in a project, [example](https://github.com/SonarDance/SonarQube-scans-testing)
