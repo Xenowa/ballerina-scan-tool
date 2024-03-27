@@ -212,8 +212,8 @@ application {
 // Configurations to automatically build and deploy scan tool
 def packageName = "tool_scan"
 def tomlVersion = "${project.scanToolVersion}"
-def ballerinaTomlFilePlaceHolder = new File("${projectDir}/tool-scan/Ballerina.toml")
-def balToolTomlFilePlaceHolder = new File("${projectDir}/tool-scan/BalTool.toml")
+def ballerinaTomlFilePlaceHolder = new File("${rootDir}/build-config/resources/Ballerina.toml")
+def balToolTomlFilePlaceHolder = new File("${rootDir}/build-config/resources/BalTool.toml")
 def ballerinaTomlFile = new File("${projectDir}/tool-scan/Ballerina.toml")
 def balToolTomlFile = new File("${projectDir}/tool-scan/BalTool.toml")
 def balerinaCentralDir = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
@@ -223,14 +223,13 @@ def ballerinaToolConfigDir = System.getProperty("user.home") + "/.ballerina/.con
 def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.config/bal-tools.toml"
 
 task updateTomlFiles {
-    // Update the Ballerina.toml and Dependencies.toml files
+    // Update the Ballerina.toml and BalTool.toml files
     doLast {
-        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@project.scanToolVersion@", project.scanToolVersion)
+        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@toml.distribution@", project.ballerinaVersion)
         newConfig = newConfig.replace("@toml.version@", tomlVersion)
         ballerinaTomlFile.text = newConfig
 
-        def newToolConfig = balToolTomlFilePlaceHolder.text.replace("@project.scanToolVersion@", project.scanToolVersion)
-        newToolConfig = newToolConfig.replace("@toml.version@", tomlVersion)
+        def newToolConfig = balToolTomlFilePlaceHolder.text.replace("@toml.version@", tomlVersion)
         balToolTomlFile.text = newToolConfig
     }
 }
@@ -257,12 +256,19 @@ task createBallerinaToolConfigFile {
         def tomlFile = file(ballerinaToolConfigToml)
         def tomlFileContent = tomlFile.text
 
-        // Append tool to toml file if it does not exist
-        if (!tomlFileContent.contains(configFileContent)) {
+        // Regex to identify existing scan tool entry
+        def entryRegex = /\n\[\[tool]]\nid = "scan"\norg = "ballerina"\nname = "tool_scan"\nversion = ".+"\nactive = true/
+        def match = tomlFileContent.find(entryRegex)
+
+        if (match) {
+            // Replace existing entry with new configuration
+            tomlFileContent = tomlFileContent.replaceFirst(entryRegex, configFileContent)
+            tomlFile.text = tomlFileContent
+            println("Successfully updated bal-tools.toml with new version of scan tool")
+        } else {
+            // add scan tool entry
             tomlFile << "\n" + configFileContent
             println("Successfully created the bal-tools.toml file in the .ballerina/.config directory")
-        } else {
-            println("bal scan tool already exists!")
         }
     }
 }
@@ -301,6 +307,7 @@ task buildScanTool {
     }
 }
 
+createBallerinaToolConfigFile.dependsOn updateTomlFiles
 buildScanTool.dependsOn createBallerinaToolConfigFile
 
 build {

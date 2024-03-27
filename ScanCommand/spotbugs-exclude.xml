@@ -1,9 +1,5 @@
 <FindBugsFilter>
     <Match>
-        <Class name="io.ballerina.scan.ScanCommand"/>
-        <Bug pattern="EI_EXPOSE_REP2"/>
-    </Match>
-    <Match>
         <Class name="io.ballerina.scan.IssueIml"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>

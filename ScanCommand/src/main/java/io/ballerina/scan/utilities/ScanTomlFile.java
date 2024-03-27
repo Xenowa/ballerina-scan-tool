@@ -19,12 +19,13 @@ package io.ballerina.scan.utilities;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ScanTomlFile {
 
-    private final ArrayList<Platform> platforms = new ArrayList<>();
+    private final List<Platform> platforms = new ArrayList<>();
     private final Set<Analyzer> analyzers = new HashSet<>();
     private final Set<RuleToFilter> rulesToInclude = new HashSet<>();
     private final Set<RuleToFilter> rulesToExclude = new HashSet<>();
@@ -33,7 +34,7 @@ public class ScanTomlFile {
         platforms.add(platform);
     }
 
-    public ArrayList<Platform> getPlatforms() {
+    public List<Platform> getPlatforms() {
         return platforms;
     }
 

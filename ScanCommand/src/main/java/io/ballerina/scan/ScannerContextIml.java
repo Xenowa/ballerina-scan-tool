@@ -17,13 +17,13 @@
 
 package io.ballerina.scan;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ScannerContextIml implements ScannerContext {
 
     private final ReporterIml reporter;
 
-    ScannerContextIml(ArrayList<Issue> issues) {
+    ScannerContextIml(List<Issue> issues) {
         this.reporter = new ReporterIml(issues);
     }
 
@@ -33,7 +33,7 @@ public class ScannerContextIml implements ScannerContext {
     }
 
     // TODO: Internal method To be removed ones project API fix is in effect
-    synchronized ArrayList<Issue> getAllIssues() {
+    synchronized List<Issue> getAllIssues() {
         return reporter.getIssues();
     }
 

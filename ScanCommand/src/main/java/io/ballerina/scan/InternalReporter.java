@@ -23,13 +23,13 @@ import io.ballerina.tools.diagnostics.Location;
 import io.ballerina.tools.text.LineRange;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.List;
 
 public class InternalReporter {
 
-    private final ArrayList<Issue> issues;
+    private final List<Issue> issues;
 
-    InternalReporter(ArrayList<Issue> issues) {
+    InternalReporter(List<Issue> issues) {
         this.issues = issues;
     }
 
@@ -64,7 +64,7 @@ public class InternalReporter {
         issues.add(issue);
     }
 
-    void addExternalIssues(ArrayList<Issue> externalIssues) {
+    void addExternalIssues(List<Issue> externalIssues) {
 
         issues.addAll(externalIssues);
     }

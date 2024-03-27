@@ -73,11 +73,6 @@ public class IssueIml implements Issue {
     }
 
     @Override
-    public String getMessage() {
-        return message;
-    }
-
-    @Override
     public IssueType getIssueType() {
         return issueType;
     }
@@ -87,6 +82,10 @@ public class IssueIml implements Issue {
         return issueSeverity;
     }
 
+    public String getMessage() {
+        return message;
+    }
+    
     public String getReportedFilePath() {
         return reportedFilePath;
     }

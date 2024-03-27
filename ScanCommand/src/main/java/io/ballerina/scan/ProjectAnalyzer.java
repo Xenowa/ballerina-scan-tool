@@ -31,6 +31,7 @@ import io.ballerina.tools.text.LineRange;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
@@ -48,9 +49,9 @@ public class ProjectAnalyzer {
         this.outputStream = outputStream;
     }
 
-    public ArrayList<Issue> analyzeProject(Project project) {
+    public List<Issue> analyzeProject(Project project) {
         // Issues store
-        ArrayList<Issue> allIssues = new ArrayList<>();
+        List<Issue> allIssues = new ArrayList<>();
         InternalScannerContext internalScannerContext = new InternalScannerContext(allIssues);
 
         if (project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
@@ -163,19 +164,19 @@ public class ProjectAnalyzer {
 
             // TODO: External Scanner context will be used after property bag feature is introduced by project API
             //  External issues store
-            //  ArrayList<Issue> externalIssues = new ArrayList<>();
+            //  List<Issue> externalIssues = new ArrayList<>();
             //  ScannerContext scannerContext = new ScannerContext(externalIssues);
 
             // Engage custom compiler plugins through module compilation
             currentProject.currentPackage().getCompilation();
 
             // Retrieve External issues
-            ArrayList<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
+            List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
 
             if (externalIssues != null) {
                 // Filter main bal file which compiler plugin imports were generated and remove imported lines from
                 // reported issues and create a modified external issues array
-                ArrayList<Issue> modifiedExternalIssues = new ArrayList<>();
+                List<Issue> modifiedExternalIssues = new ArrayList<>();
                 externalIssues.forEach(externalIssue -> {
                     // Cast the external issue to its implementation to retrieve additional getters
                     IssueIml externalIssueIml = (IssueIml) externalIssue;

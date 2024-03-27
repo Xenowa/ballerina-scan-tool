@@ -58,7 +58,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
         }
 
         // TODO: To be created from the scan tool side ones project API fix is in effect
-        ArrayList<Issue> externalIssues = new ArrayList<>();
+        List<Issue> externalIssues = new ArrayList<>();
         currentScannerContext = new ScannerContextIml(externalIssues);
         return currentScannerContext;
     }
@@ -66,7 +66,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
     // TODO: To be removed ones project API fix is in effect
     public synchronized void complete() {
         if (currentScannerContext != null) {
-            ArrayList<Issue> existingIssues = currentScannerContext.getAllIssues();
+            List<Issue> existingIssues = currentScannerContext.getAllIssues();
 
             if (!existingIssues.isEmpty()) {
                 try {
@@ -74,7 +74,7 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
                         // Read the context from file
                         Reader fileReader = new FileReader(SERIALIZE_CONTEXT_FILE, StandardCharsets.UTF_8);
                         JsonReader reader = new JsonReader(fileReader);
-                        ArrayList<Issue> deserializedExternalIssues = gson.fromJson(reader, listOfIssuesType);
+                        List<Issue> deserializedExternalIssues = gson.fromJson(reader, listOfIssuesType);
                         reader.close();
 
                         Writer fileWriter = new FileWriter(SERIALIZE_CONTEXT_FILE, StandardCharsets.UTF_8);
@@ -103,13 +103,13 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
 
     // TODO: To be removed ones project API fix is in effect
     // Retrieve the deserialized context from file
-    static ArrayList<Issue> getIssues() {
+    static List<Issue> getIssues() {
         Path serializedContextFilePath = Path.of(SERIALIZE_CONTEXT_FILE);
         if (Files.exists(serializedContextFilePath)) {
             try {
                 Reader fileReader = new FileReader(SERIALIZE_CONTEXT_FILE, StandardCharsets.UTF_8);
                 JsonReader reader = new JsonReader(fileReader);
-                ArrayList<Issue> externalIssues = gson.fromJson(reader, listOfIssuesType);
+                List<Issue> externalIssues = gson.fromJson(reader, listOfIssuesType);
                 reader.close();
 
                 // delete the file after getting the context

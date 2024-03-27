@@ -24,15 +24,16 @@ import io.ballerina.tools.text.LineRange;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_ORG;
 
 public class ReporterIml implements Reporter {
 
-    private final ArrayList<Issue> issues;
+    private final List<Issue> issues;
 
-    ReporterIml(ArrayList<Issue> issues) {
+    ReporterIml(List<Issue> issues) {
         this.issues = issues;
     }
 
@@ -77,8 +78,8 @@ public class ReporterIml implements Reporter {
     }
 
     // TODO: Internal method to be removed once property bag is introduced by project API
-    ArrayList<Issue> getIssues() {
-        ArrayList<Issue> existingIssues = new ArrayList<>(issues);
+    List<Issue> getIssues() {
+        List<Issue> existingIssues = new ArrayList<>(issues);
         issues.clear();
         return existingIssues;
     }

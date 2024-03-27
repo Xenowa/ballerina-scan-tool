@@ -17,13 +17,13 @@
 
 package io.ballerina.scan;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class InternalScannerContext {
 
     private final InternalReporter reporter;
 
-    InternalScannerContext(ArrayList<Issue> issues) {
+    InternalScannerContext(List<Issue> issues) {
         this.reporter = new InternalReporter(issues);
     }
 

@@ -28,8 +28,6 @@ public interface Issue {
 
     String getRuleID();
 
-    String getMessage();
-
     IssueType getIssueType();
 
     Severity getIssueSeverity();

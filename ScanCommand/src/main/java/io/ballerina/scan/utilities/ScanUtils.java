@@ -48,7 +48,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,13 +76,13 @@ public class ScanUtils {
 
     }
 
-    public static void printToConsole(ArrayList<Issue> issues) {
+    public static void printToConsole(List<Issue> issues) {
         String jsonOutput = convertIssuesToJsonString(issues);
         outputStream.println();
         outputStream.println(jsonOutput);
     }
 
-    public static String convertIssuesToJsonString(ArrayList<Issue> issues) {
+    public static String convertIssuesToJsonString(List<Issue> issues) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         return gson.toJson(issuesAsJson);
@@ -125,7 +124,7 @@ public class ScanUtils {
         return target;
     }
 
-    public static Path saveToDirectory(ArrayList<Issue> issues, Project project, String directoryName) {
+    public static Path saveToDirectory(List<Issue> issues, Project project, String directoryName) {
         // Create folder to save issues to
         Target target = getTargetPath(project, directoryName);
 
@@ -157,7 +156,7 @@ public class ScanUtils {
     }
 
     // Save scan results in the HTML template
-    public static Path generateScanReport(ArrayList<Issue> issues, Project project, String directoryName) {
+    public static Path generateScanReport(List<Issue> issues, Project project, String directoryName) {
         // Convert existing issues to the structure required by the scan report
         JsonObject jsonScannedProject = new JsonObject();
         jsonScannedProject.addProperty("projectName", project.currentPackage().packageName().toString());

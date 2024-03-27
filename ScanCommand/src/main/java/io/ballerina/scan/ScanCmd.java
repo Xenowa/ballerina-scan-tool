@@ -50,7 +50,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
-public class ScanCommand implements BLauncherCmd {
+public class ScanCmd implements BLauncherCmd {
 
     private final PrintStream outputStream;
     @CommandLine.Parameters(description = "Program arguments")
@@ -87,12 +87,8 @@ public class ScanCommand implements BLauncherCmd {
             defaultValue = "local")
     private List<String> platforms = new ArrayList<>();
 
-    public ScanCommand() {
+    public ScanCmd() {
         this.outputStream = System.out;
-    }
-
-    public ScanCommand(PrintStream outputStream) {
-        this.outputStream = outputStream;
     }
 
     @Override
@@ -112,7 +108,7 @@ public class ScanCommand implements BLauncherCmd {
     }
 
     public StringBuilder helpMessage() {
-        InputStream inputStream = ScanCommand.class.getResourceAsStream("/cli-help/ballerina-scan.help");
+        InputStream inputStream = ScanCmd.class.getResourceAsStream("/cli-help/ballerina-scan.help");
         StringBuilder builder = new StringBuilder();
         if (inputStream != null) {
             try (
@@ -190,7 +186,7 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         outputStream.println();
-        outputStream.println("Running Scans");
+        outputStream.println("Running Scans...");
 
         // Retrieve Scan.toml file configurations
         ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
@@ -219,7 +215,7 @@ public class ScanCommand implements BLauncherCmd {
 
         // Perform scan on ballerina file/project
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
-        ArrayList<Issue> issues = projectAnalyzer.analyzeProject(project);
+        List<Issue> issues = projectAnalyzer.analyzeProject(project);
 
         // Remove rules not in include list
         if (!allRulesToInclude.isEmpty()) {
@@ -270,7 +266,7 @@ public class ScanCommand implements BLauncherCmd {
         }
 
         // Retrieve the platform JAR file paths and arguments from Scan.toml
-        ArrayList<String> externalJarFilePaths = new ArrayList<>();
+        List<String> externalJarFilePaths = new ArrayList<>();
         Map<String, PlatformPluginContext> platformContexts = new HashMap<>();
         scanTomlFile.getPlatforms().forEach(platform -> {
             if (platformTriggered && platforms.size() == 1 && platforms.contains(platform.getName())) {
@@ -324,9 +320,9 @@ public class ScanCommand implements BLauncherCmd {
         });
     }
 
-    private URLClassLoader loadExternalJars(ArrayList<String> jarPaths) {
+    private URLClassLoader loadExternalJars(List<String> jarPaths) {
 
-        ArrayList<URL> jarUrls = new ArrayList<>();
+        List<URL> jarUrls = new ArrayList<>();
 
         jarPaths.forEach(jarPath -> {
             try {

@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestScanCommand {
+public class TestScanCmd {
 
     private static final Type listOfIssuesType = new TypeToken<ArrayList<IssueIml>>() {
     }.getType();
@@ -83,10 +83,10 @@ public class TestScanCommand {
             }
             JsonReader reader = new JsonReader(fileReader);
             Gson gson = new Gson();
-            ArrayList<Issue> reportedIssues = gson.fromJson(reader, listOfIssuesType);
+            List<Issue> reportedIssues = gson.fromJson(reader, listOfIssuesType);
 
             // Assert first issue
-            Issue firstIssue = reportedIssues.get(0);
+            IssueIml firstIssue = (IssueIml) reportedIssues.get(0);
             LineRange lineRange = firstIssue.getLocation().lineRange();
             Assertions.assertEquals(7, lineRange.startLine().line());
             Assertions.assertEquals(22, lineRange.startLine().offset());
