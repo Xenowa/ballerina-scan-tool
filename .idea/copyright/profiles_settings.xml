@@ -1,3 +1,7 @@
 <component name="CopyrightManager">
-  <settings default="Ballerina Java" />
+  <settings default="Ballerina">
+    <module2copyright>
+      <element module="All" copyright="Ballerina" />
+    </module2copyright>
+  </settings>
 </component>

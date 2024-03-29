@@ -24,12 +24,24 @@ import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageDependencyScope;
+import io.ballerina.projects.PackageManifest;
+import io.ballerina.projects.PackageName;
+import io.ballerina.projects.PackageOrg;
+import io.ballerina.projects.PackageResolution;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
+import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.tools.text.LineRange;
 
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,6 +59,128 @@ public class ProjectAnalyzer {
     ProjectAnalyzer(ScanTomlFile scanTomlFile, PrintStream outputStream) {
         this.scanTomlFile = scanTomlFile;
         this.outputStream = outputStream;
+    }
+
+    public List<Rule> getExternalAnalyzerRules(Project project) {
+        List<Rule> externalRules = new ArrayList<>();
+
+        Module defaultModule = project.currentPackage().getDefaultModule();
+        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
+
+        // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
+        StringBuilder newImports = new StringBuilder();
+        StringBuilder tomlDependencies = new StringBuilder();
+        AtomicInteger importCounter = new AtomicInteger(0);
+
+        List<String> analyzerDescriptors = new ArrayList<>();
+        scanTomlFile.getAnalyzers().forEach(analyzer -> {
+            // Generate analyzer as import
+            String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
+                    + USE_IMPORT_AS_SERVICE;
+            newImports.append(analyzerImport).append("\n");
+
+            analyzerDescriptors.add(analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName());
+
+            // Generate toml dependencies if version provided
+            if (analyzer.getVersion() != null) {
+                tomlDependencies.append("\n");
+                tomlDependencies.append("[[dependency]]" + "\n");
+                tomlDependencies.append("org='" + analyzer.getOrg() + "'\n");
+                tomlDependencies.append("name='" + analyzer.getName() + "'\n");
+                tomlDependencies.append("version='" + analyzer.getVersion() + "'\n");
+
+                if (analyzer.getRepository() != null) {
+                    tomlDependencies.append("repository='" + analyzer.getRepository() + "'\n");
+                }
+
+                tomlDependencies.append("\n");
+            }
+
+            // Increment the imports counter
+            importCounter.getAndIncrement();
+        });
+
+        // Generating imports
+        String documentContent = mainBAL.textDocument().toString();
+        mainBAL.modify().withContent(newImports + documentContent).apply();
+
+        // Get direct dependencies of in memory BAL file through project API
+        PackageResolution packageResolution = project.currentPackage().getResolution();
+        ResolvedPackageDependency rootPkgNode = new ResolvedPackageDependency(project.currentPackage(),
+                PackageDependencyScope.DEFAULT);
+
+        List<Package> directDependencies = packageResolution.dependencyGraph()
+                .getDirectDependencies(rootPkgNode)
+                .stream()
+                .map(ResolvedPackageDependency::packageInstance)
+                .toList();
+
+        // Load rules from compiler plugins found in imports of main BAL file
+        for (Package pkgDependency : directDependencies) {
+            PackageManifest pkgManifest = pkgDependency.manifest();
+
+            // Retrieve org and name of each import
+            PackageOrg org = pkgManifest.org();
+            PackageName name = pkgManifest.name();
+
+            // Check if import is a compiler plugin
+            pkgManifest.compilerPluginDescriptor()
+                    .ifPresent(pluginDesc -> {
+
+                        // Check if compiler plugin is one defined in Scan.toml file by comparing org and name
+                        String fqn = pluginDesc.plugin().getClassName();
+                        String reportedSource = org + PATH_SEPARATOR + name;
+                        if (analyzerDescriptors.contains(reportedSource)) {
+                            try {
+                                // Get the URL of the imported compiler plugin
+                                List<String> jarPaths = new ArrayList<>();
+
+                                // There is only 1 pluginDesc per compiler plugin
+                                pluginDesc.dependencies().forEach(dependency -> {
+                                    jarPaths.add(dependency.getPath());
+                                });
+
+                                // Create a URLClassLoader
+                                List<URL> jarUrls = new ArrayList<>();
+                                jarPaths.forEach(jarPath -> {
+                                    try {
+                                        URL jarUrl = Path.of(jarPath).toUri().toURL();
+                                        jarUrls.add(jarUrl);
+                                    } catch (MalformedURLException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                                URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
+                                        this.getClass().getClassLoader());
+
+                                // Load the class dynamically using the UCL
+                                Class<?> pluginClass = ucl.loadClass(fqn);
+                                StaticCodeAnalyzerPlugin plugin = (StaticCodeAnalyzerPlugin) pluginClass
+                                        .getConstructor()
+                                        .newInstance();
+
+                                // Collect all rules from the compiler plugin
+                                externalRules.addAll(plugin.rules());
+                            } catch (ClassNotFoundException |
+                                     NoSuchMethodException |
+                                     SecurityException |
+                                     InstantiationException |
+                                     IllegalAccessException |
+                                     IllegalArgumentException |
+                                     InvocationTargetException e) {
+                                // Handle any exceptions that might occur during class loading or method invocation
+                                outputStream.println("Error loading or calling rules() method from compiler plugin: " +
+                                        fqn);
+                                outputStream.println(e.getMessage());
+                            }
+                        }
+                    });
+        }
+
+        // Replace mainBAL file with its original content once to preserve initial line numbers during core scans
+        mainBAL.modify().withContent(documentContent).apply();
+
+        return externalRules;
     }
 
     public List<Issue> analyzeProject(Project project) {
@@ -96,118 +230,100 @@ public class ProjectAnalyzer {
         SemanticModel semanticModel = compilation.getSemanticModel();
 
         // Perform core scans
-        runInternalScans(currentDocument,
+        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentDocument,
                 syntaxTree,
                 semanticModel,
                 internalScannerContext);
 
-        // Perform external scans
-        runCustomScans(currentDocument, internalScannerContext);
-    }
-
-    public void runInternalScans(Document currentDocument,
-                                 SyntaxTree syntaxTree,
-                                 SemanticModel semanticModel,
-                                 InternalScannerContext scannerContext) {
-        StaticCodeAnalyzer analyzer = new StaticCodeAnalyzer(currentDocument,
-                syntaxTree,
-                semanticModel,
-                scannerContext);
-
         analyzer.initialize();
     }
 
-    public void runCustomScans(Document currentDocument, InternalScannerContext internalScannerContext) {
-        // Run custom scans once
-        if (currentDocument.module().isDefaultModule() && currentDocument.name().equals(MAIN_BAL)) {
-            // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
-            StringBuilder newImports = new StringBuilder();
-            StringBuilder tomlDependencies = new StringBuilder();
-            AtomicInteger importCounter = new AtomicInteger(0);
+    public List<Issue> runExternalAnalyzers(Project project) {
+        Module defaultModule = project.currentPackage().getDefaultModule();
+        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
 
-            scanTomlFile.getAnalyzers().forEach(analyzer -> {
-                // Generate analyzer as import
-                String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
-                        + USE_IMPORT_AS_SERVICE;
-                newImports.append(analyzerImport).append("\n");
+        // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
+        StringBuilder newImports = new StringBuilder();
+        StringBuilder tomlDependencies = new StringBuilder();
+        AtomicInteger importCounter = new AtomicInteger(0);
 
-                // Generate toml dependencies if version provided
-                if (analyzer.getVersion() != null) {
-                    tomlDependencies.append("\n");
-                    tomlDependencies.append("[[dependency]]" + "\n");
-                    tomlDependencies.append("org='" + analyzer.getOrg() + "'\n");
-                    tomlDependencies.append("name='" + analyzer.getName() + "'\n");
-                    tomlDependencies.append("version='" + analyzer.getVersion() + "'\n");
+        scanTomlFile.getAnalyzers().forEach(analyzer -> {
+            // Generate analyzer as import
+            String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
+                    + USE_IMPORT_AS_SERVICE;
+            newImports.append(analyzerImport).append("\n");
 
-                    if (analyzer.getRepository() != null) {
-                        tomlDependencies.append("repository='" + analyzer.getRepository() + "'\n");
-                    }
+            // Generate toml dependencies if version provided
+            if (analyzer.getVersion() != null) {
+                tomlDependencies.append("\n");
+                tomlDependencies.append("[[dependency]]" + "\n");
+                tomlDependencies.append("org='" + analyzer.getOrg() + "'\n");
+                tomlDependencies.append("name='" + analyzer.getName() + "'\n");
+                tomlDependencies.append("version='" + analyzer.getVersion() + "'\n");
 
-                    tomlDependencies.append("\n");
+                if (analyzer.getRepository() != null) {
+                    tomlDependencies.append("repository='" + analyzer.getRepository() + "'\n");
                 }
 
-                // Increment the imports counter
-                importCounter.getAndIncrement();
+                tomlDependencies.append("\n");
+            }
+
+            // Increment the imports counter
+            importCounter.getAndIncrement();
+        });
+
+        // Generating imports
+        String documentContent = mainBAL.textDocument().toString();
+        mainBAL.modify().withContent(newImports + documentContent).apply();
+
+        // Generating dependencies
+        BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
+        if (ballerinaToml != null) {
+            documentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
+        }
+
+        // Engage custom compiler plugins through module compilation
+        project.currentPackage().getCompilation();
+
+        // Retrieve External issues
+        List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
+
+        if (externalIssues != null) {
+            // Filter main bal file which compiler plugin imports were generated and remove imported lines from
+            // reported issues and create a modified external issues array
+            List<Issue> modifiedExternalIssues = new ArrayList<>();
+            externalIssues.forEach(externalIssue -> {
+                // Cast the external issue to its implementation to retrieve additional getters
+                IssueIml externalIssueIml = (IssueIml) externalIssue;
+                if (externalIssueIml.getFileName().equals(project.currentPackage()
+                        .packageName()
+                        + PATH_SEPARATOR
+                        + MAIN_BAL)) {
+                    // Modify the issue
+                    LineRange lineRange = externalIssueIml.getLocation().lineRange();
+                    IssueIml modifiedExternalIssue = new IssueIml(
+                            lineRange.startLine().line() - importCounter.get(),
+                            lineRange.startLine().offset(),
+                            lineRange.endLine().line() - importCounter.get(),
+                            lineRange.endLine().offset(),
+                            externalIssueIml.getRuleID(),
+                            externalIssueIml.getMessage(),
+                            externalIssueIml.getIssueSeverity(),
+                            externalIssueIml.getIssueType(),
+                            externalIssueIml.getFileName(),
+                            externalIssueIml.getReportedFilePath(),
+                            externalIssueIml.getReportedSource());
+
+                    modifiedExternalIssues.add(modifiedExternalIssue);
+                } else {
+                    modifiedExternalIssues.add(externalIssue);
+                }
             });
 
-            // Generating imports
-            String documentContent = currentDocument.textDocument().toString();
-            currentDocument.modify().withContent(newImports + documentContent).apply();
-
-            // Generating dependencies
-            Project currentProject = currentDocument.module().project();
-            BallerinaToml ballerinaToml = currentProject.currentPackage().ballerinaToml().orElse(null);
-            if (ballerinaToml != null) {
-                documentContent = ballerinaToml.tomlDocument().textDocument().toString();
-                ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
-            }
-
-            // TODO: External Scanner context will be used after property bag feature is introduced by project API
-            //  External issues store
-            //  List<Issue> externalIssues = new ArrayList<>();
-            //  ScannerContext scannerContext = new ScannerContext(externalIssues);
-
-            // Engage custom compiler plugins through module compilation
-            currentProject.currentPackage().getCompilation();
-
-            // Retrieve External issues
-            List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
-
-            if (externalIssues != null) {
-                // Filter main bal file which compiler plugin imports were generated and remove imported lines from
-                // reported issues and create a modified external issues array
-                List<Issue> modifiedExternalIssues = new ArrayList<>();
-                externalIssues.forEach(externalIssue -> {
-                    // Cast the external issue to its implementation to retrieve additional getters
-                    IssueIml externalIssueIml = (IssueIml) externalIssue;
-                    if (externalIssueIml.getFileName().equals(currentProject.currentPackage()
-                            .packageName()
-                            + PATH_SEPARATOR
-                            + MAIN_BAL)) {
-                        // Modify the issue
-                        LineRange lineRange = externalIssueIml.getLocation().lineRange();
-                        IssueIml modifiedExternalIssue = new IssueIml(
-                                lineRange.startLine().line() - importCounter.get(),
-                                lineRange.startLine().offset(),
-                                lineRange.endLine().line() - importCounter.get(),
-                                lineRange.endLine().offset(),
-                                externalIssueIml.getRuleID(),
-                                externalIssueIml.getMessage(),
-                                externalIssueIml.getIssueSeverity(),
-                                externalIssueIml.getIssueType(),
-                                externalIssueIml.getFileName(),
-                                externalIssueIml.getReportedFilePath(),
-                                externalIssueIml.getReportedSource());
-
-                        modifiedExternalIssues.add(modifiedExternalIssue);
-                    } else {
-                        modifiedExternalIssues.add(externalIssue);
-                    }
-                });
-
-                internalScannerContext.getReporter().addExternalIssues(modifiedExternalIssues);
-                outputStream.println("Running custom scanner plugins...");
-            }
+            outputStream.println("Running custom scanner plugins...");
+            return modifiedExternalIssues;
         }
+        return new ArrayList<>();
     }
 }

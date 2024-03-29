@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (https://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 
 package io.ballerina.scan;
@@ -58,7 +59,9 @@ public class ScanCmd implements BLauncherCmd {
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform-triggered"}, hidden = true)
+    @CommandLine.Option(names = {"--platform-triggered"},
+            description = "Specify whether the scan command is triggered from an external analysis platform tool",
+            hidden = true)
     private boolean platformTriggered;
 
     @CommandLine.Option(names = "--target-dir", description = "Target directory path")
@@ -179,17 +182,23 @@ public class ScanCmd implements BLauncherCmd {
             return;
         }
 
-        // TODO: Class Load json resource files that contains external rules from compiler plugins
+        // Retrieve Scan.toml file configurations
+        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
+
+        // Initialize project analyzer
+        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
+
+        // Load and add rules from all static code analyzer plugins
+        List<Rule> allRules = projectAnalyzer.getExternalAnalyzerRules(project);
+        allRules.addAll(InbuiltRules.INBUILT_RULES);
+
         if (listRules) {
-            ScanUtils.printRulesToConsole(InbuiltRules.INBUILT_RULES);
+            ScanUtils.printRulesToConsole(allRules);
             return;
         }
 
         outputStream.println();
         outputStream.println("Running Scans...");
-
-        // Retrieve Scan.toml file configurations
-        ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
         // Get all rules to include from Scan.toml file
         Set<ScanTomlFile.RuleToFilter> rulesToInclude = scanTomlFile.getRulesToInclude();
@@ -213,9 +222,18 @@ public class ScanCmd implements BLauncherCmd {
         // Add console defined rules
         allRulesToExclude.addAll(excludeRules);
 
-        // Perform scan on ballerina file/project
-        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
+        // Perform core scans on ballerina file/project
         List<Issue> issues = projectAnalyzer.analyzeProject(project);
+
+        // Perform external scans
+        // TODO: External Scanner context will be used after property bag feature is introduced by project API
+        //  External issues store
+        //  List<Issue> externalIssues = new ArrayList<>();
+        //  ScannerContext scannerContext = new ScannerContext(externalIssues);
+        List<Issue> externalIssues = projectAnalyzer.runExternalAnalyzers(project);
+
+        // Add all issues
+        issues.addAll(externalIssues);
 
         // Remove rules not in include list
         if (!allRulesToInclude.isEmpty()) {
