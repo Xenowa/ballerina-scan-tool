@@ -238,7 +238,7 @@ tasks.test {
                     .resolve("libs/sonar-platform-plugin-1.0.jar").toFile()
             copy {
                 from platformPluginJar
-                into "/src/test/java/io/ballerina/sonar/sonar_bal_testing"
+                into "./src/test/java/io/ballerina/sonar/sonar_bal_testing"
             }
         }
     }
