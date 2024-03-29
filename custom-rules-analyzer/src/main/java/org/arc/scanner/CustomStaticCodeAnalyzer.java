@@ -34,7 +34,7 @@ public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
         List<Rule> customRules = new ArrayList<>();
         customRules.add(RuleFactory.createRule(109, "Add a nested comment explaining why" +
                 " this function is empty or complete the implementation.", Severity.CODE_SMELL));
-        
+
         customRules.add(RuleFactory.createRule(110, "rule 110", Severity.CODE_SMELL));
         customRules.add(RuleFactory.createRule(111, "rule 111", Severity.CODE_SMELL));
         customRules.add(RuleFactory.createRule(112, "rule 112", Severity.CODE_SMELL));

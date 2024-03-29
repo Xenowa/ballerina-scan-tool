@@ -14,3 +14,9 @@ configPath = "./Scan.toml"
 
 # With remote path
 #configPath = "https://raw.githubusercontent.com/Xenowa/sonar-ballerina/main/ScanCommand/bal-scan-tool-tester/Scan.toml"
+
+[[dependency]]
+org = "tharana_wanigaratne"
+name = "custom_static_code_analyzer"
+version = "0.1.0"
+repository = "local"

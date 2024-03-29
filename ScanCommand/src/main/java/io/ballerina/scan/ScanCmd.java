@@ -25,7 +25,6 @@ import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.scan.utilities.ScanTomlFile;
-import io.ballerina.scan.utilities.ScanToolConstants;
 import io.ballerina.scan.utilities.ScanUtils;
 import io.ballerina.scan.utilities.StringToListConverter;
 import picocli.CommandLine;
@@ -50,16 +49,20 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "scan", description = "Perform static code analysis for ballerina packages")
+import static io.ballerina.scan.ScanToolConstants.SCAN_COMMAND;
+
+@CommandLine.Command(name = SCAN_COMMAND, description = "Perform static code analysis for ballerina packages")
 public class ScanCmd implements BLauncherCmd {
 
     private final PrintStream outputStream;
+
     @CommandLine.Parameters(description = "Program arguments")
     private final List<String> argList = new ArrayList<>();
+
     @CommandLine.Option(names = {"--help", "-h", "?"}, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--platform-triggered"},
+    @CommandLine.Option(names = "--platform-triggered",
             description = "Specify whether the scan command is triggered from an external analysis platform tool",
             hidden = true)
     private boolean platformTriggered;
@@ -67,27 +70,23 @@ public class ScanCmd implements BLauncherCmd {
     @CommandLine.Option(names = "--target-dir", description = "Target directory path")
     private String targetDir;
 
-    @CommandLine.Option(names = {"--scan-report"}, description = "Enable scan report generation")
+    @CommandLine.Option(names = "--scan-report", description = "Enable scan report generation")
     private boolean scanReport;
 
-    @CommandLine.Option(names = {"--list-rules"},
-            description = "List the internal rules available in the Ballerina scan tool.")
+    @CommandLine.Option(names = "--list-rules",
+            description = "List the rules available in the Ballerina scan tool.")
     private boolean listRules;
 
-    @CommandLine.Option(names = {"--include-rules"},
-            converter = StringToListConverter.class,
+    @CommandLine.Option(names = "--include-rules", converter = StringToListConverter.class,
             description = "Specify the comma separated list of rules to include specific analysis issues")
     private List<String> includeRules = new ArrayList<>();
 
-    @CommandLine.Option(names = {"--exclude-rules"},
-            converter = StringToListConverter.class,
+    @CommandLine.Option(names = "--exclude-rules", converter = StringToListConverter.class,
             description = "Specify the comma separated list of rules to exclude specific analysis issues")
     private List<String> excludeRules = new ArrayList<>();
 
-    @CommandLine.Option(names = {"--platforms"},
-            converter = StringToListConverter.class,
-            description = "static code analysis output platform",
-            defaultValue = "local")
+    @CommandLine.Option(names = "--platforms", converter = StringToListConverter.class,
+            description = "Specify the comma separated list of static code analysis platforms to report issues")
     private List<String> platforms = new ArrayList<>();
 
     public ScanCmd() {
@@ -96,7 +95,7 @@ public class ScanCmd implements BLauncherCmd {
 
     @Override
     public String getName() {
-        return "scan";
+        return SCAN_COMMAND;
     }
 
     @Override
@@ -110,62 +109,10 @@ public class ScanCmd implements BLauncherCmd {
         out.append("Tool for providing static code analysis results for Ballerina projects");
     }
 
-    public StringBuilder helpMessage() {
-        InputStream inputStream = ScanCmd.class.getResourceAsStream("/cli-help/ballerina-scan.help");
-        StringBuilder builder = new StringBuilder();
-        if (inputStream != null) {
-            try (
-                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                    BufferedReader br = new BufferedReader(inputStreamReader)
-            ) {
-                String content = br.readLine();
-                builder.append(content);
-                while ((content = br.readLine()) != null) {
-                    builder.append("\n").append(content);
-                }
-            } catch (IOException e) {
-                builder.append("Helper text is not available.");
-                throw new RuntimeException(e);
-            }
-        }
-
-        return builder;
-    }
-
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
-
     }
 
-    private Project getProject() {
-        // retrieve the user passed argument or the current working directory
-        if (argList.isEmpty()) {
-            // Return the loaded project or the relevant error message
-            try {
-                return BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
-            } catch (RuntimeException e) {
-                outputStream.println(e.getMessage());
-                return null;
-            }
-        } else {
-            // Return the loaded project or the relevant error message
-            Path path = Paths.get(argList.get(0));
-            try {
-                if (path.toFile().isDirectory()) {
-                    return BuildProject.load(path);
-                } else {
-                    return SingleFileProject.load(Paths.get(argList.get(0)));
-                }
-            } catch (RuntimeException e) {
-                outputStream.println(e.getMessage());
-                return null;
-            }
-        }
-    }
-
-    // ========================
-    // Scan Command Main Method
-    // ========================
     @Override
     public void execute() {
         if (helpFlag) {
@@ -189,10 +136,9 @@ public class ScanCmd implements BLauncherCmd {
         ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
 
         // Load and add rules from all static code analyzer plugins
-        List<Rule> allRules = projectAnalyzer.getExternalAnalyzerRules(project);
-        allRules.addAll(InbuiltRules.INBUILT_RULES);
-
         if (listRules) {
+            List<Rule> allRules = projectAnalyzer.getExternalAnalyzerRules(project);
+            allRules.addAll(InbuiltRules.INBUILT_RULES);
             ScanUtils.printRulesToConsole(allRules);
             return;
         }
@@ -208,7 +154,7 @@ public class ScanCmd implements BLauncherCmd {
                 .map(ScanTomlFile.RuleToFilter::getId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Add console defined rules
+        // Add console defined rules to include
         allRulesToInclude.addAll(includeRules);
 
         // Get all rules to exclude from Scan.toml file
@@ -219,17 +165,13 @@ public class ScanCmd implements BLauncherCmd {
                 .map(ScanTomlFile.RuleToFilter::getId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Add console defined rules
+        // Add console defined rules to exclude
         allRulesToExclude.addAll(excludeRules);
 
         // Perform core scans on ballerina file/project
         List<Issue> issues = projectAnalyzer.analyzeProject(project);
 
         // Perform external scans
-        // TODO: External Scanner context will be used after property bag feature is introduced by project API
-        //  External issues store
-        //  List<Issue> externalIssues = new ArrayList<>();
-        //  ScannerContext scannerContext = new ScannerContext(externalIssues);
         List<Issue> externalIssues = projectAnalyzer.runExternalAnalyzers(project);
 
         // Add all issues
@@ -237,17 +179,16 @@ public class ScanCmd implements BLauncherCmd {
 
         // Remove rules not in include list
         if (!allRulesToInclude.isEmpty()) {
-            issues.removeIf(issue -> !allRulesToInclude.contains(issue.getRuleID()));
+            issues.removeIf(issue -> !allRulesToInclude.contains(issue.ruleId()));
         }
 
         // Remove rules in exclude list
         if (!allRulesToExclude.isEmpty()) {
-            issues.removeIf(issue -> allRulesToExclude.contains(issue.getRuleID()));
+            issues.removeIf(issue -> allRulesToExclude.contains(issue.ruleId()));
         }
 
-        // TODO: Remove quiet flag with platformTriggered flag and move logic to platform plugin side
         // Produce analysis results locally if 'local' platform is given
-        if (platforms.contains("local") && !platformTriggered) {
+        if (platforms.isEmpty() && !platformTriggered) {
             // Print results to console
             ScanUtils.printToConsole(issues);
 
@@ -279,8 +220,6 @@ public class ScanCmd implements BLauncherCmd {
                 outputStream.println("View scan results at:");
                 outputStream.println("\t" + reportPath + "\n");
             }
-
-            platforms.removeAll(Collections.singleton("local"));
         }
 
         // Retrieve the platform JAR file paths and arguments from Scan.toml
@@ -322,6 +261,7 @@ public class ScanCmd implements BLauncherCmd {
                 PlatformPluginContext platformPluginContext = platformContexts.get(
                         staticCodeAnalysisPlatformPlugin.platform());
 
+                outputStream.println("Reporting issues to " + staticCodeAnalysisPlatformPlugin.platform() + "...");
                 staticCodeAnalysisPlatformPlugin.init(platformPluginContext);
                 staticCodeAnalysisPlatformPlugin.onScan(issues);
 
@@ -338,10 +278,55 @@ public class ScanCmd implements BLauncherCmd {
         });
     }
 
+    public StringBuilder helpMessage() {
+        InputStream inputStream = ScanCmd.class.getResourceAsStream("/cli-help/ballerina-scan.help");
+        StringBuilder builder = new StringBuilder();
+        if (inputStream != null) {
+            try (
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                    BufferedReader br = new BufferedReader(inputStreamReader)
+            ) {
+                String content = br.readLine();
+                builder.append(content);
+                while ((content = br.readLine()) != null) {
+                    builder.append("\n").append(content);
+                }
+            } catch (IOException e) {
+                builder.append("Helper text is not available.");
+                throw new RuntimeException(e);
+            }
+        }
+        return builder;
+    }
+
+    private Project getProject() {
+        // retrieve the user passed argument or the current working directory
+        if (argList.isEmpty()) {
+            // Return the loaded project or the relevant error message
+            try {
+                return BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
+            } catch (RuntimeException e) {
+                outputStream.println(e.getMessage());
+                return null;
+            }
+        } else {
+            // Return the loaded project or the relevant error message
+            Path path = Paths.get(argList.get(0));
+            try {
+                if (path.toFile().isDirectory()) {
+                    return BuildProject.load(path);
+                } else {
+                    return SingleFileProject.load(Paths.get(argList.get(0)));
+                }
+            } catch (RuntimeException e) {
+                outputStream.println(e.getMessage());
+                return null;
+            }
+        }
+    }
+
     private URLClassLoader loadExternalJars(List<String> jarPaths) {
-
         List<URL> jarUrls = new ArrayList<>();
-
         jarPaths.forEach(jarPath -> {
             try {
                 URL jarUrl = Path.of(jarPath).toUri().toURL();
@@ -350,7 +335,6 @@ public class ScanCmd implements BLauncherCmd {
                 throw new RuntimeException(e);
             }
         });
-
         return new URLClassLoader(jarUrls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
 }

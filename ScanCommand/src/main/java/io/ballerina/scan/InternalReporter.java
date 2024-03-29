@@ -18,7 +18,6 @@
 package io.ballerina.scan;
 
 import io.ballerina.projects.Document;
-import io.ballerina.scan.utilities.ScanToolConstants;
 import io.ballerina.tools.diagnostics.Location;
 import io.ballerina.tools.text.LineRange;
 
@@ -56,7 +55,7 @@ public class InternalReporter {
                 ruleWithPrefix,
                 rule.description(),
                 rule.severity(),
-                IssueType.CORE_ISSUE,
+                Source.BUILT_IN,
                 moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
                 issuesFilePath.toString(),
                 reportedSource);

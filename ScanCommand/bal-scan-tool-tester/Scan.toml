@@ -6,7 +6,7 @@
 [[analyzer]]
 org = "tharana_wanigaratne"
 name = "custom_static_code_analyzer"
-#version = "0.1.0"
+# version = "0.1.0"
 
 [rule]
 include = ["S107", "S108", "S109"]

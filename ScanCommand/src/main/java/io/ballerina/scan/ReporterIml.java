@@ -18,7 +18,6 @@
 package io.ballerina.scan;
 
 import io.ballerina.projects.Document;
-import io.ballerina.scan.utilities.ScanToolConstants;
 import io.ballerina.tools.diagnostics.Location;
 import io.ballerina.tools.text.LineRange;
 
@@ -56,7 +55,7 @@ public class ReporterIml implements Reporter {
 
         // Depending on the org name of the compiler plugin set the issue type
         String pluginOrg = reportedSource.split(Pattern.quote(System.getProperty("file.separator")))[0];
-        IssueType issueType = pluginOrg.equals(BALLERINA_ORG) ? IssueType.CORE_ISSUE : IssueType.EXTERNAL_ISSUE;
+        Source source = pluginOrg.equals(BALLERINA_ORG) ? Source.BUILT_IN : Source.EXTERNAL;
 
         // Construct the issue reported compiler plugin source
 
@@ -68,7 +67,7 @@ public class ReporterIml implements Reporter {
                 ruleWithPrefix,
                 rule.description(),
                 rule.severity(),
-                issueType,
+                source,
                 moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
                 issuesFilePath.toString(),
                 reportedSource);

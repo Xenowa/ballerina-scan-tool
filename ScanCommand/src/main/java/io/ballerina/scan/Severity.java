@@ -21,7 +21,12 @@
 package io.ballerina.scan;
 
 public enum Severity {
+    // Label for marking maintainability issues causing code confusion and difficulty
     CODE_SMELL,
+
+    // Label for marking coding mistakes which leads to an error or unexpected behavior at runtime
     BUG,
+
+    // Label for marking code susceptible to exploits due to security weaknesses
     VULNERABILITY
 }

@@ -54,8 +54,8 @@ class BallerinaSensor implements Sensor {
     private static final String TARGET_FOLDER = "target";
     private static final String REPORT_FOLDER = "report";
     private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
-    private static final String CORE_ISSUE = "CORE_ISSUE";
-    private static final String EXTERNAL_ISSUE = "EXTERNAL_ISSUE";
+    private static final String BUILT_IN = "BUILT_IN";
+    private static final String EXTERNAL = "EXTERNAL";
     private static final Logger LOG = Loggers.get(BallerinaSensor.class);
     private final FileLinesContextFactory fileLinesContextFactory;
     private final NoSonarFilter noSonarFilter;
@@ -227,12 +227,12 @@ class BallerinaSensor implements Sensor {
                 InputFile inputFile = pathAndInputFiles.get(absoluteFilePath);
 
                 // Get the issue type from the output
-                String issueType = issue.get("issueType").getAsString();
+                String issueType = issue.get("source").getAsString();
 
                 // Perform validations on the issueType and proceed
                 switch (issueType) {
-                    case CORE_ISSUE -> reportIssue(inputFile, context, issue);
-                    case EXTERNAL_ISSUE -> reportExternalIssue(inputFile, context, issue);
+                    case BUILT_IN -> reportIssue(inputFile, context, issue);
+                    case EXTERNAL -> reportExternalIssue(inputFile, context, issue);
                     default -> LOG.info("Invalid Issue Format!");
                 }
             }

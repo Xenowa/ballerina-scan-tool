@@ -24,12 +24,12 @@ import io.ballerina.tools.diagnostics.Location;
 
 public interface Issue {
 
-    Location getLocation();
+    Location location();
 
-    String getRuleID();
+    String ruleId();
 
-    IssueType getIssueType();
+    Source source();
 
-    Severity getIssueSeverity();
+    Severity severity();
 }
 

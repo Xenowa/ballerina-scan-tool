@@ -1,5 +1,0 @@
-[analyzer] # Have to check if below path is needed
-class = "org.arc.scanner.CustomStaticCodeAnalyzer"
-
-[[dependency]]
-path = "../build/libs/custom-rules-analyzer-1.0-all.jar"

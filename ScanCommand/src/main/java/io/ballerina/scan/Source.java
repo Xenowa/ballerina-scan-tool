@@ -20,7 +20,10 @@
 
 package io.ballerina.scan;
 
-public enum IssueType {
-    CORE_ISSUE,
-    EXTERNAL_ISSUE
+public enum Source {
+    // For labelling issues reported by ballerina scan tool and ballerina org static code analyzer plugins
+    BUILT_IN,
+
+    // For labelling issues reported by non-ballerina org static code analyzer plugins
+    EXTERNAL
 }

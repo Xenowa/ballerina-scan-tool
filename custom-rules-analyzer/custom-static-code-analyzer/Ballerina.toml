@@ -3,6 +3,3 @@ org = "tharana_wanigaratne"
 name = "custom_static_code_analyzer"
 version = "0.1.0"
 distribution = "2201.8.5"
-
-[build-options]
-observabilityIncluded = true

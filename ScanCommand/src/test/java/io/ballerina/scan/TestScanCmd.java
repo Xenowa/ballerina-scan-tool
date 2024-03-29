@@ -87,16 +87,16 @@ public class TestScanCmd {
 
             // Assert first issue
             IssueIml firstIssue = (IssueIml) reportedIssues.get(0);
-            LineRange lineRange = firstIssue.getLocation().lineRange();
+            LineRange lineRange = firstIssue.location().lineRange();
             Assertions.assertEquals(7, lineRange.startLine().line());
             Assertions.assertEquals(22, lineRange.startLine().offset());
             Assertions.assertEquals(7, lineRange.endLine().line());
             Assertions.assertEquals(34, lineRange.endLine().offset());
-            Assertions.assertEquals("S108", firstIssue.getRuleID());
+            Assertions.assertEquals("S108", firstIssue.ruleId());
             Assertions.assertEquals(
                     "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                     firstIssue.getMessage());
-            Assertions.assertEquals(IssueType.CORE_ISSUE, firstIssue.getIssueType());
+            Assertions.assertEquals(Source.BUILT_IN, firstIssue.source());
         }
     }
 

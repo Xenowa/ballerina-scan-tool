@@ -28,8 +28,8 @@ public class IssueIml implements Issue {
     private final int endLineOffset;
     private final String ruleID;
     private final String message;
-    private final IssueType issueType;
-    private final Severity issueSeverity;
+    private final Source source;
+    private final Severity severity;
     // There can be more than one ballerina file which has the same name, so we store it in the following format:
     // fileName = "moduleName/main.bal"
     private final String fileName;
@@ -42,8 +42,8 @@ public class IssueIml implements Issue {
              int endLineOffset,
              String ruleID,
              String message,
-             Severity issueSeverity,
-             IssueType issueType,
+             Severity severity,
+             Source source,
              String fileName,
              String reportedFilePath,
              String reportedSource) {
@@ -54,38 +54,38 @@ public class IssueIml implements Issue {
         this.endLineOffset = endLineOffset;
         this.ruleID = ruleID;
         this.message = message;
-        this.issueSeverity = issueSeverity;
-        this.issueType = issueType;
+        this.severity = severity;
+        this.source = source;
         this.fileName = fileName;
         this.reportedFilePath = reportedFilePath;
         this.reportedSource = reportedSource;
     }
 
     @Override
-    public Location getLocation() {
+    public Location location() {
         return new BLangDiagnosticLocation(fileName, startLine, endLine, startLineOffset, endLineOffset, 0,
                 0);
     }
 
     @Override
-    public String getRuleID() {
+    public String ruleId() {
         return ruleID;
     }
 
     @Override
-    public IssueType getIssueType() {
-        return issueType;
+    public Source source() {
+        return source;
     }
 
     @Override
-    public Severity getIssueSeverity() {
-        return issueSeverity;
+    public Severity severity() {
+        return severity;
     }
 
     public String getMessage() {
         return message;
     }
-    
+
     public String getReportedFilePath() {
         return reportedFilePath;
     }

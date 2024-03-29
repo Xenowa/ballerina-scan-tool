@@ -1,27 +1,29 @@
 /*
- * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (https://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 
-package io.ballerina.scan.utilities;
+package io.ballerina.scan;
 
 public class ScanToolConstants {
 
+    static final String SCAN_COMMAND = "scan";
+
     // Internal and external issues constants
     public static final String MAIN_BAL = "main.bal";
-    public static final String SCAN_COMMAND = "scan";
 
     // Report generation constants
     public static final String RESULTS_HTML_FILE = "index.html";
@@ -43,4 +45,7 @@ public class ScanToolConstants {
     // Import generation constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";
     public static final String CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN = "^\\d+\\.\\d+\\.\\d+$";
+
+    private ScanToolConstants() {
+    }
 }

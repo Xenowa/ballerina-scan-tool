@@ -34,6 +34,12 @@ public class RuleFactory {
     private RuleFactory() {
     }
 
+    static Rule createRule(int numericId, String description, Severity severity, String reportedSource) {
+        String fullyQualifiedId = String.format(reportedSource + ":%s%d", BALLERINA_RULE_PREFIX, numericId);
+
+        return new RuleIml(fullyQualifiedId, numericId, description, severity);
+    }
+
     /**
      * Creates a {@code Rule} instances from the given details.
      *

@@ -47,9 +47,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
-import static io.ballerina.scan.utilities.ScanToolConstants.MAIN_BAL;
-import static io.ballerina.scan.utilities.ScanToolConstants.PATH_SEPARATOR;
-import static io.ballerina.scan.utilities.ScanToolConstants.USE_IMPORT_AS_SERVICE;
+import static io.ballerina.scan.ScanToolConstants.MAIN_BAL;
+import static io.ballerina.scan.ScanToolConstants.PATH_SEPARATOR;
+import static io.ballerina.scan.ScanToolConstants.USE_IMPORT_AS_SERVICE;
 
 public class ProjectAnalyzer {
 
@@ -287,6 +287,10 @@ public class ProjectAnalyzer {
         project.currentPackage().getCompilation();
 
         // Retrieve External issues
+        // TODO: External Scanner context will be used after property bag feature is introduced by project API
+        //  External issues store
+        //  List<Issue> externalIssues = new ArrayList<>();
+        //  ScannerContext scannerContext = new ScannerContext(externalIssues);
         List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
 
         if (externalIssues != null) {
@@ -301,16 +305,16 @@ public class ProjectAnalyzer {
                         + PATH_SEPARATOR
                         + MAIN_BAL)) {
                     // Modify the issue
-                    LineRange lineRange = externalIssueIml.getLocation().lineRange();
+                    LineRange lineRange = externalIssueIml.location().lineRange();
                     IssueIml modifiedExternalIssue = new IssueIml(
                             lineRange.startLine().line() - importCounter.get(),
                             lineRange.startLine().offset(),
                             lineRange.endLine().line() - importCounter.get(),
                             lineRange.endLine().offset(),
-                            externalIssueIml.getRuleID(),
+                            externalIssueIml.ruleId(),
                             externalIssueIml.getMessage(),
-                            externalIssueIml.getIssueSeverity(),
-                            externalIssueIml.getIssueType(),
+                            externalIssueIml.severity(),
+                            externalIssueIml.source(),
                             externalIssueIml.getFileName(),
                             externalIssueIml.getReportedFilePath(),
                             externalIssueIml.getReportedSource());
