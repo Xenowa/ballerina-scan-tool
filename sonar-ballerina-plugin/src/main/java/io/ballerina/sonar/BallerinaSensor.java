@@ -163,8 +163,8 @@ class BallerinaSensor implements Sensor {
             } else {
                 LOG.info("Unable to analyze ballerina file batch!");
             }
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | InterruptedException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -182,7 +182,7 @@ class BallerinaSensor implements Sensor {
                 stringBuilder.append(line);
             }
             fileContent = stringBuilder.toString();
-        } catch (IOException e) {
+        } catch (IOException ex) {
             LOG.info("Unable to retrieve analysis results!");
         }
         return fileContent;

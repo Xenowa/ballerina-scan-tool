@@ -45,13 +45,17 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -74,7 +78,6 @@ public class ScanUtils {
     private static final PrintStream outputStream = System.out;
 
     private ScanUtils() {
-
     }
 
     public static void printToConsole(List<Issue> issues) {
@@ -83,13 +86,13 @@ public class ScanUtils {
         outputStream.println(jsonOutput);
     }
 
-    public static String convertIssuesToJsonString(List<Issue> issues) {
+    private static String convertIssuesToJsonString(List<Issue> issues) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         return gson.toJson(issuesAsJson);
     }
 
-    public static Target getTargetPath(Project project, String directoryName) {
+    private static Target getTargetPath(Project project, String directoryName) {
         Target target;
         try {
             if (project.kind().equals(ProjectKind.BUILD_PROJECT)) {
@@ -118,8 +121,8 @@ public class ScanUtils {
                     target = new Target(project.targetDir());
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         return target;
@@ -149,8 +152,8 @@ public class ScanUtils {
                     jsonFilePath = jsonFile.toPath();
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         return jsonFilePath;
@@ -177,8 +180,8 @@ public class ScanUtils {
                 String fileContent = "";
                 try {
                     fileContent = Files.readString(Path.of(filePath));
-                } catch (Exception ignored) {
-                    outputStream.println("Unable to retrieve file contents!");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
                 jsonScanReportFile.addProperty("fileContent", fileContent);
 
@@ -265,7 +268,7 @@ public class ScanUtils {
         return htmlFile.toPath();
     }
 
-    public static void unzipReportResources(InputStream source, File target) throws IOException {
+    private static void unzipReportResources(InputStream source, File target) throws IOException {
         final ZipInputStream zipStream = new ZipInputStream(source);
         ZipEntry nextEntry;
         while ((nextEntry = zipStream.getNextEntry()) != null) {
@@ -332,16 +335,18 @@ public class ScanUtils {
 
                     if (configPath != null) {
                         String scanTomlPath = configPath.toNativeValue().toString();
-                        if (new File(scanTomlPath).exists()) {
-                            Path scanTomlFilePath = Path.of(configPath.toNativeValue().toString());
-                            return loadScanFile(root, scanTomlFilePath);
+
+                        Optional<Path> path = convertConfigurationPath(scanTomlPath);
+                        Optional<Path> absPath = path.isEmpty() || path.get().isAbsolute() ? path
+                                : Optional.of(root.resolve(scanTomlPath));
+                        if (isLocalFile(absPath)) {
+                            return loadScanFile(root, absPath.get());
                         } else {
                             try {
                                 URL url = new URL(scanTomlPath);
                                 return loadRemoteScanFile(root, url);
-                            } catch (Exception ignored) {
-                                outputStream.println("File: " + scanTomlPath + " does not exists!");
-                                return new ScanTomlFile();
+                            } catch (MalformedURLException ex) {
+                                throw new RuntimeException(ex);
                             }
                         }
                     }
@@ -367,7 +372,19 @@ public class ScanUtils {
         return new ScanTomlFile();
     }
 
-    public static ScanTomlFile loadRemoteScanFile(Path root, URL remoteScanTomlFilePath) {
+    private static Optional<Path> convertConfigurationPath(String path) {
+        try {
+            return Optional.of(Paths.get(path));
+        } catch (InvalidPathException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private static boolean isLocalFile(Optional<Path> path) throws InvalidPathException {
+        return path.isPresent() && new File(path.get().toString()).exists();
+    }
+
+    private static ScanTomlFile loadRemoteScanFile(Path root, URL remoteScanTomlFilePath) {
         //  2. If 'Scan.toml' is already available in cache load it from there
         Path cachePath = root.resolve(TARGET_DIR_NAME).resolve(REPORT_DIR_NAME).resolve(SCAN_FILE);
         if (Files.exists(cachePath)) {
@@ -378,10 +395,8 @@ public class ScanUtils {
         // 3. download and copy configurations from remote to a local 'Scan.toml' and load configurations
         try {
             FileUtils.copyURLToFile(remoteScanTomlFilePath, cachePath.toFile());
-        } catch (IOException e) {
-            outputStream.println("Unable to load scan tool configurations from: "
-                    + remoteScanTomlFilePath.toString());
-            return new ScanTomlFile();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         // Load file from cache
@@ -389,13 +404,13 @@ public class ScanUtils {
         return loadScanFile(root, cachePath);
     }
 
-    public static ScanTomlFile loadScanFile(Path root, Path scanTomlFilePath) {
+    private static ScanTomlFile loadScanFile(Path root, Path scanTomlFilePath) {
         // Parse the toml document
         Toml scanTomlDocumentContent;
         try {
             scanTomlDocumentContent = Toml.read(scanTomlFilePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         // Start creating the Scan.toml object
@@ -417,9 +432,8 @@ public class ScanUtils {
                     try {
                         URL url = new URL(path);
                         path = loadRemoteJAR(root, name, url);
-                    } catch (Exception ignored) {
-                        outputStream.println("File: " + path + " does not exists!");
-                        path = "";
+                    } catch (MalformedURLException ex) {
+                        throw new RuntimeException(ex);
                     }
                 }
 
@@ -446,7 +460,6 @@ public class ScanUtils {
             String repository = !(properties.get("repository") instanceof String) ? null :
                     properties.get("repository").toString();
 
-            // TODO: Identify way to remove version and load the plugins
             if (org != null && !org.isEmpty() && name != null && !name.isEmpty()) {
                 ScanTomlFile.Analyzer analyzer;
 
@@ -521,9 +534,8 @@ public class ScanUtils {
             FileUtils.copyURLToFile(remoteJarFile, cachedJarPath.toFile());
             outputStream.println("Downloading remote JAR: " + remoteJarFile);
             return cachedJarPath.toAbsolutePath().toString();
-        } catch (IOException e) {
-            outputStream.println("Unable to download remote JAR file from: " + remoteJarFile);
-            return "";
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

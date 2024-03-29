@@ -92,8 +92,8 @@ public abstract class AbstractSensorTest {
         String fileContent = null;
         try {
             fileContent = new String(Files.readAllBytes(balFilePath), StandardCharsets.UTF_8).trim();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         return TestInputFileBuilder.create("moduleKey", relativePath)

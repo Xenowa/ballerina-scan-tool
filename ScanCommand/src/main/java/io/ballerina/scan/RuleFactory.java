@@ -57,8 +57,8 @@ public class RuleFactory {
         URI jarUri;
         try {
             jarUri = jarUrl.toURI();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+        } catch (URISyntaxException ex) {
+            throw new RuntimeException(ex);
         }
 
         Path jarPath = Paths.get(jarUri);

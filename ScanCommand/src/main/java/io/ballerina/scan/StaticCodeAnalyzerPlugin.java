@@ -94,8 +94,8 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
                         gson.toJson(existingIssues, listOfIssuesType, writer);
                         writer.close();
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         }
@@ -116,8 +116,8 @@ public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
                 Files.delete(serializedContextFilePath);
 
                 return externalIssues;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         }
 

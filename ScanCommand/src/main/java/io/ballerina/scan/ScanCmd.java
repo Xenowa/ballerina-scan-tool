@@ -291,9 +291,9 @@ public class ScanCmd implements BLauncherCmd {
                 while ((content = br.readLine()) != null) {
                     builder.append("\n").append(content);
                 }
-            } catch (IOException e) {
+            } catch (IOException ex) {
                 builder.append("Helper text is not available.");
-                throw new RuntimeException(e);
+                throw new RuntimeException(ex);
             }
         }
         return builder;
@@ -305,8 +305,8 @@ public class ScanCmd implements BLauncherCmd {
             // Return the loaded project or the relevant error message
             try {
                 return BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
-            } catch (RuntimeException e) {
-                outputStream.println(e.getMessage());
+            } catch (RuntimeException ex) {
+                outputStream.println(ex.getMessage());
                 return null;
             }
         } else {
@@ -318,8 +318,8 @@ public class ScanCmd implements BLauncherCmd {
                 } else {
                     return SingleFileProject.load(Paths.get(argList.get(0)));
                 }
-            } catch (RuntimeException e) {
-                outputStream.println(e.getMessage());
+            } catch (RuntimeException ex) {
+                outputStream.println(ex.getMessage());
                 return null;
             }
         }
@@ -331,8 +331,8 @@ public class ScanCmd implements BLauncherCmd {
             try {
                 URL jarUrl = Path.of(jarPath).toUri().toURL();
                 jarUrls.add(jarUrl);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+            } catch (MalformedURLException ex) {
+                throw new RuntimeException(ex);
             }
         });
         return new URLClassLoader(jarUrls.toArray(new URL[0]), this.getClass().getClassLoader());

@@ -80,13 +80,9 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
 
     @Override
     public void onScan(List<Issue> issues) {
-        boolean issuesSaved = saveIssues(ISSUES_FILE_PATH, issues);
+        saveIssues(ISSUES_FILE_PATH, issues);
 
-        if (issuesSaved && platformPluginContext.initiatedByPlatform()) {
-            return;
-        }
-
-        if (issuesSaved) {
+        if (!platformPluginContext.initiatedByPlatform()) {
             processBuilderArguments.add("-DanalyzedResultsPath=" + Path.of(ISSUES_FILE_PATH).toAbsolutePath());
 
             String sonarProjectPropertiesPath = platformPluginContext.platformArgs()
@@ -111,16 +107,13 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
                 } else {
                     outputStream.println("Reporting failed!");
                 }
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (IOException | InterruptedException ex) {
+                throw new RuntimeException(ex);
             }
-            return;
         }
-
-        outputStream.println("Unable to save issues to file!");
     }
 
-    private boolean saveIssues(String fileName, List<Issue> issues) {
+    private void saveIssues(String fileName, List<Issue> issues) {
         // Convert the output to a string
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
@@ -130,9 +123,8 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
         File destination = new File(fileName);
         try (FileWriter writer = new FileWriter(destination, StandardCharsets.UTF_8)) {
             writer.write(jsonOutput);
-            return true;
-        } catch (IOException e) {
-            return false;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

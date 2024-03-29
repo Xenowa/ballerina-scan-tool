@@ -146,13 +146,15 @@ public class ProjectAnalyzer {
                                     try {
                                         URL jarUrl = Path.of(jarPath).toUri().toURL();
                                         jarUrls.add(jarUrl);
-                                    } catch (MalformedURLException e) {
-                                        throw new RuntimeException(e);
+                                    } catch (MalformedURLException ex) {
+                                        throw new RuntimeException(ex);
                                     }
                                 });
                                 URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
                                         this.getClass().getClassLoader());
 
+                                // TODO: Create method to retrieve external rules defined in a JSON file in the plugins
+                                //  resources folder instead of creating new instances
                                 // Load the class dynamically using the UCL
                                 Class<?> pluginClass = ucl.loadClass(fqn);
                                 StaticCodeAnalyzerPlugin plugin = (StaticCodeAnalyzerPlugin) pluginClass
@@ -167,11 +169,8 @@ public class ProjectAnalyzer {
                                      InstantiationException |
                                      IllegalAccessException |
                                      IllegalArgumentException |
-                                     InvocationTargetException e) {
-                                // Handle any exceptions that might occur during class loading or method invocation
-                                outputStream.println("Error loading or calling rules() method from compiler plugin: " +
-                                        fqn);
-                                outputStream.println(e.getMessage());
+                                     InvocationTargetException ex) {
+                                throw new RuntimeException(ex);
                             }
                         }
                     });
@@ -288,7 +287,6 @@ public class ProjectAnalyzer {
 
         // Retrieve External issues
         // TODO: External Scanner context will be used after property bag feature is introduced by project API
-        //  External issues store
         //  List<Issue> externalIssues = new ArrayList<>();
         //  ScannerContext scannerContext = new ScannerContext(externalIssues);
         List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();

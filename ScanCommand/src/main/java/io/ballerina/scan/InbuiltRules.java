@@ -22,12 +22,9 @@ import java.util.List;
 
 public class InbuiltRules {
 
-    // Initializing the inbuilt rules
-    // Map for inbuilt rules
     static final List<Rule> INBUILT_RULES = new ArrayList<>();
     private static final String REPORTED_SOURCE = "scan_tool";
 
-    // Populating inbuilt rules
     static {
         INBUILT_RULES.add(RuleFactory.createRule(107,
                 "Functions should not have too many parameters!",
@@ -35,5 +32,8 @@ public class InbuiltRules {
         INBUILT_RULES.add(RuleFactory.createRule(108,
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                 Severity.CODE_SMELL, REPORTED_SOURCE));
+    }
+
+    private InbuiltRules() {
     }
 }
