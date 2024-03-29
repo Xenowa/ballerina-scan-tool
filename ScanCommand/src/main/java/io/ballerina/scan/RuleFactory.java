@@ -29,7 +29,7 @@ import java.util.Optional;
 
 public class RuleFactory {
 
-    private static final String BALLERINA_RULE_PREFIX = "S";
+    private static final String BALLERINA_RULE_PREFIX = "B";
 
     private RuleFactory() {
     }

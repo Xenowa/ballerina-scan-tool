@@ -27,8 +27,7 @@ public class BallerinaChecks {
 
     // Populating default checks
     static {
-        // NOTE: Rule numbers 001 - 106 is not valid
-        DEFAULT_CHECKS.add("S107");
-        DEFAULT_CHECKS.add("S108");
+        DEFAULT_CHECKS.add("B107");
+        DEFAULT_CHECKS.add("B108");
     }
 }

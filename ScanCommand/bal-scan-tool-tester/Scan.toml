@@ -9,8 +9,8 @@ name = "custom_static_code_analyzer"
 # version = "0.1.0"
 
 [rule]
-include = ["S107", "S108", "S109"]
-exclude = ["S107"]
+include = ["B107", "B108", "B109"]
+exclude = ["B107"]
 
 # ================================================
 # Invalid use cases which are ignored by scan tool

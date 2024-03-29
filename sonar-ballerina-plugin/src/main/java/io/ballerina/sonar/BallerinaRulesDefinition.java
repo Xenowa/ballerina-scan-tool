@@ -23,7 +23,7 @@ import org.sonarsource.analyzer.commons.RuleMetadataLoader;
 
 public class BallerinaRulesDefinition implements RulesDefinition {
 
-    private static final String RESOURCE_FOLDER = "org/sonar/l10n/ballerina/rules/ballerina";
+    private static final String RESOURCE_FOLDER = "io/ballerina/sonar";
     private final SonarRuntime runtime;
 
     public BallerinaRulesDefinition(SonarRuntime runtime) {

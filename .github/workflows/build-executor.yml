@@ -2,6 +2,9 @@ name: Build
 
 # Action Listeners
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main

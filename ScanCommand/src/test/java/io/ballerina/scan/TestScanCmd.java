@@ -92,7 +92,7 @@ public class TestScanCmd {
             Assertions.assertEquals(22, lineRange.startLine().offset());
             Assertions.assertEquals(7, lineRange.endLine().line());
             Assertions.assertEquals(34, lineRange.endLine().offset());
-            Assertions.assertEquals("S108", firstIssue.ruleId());
+            Assertions.assertEquals("B108", firstIssue.ruleId());
             Assertions.assertEquals(
                     "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
                     firstIssue.getMessage());
