@@ -15,6 +15,8 @@ The following software should be installed locally
 - [SonarQube version: 9.9 (LTS)](https://www.sonarsource.com/products/sonarqube/downloads/lts/9-9-lts)
 - [Sonar scanner](https://docs.sonarsource.com/sonarqube/9.9/analyzing-source-code/scanners/sonarscanner/)
 - [Ballerina version: 2201.8.5](https://ballerina.io/downloads/archived/#swan-lake-archived-versions)
+- [Node.js version: v20.12.0](https://nodejs.org/en/blog/release/v20.12.0)
+- npm (version 10.5.0 or later)
 
 ## Getting started
 
