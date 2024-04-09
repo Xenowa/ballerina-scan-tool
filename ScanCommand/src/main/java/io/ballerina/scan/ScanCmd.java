@@ -138,7 +138,7 @@ public class ScanCmd implements BLauncherCmd {
         // Load and add rules from all static code analyzer plugins
         if (listRules) {
             List<Rule> allRules = projectAnalyzer.getExternalAnalyzerRules(project);
-            allRules.addAll(InbuiltRules.INBUILT_RULES);
+            allRules.addAll(InbuiltRules.INBUILT_RULES.values());
             ScanUtils.printRulesToConsole(allRules);
             return;
         }
@@ -219,6 +219,18 @@ public class ScanCmd implements BLauncherCmd {
                 outputStream.println();
                 outputStream.println("View scan results at:");
                 outputStream.println("\t" + reportPath + "\n");
+            } else {
+                if (scanReport) {
+                    outputStream.println();
+                    outputStream.println("Scan report is not yet supported with single bal files. " +
+                            "Ignoring the flag and continuing the scans...");
+                }
+
+                if (targetDir != null) {
+                    outputStream.println();
+                    outputStream.println("Generating reports to specified target directory is not yet supported with " +
+                            "single bal files. Ignoring the flag and continuing the scans...");
+                }
             }
         }
 

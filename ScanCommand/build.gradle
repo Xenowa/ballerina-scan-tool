@@ -15,7 +15,9 @@
  *
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os;
+import org.apache.tools.ant.taskdefs.condition.Os
+
+import java.nio.file.Paths;
 
 plugins {
     id 'java'
@@ -88,13 +90,6 @@ dependencies {
 
     // For including the scan report JAR
     implementation files("${projectDir}/src/main/resources/report.zip")
-}
-
-// Setting up the ballerina home property for the project
-tasks.withType(JavaExec).configureEach {
-    // From the local ballerina distribution
-    // Following code is the same as:
-    systemProperty 'ballerina.home', System.getenv("BALLERINA_HOME")
 }
 
 // =====================
@@ -198,16 +193,6 @@ task validateSpotbugs() {
 }
 
 spotbugsMain.finalizedBy validateSpotbugs
-
-// Required to run tests relevant to the plugin
-tasks.test {
-    useJUnitPlatform()
-}
-
-// class to build when gradlew run is executed in there terminal
-application {
-    mainClass = 'io.ballerina.scan.Main'
-}
 
 // Configurations to automatically build and deploy scan tool
 def packageName = "tool_scan"
@@ -314,4 +299,24 @@ build {
     dependsOn updateTomlFiles
     dependsOn createBallerinaToolConfigFile
     dependsOn buildScanTool
+    dependsOn ':static-code-analysis-report:createScanReportZip'
+}
+
+// class to build when gradlew run is executed in there terminal
+application {
+    mainClass = 'io.ballerina.scan.Main'
+}
+
+// Setting up the ballerina home property for java exec commands
+tasks.withType(JavaExec).configureEach {
+    systemProperty "ballerina.home", Paths.get(System.getenv("BALLERINA_HOME")).resolve("distributions")
+            .resolve("ballerina-${ballerinaVersion}").toString()
+}
+
+// Required to run tests relevant to the plugin
+test {
+    systemProperty "ballerina.home", Paths.get(System.getenv("BALLERINA_HOME")).resolve("distributions")
+            .resolve("ballerina-${ballerinaVersion}").toString()
+
+    useJUnitPlatform()
 }

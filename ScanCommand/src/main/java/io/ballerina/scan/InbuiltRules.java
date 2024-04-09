@@ -17,21 +17,26 @@
 
 package io.ballerina.scan;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class InbuiltRules {
 
-    static final List<Rule> INBUILT_RULES = new ArrayList<>();
+    static final Map<Integer, Rule> INBUILT_RULES = new HashMap<>();
     private static final String REPORTED_SOURCE = "scan_tool";
 
     static {
-        INBUILT_RULES.add(RuleFactory.createRule(107,
+        generateAndAddRule(107,
                 "Functions should not have too many parameters!",
-                Severity.CODE_SMELL, REPORTED_SOURCE));
-        INBUILT_RULES.add(RuleFactory.createRule(108,
+                Severity.CODE_SMELL);
+        generateAndAddRule(108,
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
-                Severity.CODE_SMELL, REPORTED_SOURCE));
+                Severity.CODE_SMELL);
+    }
+
+    private static void generateAndAddRule(int id, String description, Severity severity) {
+        Rule newRule = RuleFactory.createRule(id, description, severity, REPORTED_SOURCE);
+        INBUILT_RULES.put(newRule.numericId(), newRule);
     }
 
     private InbuiltRules() {

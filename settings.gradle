@@ -1,6 +1,7 @@
 rootProject.name = 'ballerina-scan-tool'
 // Ballerina Scan Tool Extension Plugins
 include 'ScanCommand'
+include 'static-code-analysis-report'
 include 'custom-rules-analyzer'
 include 'sonar-platform-plugin'
 

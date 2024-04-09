@@ -40,14 +40,6 @@ public class RuleFactory {
         return new RuleIml(fullyQualifiedId, numericId, description, severity);
     }
 
-    /**
-     * Creates a {@code Rule} instances from the given details.
-     *
-     * @param numericId   id of the static analysis rule
-     * @param description rule description
-     * @param severity    rule severity
-     * @return a {@code Rule} instance
-     */
     public static Rule createRule(int numericId, String description, Severity severity) {
         // Getting org/name from URL through protection domain
         URL jarUrl = severity.getClass()

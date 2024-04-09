@@ -32,12 +32,8 @@ public class Main {
     private static final PrintStream outputStream = System.out;
 
     public static void main(String[] args) {
-
-        System.setProperty("ballerina.home", System.getProperty("ballerina.home").split("\\\\bin")[0]);
-
-        Project project =
-                ProjectLoader.loadProject(
-                        Path.of("ScanCommand" + System.getProperty("file.separator") + "bal-scan-tool-tester"));
+        Project project = ProjectLoader.loadProject(Path.of("ScanCommand" + System.getProperty("file.separator") +
+                "bal-scan-tool-tester"));
         ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

@@ -1,18 +1,5 @@
 [
   {
-    "startLine": 0,
-    "startLineOffset": 25,
-    "endLine": 0,
-    "endLineOffset": 93,
-    "ruleID": "B107",
-    "message": "Functions should not have too many parameters!",
-    "source": "BUILT_IN",
-    "severity": "CODE_SMELL",
-    "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
-    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal",
-    "reportedSource": "scan_tool"
-  },
-  {
     "startLine": 1,
     "startLineOffset": 24,
     "endLine": 1,
@@ -23,6 +10,19 @@
     "severity": "CODE_SMELL",
     "fileName": "sonar_bal_testing.panicChecker/panicChecker.bal",
     "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal",
+    "reportedSource": "scan_tool"
+  },
+  {
+    "startLine": 0,
+    "startLineOffset": 25,
+    "endLine": 0,
+    "endLineOffset": 93,
+    "ruleID": "B107",
+    "message": "Functions should not have too many parameters!",
+    "source": "BUILT_IN",
+    "severity": "CODE_SMELL",
+    "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
+    "reportedFilePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal",
     "reportedSource": "scan_tool"
   }
 ]
