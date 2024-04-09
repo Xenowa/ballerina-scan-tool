@@ -296,10 +296,10 @@ createBallerinaToolConfigFile.dependsOn updateTomlFiles
 buildScanTool.dependsOn createBallerinaToolConfigFile
 
 build {
+    dependsOn ':static-code-analysis-report:createScanReportZip'
     dependsOn updateTomlFiles
     dependsOn createBallerinaToolConfigFile
     dependsOn buildScanTool
-    dependsOn ':static-code-analysis-report:createScanReportZip'
 }
 
 // class to build when gradlew run is executed in there terminal
