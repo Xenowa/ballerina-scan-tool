@@ -16,7 +16,7 @@
  *  under the License.
  */
 
-package io.ballerina.scan;
+package io.ballerina.scan.internal;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.projects.Project;
@@ -24,6 +24,10 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.util.ProjectConstants;
+import io.ballerina.scan.Issue;
+import io.ballerina.scan.PlatformPluginContext;
+import io.ballerina.scan.Rule;
+import io.ballerina.scan.StaticCodeAnalysisPlatformPlugin;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.scan.utilities.ScanUtils;
 import io.ballerina.scan.utilities.StringToListConverter;
@@ -49,7 +53,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.ballerina.scan.ScanToolConstants.SCAN_COMMAND;
+import static io.ballerina.scan.internal.ScanToolConstants.SCAN_COMMAND;
 
 @CommandLine.Command(name = SCAN_COMMAND, description = "Perform static code analysis for ballerina packages")
 public class ScanCmd implements BLauncherCmd {
@@ -179,12 +183,12 @@ public class ScanCmd implements BLauncherCmd {
 
         // Remove rules not in include list
         if (!allRulesToInclude.isEmpty()) {
-            issues.removeIf(issue -> !allRulesToInclude.contains(issue.ruleId()));
+            issues.removeIf(issue -> !allRulesToInclude.contains(issue.rule().id()));
         }
 
         // Remove rules in exclude list
         if (!allRulesToExclude.isEmpty()) {
-            issues.removeIf(issue -> allRulesToExclude.contains(issue.ruleId()));
+            issues.removeIf(issue -> allRulesToExclude.contains(issue.rule().id()));
         }
 
         // Produce analysis results locally if 'local' platform is given

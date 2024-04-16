@@ -26,10 +26,8 @@ public interface Issue {
 
     Location location();
 
-    String ruleId();
+    Rule rule();
 
     Source source();
-
-    Severity severity();
 }
 

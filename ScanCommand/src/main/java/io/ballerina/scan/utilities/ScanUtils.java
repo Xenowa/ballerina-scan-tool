@@ -27,9 +27,9 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.scan.Issue;
-import io.ballerina.scan.IssueIml;
 import io.ballerina.scan.Rule;
-import io.ballerina.scan.ScanToolConstants;
+import io.ballerina.scan.internal.IssueIml;
+import io.ballerina.scan.internal.ScanToolConstants;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.TomlType;
 import io.ballerina.toml.semantic.ast.TomlArrayValueNode;
@@ -62,16 +62,16 @@ import java.util.zip.ZipInputStream;
 
 import static io.ballerina.projects.util.ProjectConstants.LOCAL_REPOSITORY_NAME;
 import static io.ballerina.projects.util.ProjectConstants.REPORT_DIR_NAME;
-import static io.ballerina.scan.ScanToolConstants.ANALYZER_TABLE;
-import static io.ballerina.scan.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
-import static io.ballerina.scan.ScanToolConstants.JAR_PREDICATE;
-import static io.ballerina.scan.ScanToolConstants.PLATFORM_TABLE;
-import static io.ballerina.scan.ScanToolConstants.RESULTS_JSON_FILE;
-import static io.ballerina.scan.ScanToolConstants.RULES_TABLE;
-import static io.ballerina.scan.ScanToolConstants.SCAN_FILE;
-import static io.ballerina.scan.ScanToolConstants.SCAN_FILE_FIELD;
-import static io.ballerina.scan.ScanToolConstants.SCAN_TABLE;
-import static io.ballerina.scan.ScanToolConstants.TARGET_DIR_NAME;
+import static io.ballerina.scan.internal.ScanToolConstants.ANALYZER_TABLE;
+import static io.ballerina.scan.internal.ScanToolConstants.CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN;
+import static io.ballerina.scan.internal.ScanToolConstants.JAR_PREDICATE;
+import static io.ballerina.scan.internal.ScanToolConstants.PLATFORM_TABLE;
+import static io.ballerina.scan.internal.ScanToolConstants.RESULTS_JSON_FILE;
+import static io.ballerina.scan.internal.ScanToolConstants.RULES_TABLE;
+import static io.ballerina.scan.internal.ScanToolConstants.SCAN_FILE;
+import static io.ballerina.scan.internal.ScanToolConstants.SCAN_FILE_FIELD;
+import static io.ballerina.scan.internal.ScanToolConstants.SCAN_TABLE;
+import static io.ballerina.scan.internal.ScanToolConstants.TARGET_DIR_NAME;
 
 public class ScanUtils {
 
@@ -169,11 +169,11 @@ public class ScanUtils {
         issues.forEach((issue) -> {
             // Cast to issue implementation to access additional info
             IssueIml issueIml = (IssueIml) issue;
-            String filePath = issueIml.getReportedFilePath();
+            String filePath = issueIml.filePath();
             if (!jsonScanReportPathAndFile.containsKey(filePath)) {
                 JsonObject jsonScanReportFile = new JsonObject();
 
-                jsonScanReportFile.addProperty("fileName", issueIml.getFileName());
+                jsonScanReportFile.addProperty("fileName", issueIml.fileName());
                 jsonScanReportFile.addProperty("filePath", filePath);
 
                 // Get the contents of the file through a file reader
@@ -193,10 +193,10 @@ public class ScanUtils {
                 jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
-                jsonScanReportIssue.addProperty("ruleID", issueIml.ruleId());
-                jsonScanReportIssue.addProperty("issueSeverity", issueIml.severity().toString());
+                jsonScanReportIssue.addProperty("ruleID", issueIml.rule().id());
+                jsonScanReportIssue.addProperty("issueSeverity", issueIml.rule().severity().toString());
                 jsonScanReportIssue.addProperty("issueType", issueIml.source().toString());
-                jsonScanReportIssue.addProperty("message", issueIml.getMessage());
+                jsonScanReportIssue.addProperty("message", issueIml.rule().description());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 
                 JsonArray jsonIssues = new JsonArray();
@@ -215,10 +215,10 @@ public class ScanUtils {
                 jsonScanReportIssueTextRange.addProperty("endLineOffset", lineRange.endLine().offset());
 
                 JsonObject jsonScanReportIssue = new JsonObject();
-                jsonScanReportIssue.addProperty("ruleID", issueIml.ruleId());
-                jsonScanReportIssue.addProperty("issueSeverity", issueIml.severity().toString());
+                jsonScanReportIssue.addProperty("ruleID", issueIml.rule().id());
+                jsonScanReportIssue.addProperty("issueSeverity", issueIml.rule().severity().toString());
                 jsonScanReportIssue.addProperty("issueType", issueIml.source().toString());
-                jsonScanReportIssue.addProperty("message", issueIml.getMessage());
+                jsonScanReportIssue.addProperty("message", issueIml.rule().description());
                 jsonScanReportIssue.add("textRange", jsonScanReportIssueTextRange);
 
                 JsonArray jsonIssues = jsonScanReportFile.getAsJsonArray("issues");

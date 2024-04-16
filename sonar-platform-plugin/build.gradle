@@ -66,6 +66,9 @@ dependencies {
     // set the correct gson version
     implementation "com.google.code.gson:gson:${project.gsonVersion}"
 
+    // For accessing Ballerina dependencies
+    implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${project.ballerinaVersion}"
+
     // Adding dependency to the bal scan tool to retrieve the interface methods
     implementation project(path: ':ScanCommand')
 }

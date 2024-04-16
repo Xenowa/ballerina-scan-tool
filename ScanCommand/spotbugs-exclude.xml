@@ -1,6 +1,6 @@
 <FindBugsFilter>
     <Match>
-        <Class name="io.ballerina.scan.IssueIml"/>
+        <Class name="io.ballerina.scan.internal.IssueIml"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
     <Match>
@@ -18,14 +18,14 @@
         </or>
     </Match>
     <Match>
-        <Class name="io.ballerina.scan.StaticCodeAnalyzer"/>
+        <Class name="io.ballerina.scan.internal.StaticCodeAnalyzer"/>
         <or>
             <Bug pattern="EI_EXPOSE_REP2"/>
             <Bug pattern="URF_UNREAD_FIELD"/>
         </or>
     </Match>
     <Match>
-        <Class name="io.ballerina.scan.StaticCodeAnalyzerPlugin"/>
+        <Class name="io.ballerina.scan.internal.StaticCodeAnalyzerPlugin"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 </FindBugsFilter>

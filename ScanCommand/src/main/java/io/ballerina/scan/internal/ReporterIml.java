@@ -1,25 +1,29 @@
 /*
- * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (https://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 
-package io.ballerina.scan;
+package io.ballerina.scan.internal;
 
 import io.ballerina.projects.Document;
+import io.ballerina.scan.Issue;
+import io.ballerina.scan.Reporter;
+import io.ballerina.scan.Rule;
+import io.ballerina.scan.Source;
 import io.ballerina.tools.diagnostics.Location;
-import io.ballerina.tools.text.LineRange;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -44,14 +48,11 @@ public class ReporterIml implements Reporter {
         Path issuesFilePath = reportedDocument.module().project().documentPath(reportedDocument.documentId())
                 .orElse(Path.of(documentName));
 
-        LineRange lineRange = location.lineRange();
-
         // Split the fully qualified id to its source and prefixed ID
         // i.e: org/name:B109
         String fullyQualifiedRuleId = rule.id();
         String[] parts = fullyQualifiedRuleId.split(":");
         String reportedSource = parts[0];
-        String ruleWithPrefix = parts[1];
 
         // Depending on the org name of the compiler plugin set the issue type
         String pluginOrg = reportedSource.split(Pattern.quote(System.getProperty("file.separator")))[0];
@@ -60,17 +61,8 @@ public class ReporterIml implements Reporter {
         // Construct the issue reported compiler plugin source
 
         // Create a new Issue
-        IssueIml issue = new IssueIml(lineRange.startLine().line(),
-                lineRange.startLine().offset(),
-                lineRange.endLine().line(),
-                lineRange.endLine().offset(),
-                ruleWithPrefix,
-                rule.description(),
-                rule.severity(),
-                source,
-                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
-                issuesFilePath.toString(),
-                reportedSource);
+        IssueIml issue = new IssueIml(location, rule, source,
+                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName, issuesFilePath.toString());
 
         // Add the issue reported with the information
         issues.add(issue);

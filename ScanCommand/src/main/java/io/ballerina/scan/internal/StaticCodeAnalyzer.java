@@ -1,25 +1,25 @@
 /*
- * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (https://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 
-package io.ballerina.scan;
+package io.ballerina.scan.internal;
 
 import io.ballerina.compiler.api.SemanticModel;
-import io.ballerina.compiler.internal.parser.tree.STToken;
-import io.ballerina.compiler.syntax.tree.FunctionBodyBlockNode;
+import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
@@ -27,9 +27,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.Document;
 
-import java.util.List;
-
-import static io.ballerina.scan.InbuiltRules.INBUILT_RULES;
+import static io.ballerina.scan.internal.InbuiltRules.INBUILT_RULES;
 
 public class StaticCodeAnalyzer extends NodeVisitor {
 
@@ -72,20 +70,11 @@ public class StaticCodeAnalyzer extends NodeVisitor {
     }
 
     @Override
-    public void visit(FunctionBodyBlockNode functionBodyBlockNode) {
-        functionBodyBlockNode.statements().forEach(statementNode -> {
-            statementNode.children().forEach(childPair -> {
-                List<STToken> tokens = childPair.internalNode().tokens();
-                tokens.forEach(token -> {
-                    if (token.kind.equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
-                        // Report the issue
-                        scannerContext.getReporter().reportIssue(currentDocument, childPair.location(),
-                                INBUILT_RULES.get(108));
-                    }
-                });
-            });
-        });
-
-        this.visitSyntaxNode(functionBodyBlockNode);
+    public void visit(CheckExpressionNode checkExpressionNode) {
+        if (checkExpressionNode.checkKeyword().kind().equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
+            // Report the issue
+            scannerContext.getReporter().reportIssue(currentDocument, checkExpressionNode.location(),
+                    INBUILT_RULES.get(108));
+        }
     }
 }

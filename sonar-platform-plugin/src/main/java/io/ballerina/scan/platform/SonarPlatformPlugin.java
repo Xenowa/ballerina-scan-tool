@@ -20,9 +20,11 @@ package io.ballerina.scan.platform;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.PlatformPluginContext;
 import io.ballerina.scan.StaticCodeAnalysisPlatformPlugin;
+import io.ballerina.scan.internal.IssueIml;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -114,9 +116,39 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
     }
 
     private void saveIssues(String fileName, List<Issue> issues) {
-        // Convert the output to a string
+        // Convert the issues to the format sonar-ballerina plugin expects
+        JsonArray issuesAsJson = new JsonArray();
+
+        issues.forEach(issue -> {
+            IssueIml reportedIssue = (IssueIml) issue;
+            JsonObject issueObject = new JsonObject();
+            issueObject.addProperty("startLine", reportedIssue.location().lineRange().startLine().line());
+            issueObject.addProperty("startLineOffset", reportedIssue.location().lineRange().startLine()
+                    .offset());
+            issueObject.addProperty("endLine", reportedIssue.location().lineRange().endLine().line());
+            issueObject.addProperty("endLineOffset", reportedIssue.location().lineRange().endLine().offset());
+
+            String fullyQualifiedRuleId = reportedIssue.rule().id();
+            String[] parts = fullyQualifiedRuleId.split(":");
+            String reportedSource;
+            String ruleWithPrefix;
+            if (parts.length == 2) {
+                ruleWithPrefix = parts[1];
+            } else {
+                ruleWithPrefix = parts[0];
+            }
+
+            issueObject.addProperty("ruleID", ruleWithPrefix);
+            issueObject.addProperty("message", reportedIssue.rule().description());
+            issueObject.addProperty("severity", reportedIssue.rule().severity().toString());
+            issueObject.addProperty("source", reportedIssue.source().toString());
+            issueObject.addProperty("fileName", reportedIssue.fileName());
+            issueObject.addProperty("filePath", reportedIssue.filePath());
+            issuesAsJson.add(issueObject);
+        });
+
+        // Convert formatted array to a string
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        JsonArray issuesAsJson = gson.toJsonTree(issues).getAsJsonArray();
         String jsonOutput = gson.toJson(issuesAsJson);
 
         // Save analysis results to file

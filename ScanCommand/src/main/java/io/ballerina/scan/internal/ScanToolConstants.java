@@ -16,7 +16,7 @@
  *  under the License.
  */
 
-package io.ballerina.scan;
+package io.ballerina.scan.internal;
 
 public class ScanToolConstants {
 
@@ -45,6 +45,7 @@ public class ScanToolConstants {
     // Import generation constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";
     public static final String CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN = "^\\d+\\.\\d+\\.\\d+$";
+    public static final String BALLERINA_RULE_PREFIX = "B";
 
     private ScanToolConstants() {
     }

@@ -9,7 +9,7 @@ name = "custom_static_code_analyzer"
 # version = "0.1.0"
 
 [rule]
-include = ["B107", "B108", "B109"]
+include = ["B107", "B108", "tharana_wanigaratne/custom_static_code_analyzer:B109"]
 exclude = ["B107"]
 
 # ================================================

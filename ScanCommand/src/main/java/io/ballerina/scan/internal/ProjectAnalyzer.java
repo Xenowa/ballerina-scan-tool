@@ -1,21 +1,22 @@
 /*
- * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (https://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  WSO2 LLC. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 
-package io.ballerina.scan;
+package io.ballerina.scan.internal;
 
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
@@ -33,8 +34,12 @@ import io.ballerina.projects.PackageResolution;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.ResolvedPackageDependency;
+import io.ballerina.scan.Issue;
+import io.ballerina.scan.Rule;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.tools.text.LineRange;
+import io.ballerina.tools.text.TextRange;
+import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -47,9 +52,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
-import static io.ballerina.scan.ScanToolConstants.MAIN_BAL;
-import static io.ballerina.scan.ScanToolConstants.PATH_SEPARATOR;
-import static io.ballerina.scan.ScanToolConstants.USE_IMPORT_AS_SERVICE;
+import static io.ballerina.scan.internal.ScanToolConstants.BALLERINA_RULE_PREFIX;
+import static io.ballerina.scan.internal.ScanToolConstants.MAIN_BAL;
+import static io.ballerina.scan.internal.ScanToolConstants.PATH_SEPARATOR;
+import static io.ballerina.scan.internal.ScanToolConstants.USE_IMPORT_AS_SERVICE;
 
 public class ProjectAnalyzer {
 
@@ -162,7 +168,14 @@ public class ProjectAnalyzer {
                                         .newInstance();
 
                                 // Collect all rules from the compiler plugin
-                                externalRules.addAll(plugin.rules());
+                                List<Rule> rules = plugin.rules();
+                                rules.forEach(rule -> {
+                                    String fullyQualifiedId = String.format("%s" + PATH_SEPARATOR
+                                            + "%s:%s%d", org, name, BALLERINA_RULE_PREFIX, rule.numericId());
+                                    RuleIml correctedRule = new RuleIml(fullyQualifiedId, rule.numericId(),
+                                            rule.description(), rule.severity());
+                                    externalRules.add(correctedRule);
+                                });
                             } catch (ClassNotFoundException |
                                      NoSuchMethodException |
                                      SecurityException |
@@ -298,24 +311,22 @@ public class ProjectAnalyzer {
             externalIssues.forEach(externalIssue -> {
                 // Cast the external issue to its implementation to retrieve additional getters
                 IssueIml externalIssueIml = (IssueIml) externalIssue;
-                if (externalIssueIml.getFileName().equals(project.currentPackage()
+                if (externalIssueIml.fileName().equals(project.currentPackage()
                         .packageName()
                         + PATH_SEPARATOR
                         + MAIN_BAL)) {
                     // Modify the issue
-                    LineRange lineRange = externalIssueIml.location().lineRange();
-                    IssueIml modifiedExternalIssue = new IssueIml(
+                    LineRange lineRange = externalIssue.location().lineRange();
+                    TextRange textRange = externalIssue.location().textRange();
+                    BLangDiagnosticLocation modifiedLocation = new BLangDiagnosticLocation(lineRange.fileName(),
                             lineRange.startLine().line() - importCounter.get(),
-                            lineRange.startLine().offset(),
                             lineRange.endLine().line() - importCounter.get(),
+                            lineRange.startLine().offset(),
                             lineRange.endLine().offset(),
-                            externalIssueIml.ruleId(),
-                            externalIssueIml.getMessage(),
-                            externalIssueIml.severity(),
-                            externalIssueIml.source(),
-                            externalIssueIml.getFileName(),
-                            externalIssueIml.getReportedFilePath(),
-                            externalIssueIml.getReportedSource());
+                            textRange.startOffset(),
+                            textRange.length());
+                    IssueIml modifiedExternalIssue = new IssueIml(modifiedLocation, externalIssueIml.rule(),
+                            externalIssueIml.source(), externalIssueIml.fileName(), externalIssueIml.filePath());
 
                     modifiedExternalIssues.add(modifiedExternalIssue);
                 } else {

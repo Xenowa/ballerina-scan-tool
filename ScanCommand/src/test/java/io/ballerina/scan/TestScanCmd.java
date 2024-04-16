@@ -20,6 +20,7 @@ package io.ballerina.scan;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import io.ballerina.scan.internal.IssueIml;
 import io.ballerina.tools.text.LineRange;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -92,10 +93,10 @@ public class TestScanCmd {
             Assertions.assertEquals(22, lineRange.startLine().offset());
             Assertions.assertEquals(7, lineRange.endLine().line());
             Assertions.assertEquals(34, lineRange.endLine().offset());
-            Assertions.assertEquals("B108", firstIssue.ruleId());
+            Assertions.assertEquals("B108", firstIssue.rule().id());
             Assertions.assertEquals(
                     "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
-                    firstIssue.getMessage());
+                    firstIssue.rule().description());
             Assertions.assertEquals(Source.BUILT_IN, firstIssue.source());
         }
     }
