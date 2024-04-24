@@ -20,6 +20,8 @@
 
 package io.ballerina.scan;
 
+// Change the name to RuleKind, Severity should be changed to this
+// Basically user can do a validation weather the rule ID provided is from the org and name
 public enum Severity {
     // Label for marking maintainability issues causing code confusion and difficulty
     CODE_SMELL,

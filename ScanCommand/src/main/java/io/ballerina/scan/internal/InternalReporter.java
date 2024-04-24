@@ -19,20 +19,46 @@
 package io.ballerina.scan.internal;
 
 import io.ballerina.projects.Document;
+import io.ballerina.projects.Module;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.Rule;
 import io.ballerina.scan.Source;
 import io.ballerina.tools.diagnostics.Location;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InternalReporter {
 
     private final List<Issue> issues;
+    private final Map<Integer, Rule> rules = new HashMap<>();
 
-    InternalReporter(List<Issue> issues) {
+    InternalReporter(List<Issue> issues, List<Rule> rules) {
+        rules.forEach(rule -> {
+            this.rules.put(rule.numericId(), rule);
+        });
         this.issues = issues;
+    }
+
+    void reportIssue(Document reportedDocument, Location location, int ruleId) {
+        String documentName = reportedDocument.name();
+        Module module = reportedDocument.module();
+        String moduleName = module.moduleName().toString();
+        Path issuesFilePath = module.project().documentPath(reportedDocument.documentId())
+                .orElse(Path.of(documentName));
+
+        // Retrieve the relevant rule from the map
+        Rule rule = rules.get(ruleId);
+        if (rule == null) {
+            throw new NullPointerException();
+        }
+
+        // Create a new issue
+        IssueIml issue = new IssueIml(location, rule, Source.BUILT_IN,
+                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName, issuesFilePath.toString());
+        issues.add(issue);
     }
 
     void reportIssue(Document reportedDocument, Location location, Rule rule) {
@@ -42,12 +68,8 @@ public class InternalReporter {
                 .orElse(Path.of(documentName));
 
         // Create a new Issue
-        IssueIml issue = new IssueIml(location,
-                rule,
-                Source.BUILT_IN,
-                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName,
-                issuesFilePath.toString());
-
+        IssueIml issue = new IssueIml(location, rule, Source.BUILT_IN,
+                moduleName + ScanToolConstants.PATH_SEPARATOR + documentName, issuesFilePath.toString());
         issues.add(issue);
     }
 

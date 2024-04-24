@@ -21,6 +21,7 @@ package io.ballerina.scan.internal;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.BallerinaToml;
+import io.ballerina.projects.CompilerPluginCache;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
@@ -36,19 +37,21 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.Rule;
+import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.tools.text.LineRange;
 import io.ballerina.tools.text.TextRange;
 import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 
-import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
@@ -60,11 +63,9 @@ import static io.ballerina.scan.internal.ScanToolConstants.USE_IMPORT_AS_SERVICE
 public class ProjectAnalyzer {
 
     private final ScanTomlFile scanTomlFile;
-    private final PrintStream outputStream;
 
-    ProjectAnalyzer(ScanTomlFile scanTomlFile, PrintStream outputStream) {
+    ProjectAnalyzer(ScanTomlFile scanTomlFile) {
         this.scanTomlFile = scanTomlFile;
-        this.outputStream = outputStream;
     }
 
     public List<Rule> getExternalAnalyzerRules(Project project) {
@@ -198,7 +199,8 @@ public class ProjectAnalyzer {
     public List<Issue> analyzeProject(Project project) {
         // Issues store
         List<Issue> allIssues = new ArrayList<>();
-        InternalScannerContext internalScannerContext = new InternalScannerContext(allIssues);
+        InternalScannerContext internalScannerContext = new InternalScannerContext(allIssues,
+                InbuiltRules.INBUILT_RULES);
 
         if (project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
             Module tempModule = project.currentPackage().getDefaultModule();
@@ -258,12 +260,15 @@ public class ProjectAnalyzer {
         StringBuilder newImports = new StringBuilder();
         StringBuilder tomlDependencies = new StringBuilder();
         AtomicInteger importCounter = new AtomicInteger(0);
+        List<String> analyzerDescriptors = new ArrayList<>();
 
         scanTomlFile.getAnalyzers().forEach(analyzer -> {
             // Generate analyzer as import
             String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
                     + USE_IMPORT_AS_SERVICE;
             newImports.append(analyzerImport).append("\n");
+
+            analyzerDescriptors.add(analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName());
 
             // Generate toml dependencies if version provided
             if (analyzer.getVersion() != null) {
@@ -295,48 +300,126 @@ public class ProjectAnalyzer {
             ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
         }
 
-        // Engage custom compiler plugins through module compilation
+        // Passing scanner contexts to compiler plugins
+        List<ScannerContext> scannerContextList = new ArrayList<>();
+        PackageResolution packageResolution = project.currentPackage().getResolution();
+
+        // Get the dependencies generated in the main.bal file
+        ResolvedPackageDependency rootPkgNode = new ResolvedPackageDependency(project.currentPackage(),
+                PackageDependencyScope.DEFAULT);
+
+        List<Package> directDependencies = packageResolution.dependencyGraph()
+                .getDirectDependencies(rootPkgNode)
+                .stream()
+                .map(ResolvedPackageDependency::packageInstance)
+                .toList();
+
+        for (Package pkgDependency : directDependencies) {
+            PackageManifest pkgManifest = pkgDependency.manifest();
+
+            PackageOrg org = pkgManifest.org();
+            PackageName name = pkgManifest.name();
+            String reportedSource = org + PATH_SEPARATOR + name;
+
+            if (analyzerDescriptors.contains(reportedSource)) {
+                // Get the URL of the imported compiler plugin
+                List<String> jarPaths = new ArrayList<>();
+
+                pkgManifest.compilerPluginDescriptor()
+                        .ifPresent(pluginDesc -> {
+                            // There is only 1 pluginDesc per compiler plugin
+                            pluginDesc.dependencies().forEach(dependency -> {
+                                jarPaths.add(dependency.getPath());
+                            });
+
+                            // Get fully qualified class name of the class implementing the compiler plugin
+                            String fqn = pluginDesc.plugin().getClassName();
+
+                            List<Rule> externalRules = new ArrayList<>();
+                            try {
+                                // Create a URLClassLoader
+                                List<URL> jarUrls = new ArrayList<>();
+                                jarPaths.forEach(jarPath -> {
+                                    try {
+                                        URL jarUrl = Path.of(jarPath).toUri().toURL();
+                                        jarUrls.add(jarUrl);
+                                    } catch (MalformedURLException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                });
+                                URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
+                                        this.getClass().getClassLoader());
+
+                                // TODO: Change Obtaining rules defined in a JSON file on compiler plugins
+                                Class<?> pluginClass = ucl.loadClass(fqn);
+                                StaticCodeAnalyzerPlugin plugin = (StaticCodeAnalyzerPlugin) pluginClass
+                                        .getConstructor()
+                                        .newInstance();
+
+                                List<Rule> rules = plugin.rules();
+                                rules.forEach(rule -> {
+                                    String fullyQualifiedId = String.format("%s" + PATH_SEPARATOR
+                                            + "%s:%s%d", org, name, BALLERINA_RULE_PREFIX, rule.numericId());
+                                    RuleIml correctedRule = new RuleIml(fullyQualifiedId, rule.numericId(),
+                                            rule.description(), rule.severity());
+                                    externalRules.add(correctedRule);
+                                });
+                            } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
+                                     IllegalAccessException | NoSuchMethodException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            // Create and add scanner context to static analysis compiler plugins
+                            ScannerContext context = new ScannerContextIml(externalRules);
+                            scannerContextList.add(context);
+
+                            Map<String, Object> pluginProperties = new HashMap<>();
+                            pluginProperties.put("ScannerContext", context);
+
+                            project.projectEnvironmentContext()
+                                    .getService(CompilerPluginCache.class)
+                                    .putData(fqn, pluginProperties);
+                        });
+            }
+        }
+
+        // Engage custom compiler plugins through package compilation
         project.currentPackage().getCompilation();
 
-        // Retrieve External issues
-        // TODO: External Scanner context will be used after property bag feature is introduced by project API
-        //  List<Issue> externalIssues = new ArrayList<>();
-        //  ScannerContext scannerContext = new ScannerContext(externalIssues);
-        List<Issue> externalIssues = StaticCodeAnalyzerPlugin.getIssues();
+        // Filter main bal file issues and remove imported compiler plugin lines from issues
+        List<Issue> externalIssues = new ArrayList<>();
+        scannerContextList.forEach(scannerContext -> {
+            ReporterIml reporter = (ReporterIml) scannerContext.getReporter();
+            externalIssues.addAll(reporter.getIssues());
+        });
 
-        if (externalIssues != null) {
-            // Filter main bal file which compiler plugin imports were generated and remove imported lines from
-            // reported issues and create a modified external issues array
-            List<Issue> modifiedExternalIssues = new ArrayList<>();
-            externalIssues.forEach(externalIssue -> {
-                // Cast the external issue to its implementation to retrieve additional getters
-                IssueIml externalIssueIml = (IssueIml) externalIssue;
-                if (externalIssueIml.fileName().equals(project.currentPackage()
-                        .packageName()
-                        + PATH_SEPARATOR
-                        + MAIN_BAL)) {
-                    // Modify the issue
-                    LineRange lineRange = externalIssue.location().lineRange();
-                    TextRange textRange = externalIssue.location().textRange();
-                    BLangDiagnosticLocation modifiedLocation = new BLangDiagnosticLocation(lineRange.fileName(),
-                            lineRange.startLine().line() - importCounter.get(),
-                            lineRange.endLine().line() - importCounter.get(),
-                            lineRange.startLine().offset(),
-                            lineRange.endLine().offset(),
-                            textRange.startOffset(),
-                            textRange.length());
-                    IssueIml modifiedExternalIssue = new IssueIml(modifiedLocation, externalIssueIml.rule(),
-                            externalIssueIml.source(), externalIssueIml.fileName(), externalIssueIml.filePath());
+        List<Issue> modifiedExternalIssues = new ArrayList<>();
+        externalIssues.forEach(issue -> {
+            // Cast the external issue to its implementation to retrieve additional getters
+            IssueIml externalIssueIml = (IssueIml) issue;
+            if (externalIssueIml.fileName().equals(project.currentPackage()
+                    .packageName()
+                    + PATH_SEPARATOR
+                    + MAIN_BAL)) {
+                // Modify the issue
+                LineRange lineRange = issue.location().lineRange();
+                TextRange textRange = issue.location().textRange();
+                BLangDiagnosticLocation modifiedLocation = new BLangDiagnosticLocation(lineRange.fileName(),
+                        lineRange.startLine().line() - importCounter.get(),
+                        lineRange.endLine().line() - importCounter.get(),
+                        lineRange.startLine().offset(),
+                        lineRange.endLine().offset(),
+                        textRange.startOffset(),
+                        textRange.length());
+                IssueIml modifiedExternalIssue = new IssueIml(modifiedLocation, externalIssueIml.rule(),
+                        externalIssueIml.source(), externalIssueIml.fileName(), externalIssueIml.filePath());
 
-                    modifiedExternalIssues.add(modifiedExternalIssue);
-                } else {
-                    modifiedExternalIssues.add(externalIssue);
-                }
-            });
+                modifiedExternalIssues.add(modifiedExternalIssue);
+            } else {
+                modifiedExternalIssues.add(issue);
+            }
+        });
 
-            outputStream.println("Running custom scanner plugins...");
-            return modifiedExternalIssues;
-        }
-        return new ArrayList<>();
+        return modifiedExternalIssues;
     }
 }

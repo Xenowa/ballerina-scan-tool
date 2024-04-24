@@ -18,8 +18,8 @@
 
 package io.ballerina.scan.internal;
 
-import io.ballerina.scan.Issue;
 import io.ballerina.scan.Reporter;
+import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
 
 import java.util.List;
@@ -28,23 +28,12 @@ public class ScannerContextIml implements ScannerContext {
 
     private final ReporterIml reporter;
 
-    ScannerContextIml(List<Issue> issues) {
-        this.reporter = new ReporterIml(issues);
+    ScannerContextIml(List<Rule> rules) {
+        this.reporter = new ReporterIml(rules);
     }
 
     @Override
     public synchronized Reporter getReporter() {
         return reporter;
     }
-
-    // TODO: Internal method To be removed ones project API fix is in effect
-    synchronized List<Issue> getAllIssues() {
-        return reporter.getIssues();
-    }
-
-    // NOTES
-    //  - Rules to filter should be passed through the compiler plugin context through scanner context
-    //  - It's plugin developers responsibility to implement visitor checks in a way they can be enabled/disabled by
-    //  the passed rules
-    //  - There is still the problem of identifying which plugins reported which issues to be solved
 }

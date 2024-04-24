@@ -27,8 +27,6 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.Document;
 
-import static io.ballerina.scan.internal.InbuiltRules.INBUILT_RULES;
-
 public class StaticCodeAnalyzer extends NodeVisitor {
 
     private final Document currentDocument;
@@ -61,8 +59,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
         int allowedParametersLimit = 7;
         if (parameterCount > allowedParametersLimit) {
             // Report issue
-            scannerContext.getReporter().reportIssue(currentDocument, functionSignatureNode.location(),
-                    INBUILT_RULES.get(107));
+            scannerContext.getReporter().reportIssue(currentDocument, functionSignatureNode.location(), 107);
         }
 
         // Continue visiting other nodes of the syntax tree
@@ -73,8 +70,7 @@ public class StaticCodeAnalyzer extends NodeVisitor {
     public void visit(CheckExpressionNode checkExpressionNode) {
         if (checkExpressionNode.checkKeyword().kind().equals(SyntaxKind.CHECKPANIC_KEYWORD)) {
             // Report the issue
-            scannerContext.getReporter().reportIssue(currentDocument, checkExpressionNode.location(),
-                    INBUILT_RULES.get(108));
+            scannerContext.getReporter().reportIssue(currentDocument, checkExpressionNode.location(), 108);
         }
     }
 }

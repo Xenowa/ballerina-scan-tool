@@ -137,12 +137,12 @@ public class ScanCmd implements BLauncherCmd {
         ScanTomlFile scanTomlFile = ScanUtils.retrieveScanTomlConfigurations(project);
 
         // Initialize project analyzer
-        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile, outputStream);
+        ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(scanTomlFile);
 
         // Load and add rules from all static code analyzer plugins
         if (listRules) {
             List<Rule> allRules = projectAnalyzer.getExternalAnalyzerRules(project);
-            allRules.addAll(InbuiltRules.INBUILT_RULES.values());
+            allRules.addAll(InbuiltRules.INBUILT_RULES);
             ScanUtils.printRulesToConsole(allRules);
             return;
         }

@@ -21,25 +21,20 @@ package io.ballerina.scan.internal;
 import io.ballerina.scan.Rule;
 import io.ballerina.scan.Severity;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InbuiltRules {
 
-    static final Map<Integer, Rule> INBUILT_RULES = new HashMap<>();
+    static final List<Rule> INBUILT_RULES = new ArrayList<>();
 
     static {
-        generateAndAddRule(107,
+        INBUILT_RULES.add(RuleFactory.createRule(107,
                 "Functions should not have too many parameters!",
-                Severity.CODE_SMELL);
-        generateAndAddRule(108,
+                Severity.CODE_SMELL));
+        INBUILT_RULES.add(RuleFactory.createRule(108,
                 "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
-                Severity.CODE_SMELL);
-    }
-
-    private static void generateAndAddRule(int id, String description, Severity severity) {
-        Rule newRule = RuleFactory.createRule(id, description, severity);
-        INBUILT_RULES.put(newRule.numericId(), newRule);
+                Severity.CODE_SMELL));
     }
 
     private InbuiltRules() {

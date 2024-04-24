@@ -23,27 +23,19 @@ package org.arc.scanner;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
-import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
-
-import java.util.List;
 
 public class CustomCodeAnalyzer extends CodeAnalyzer {
 
-    private final CustomStaticCodeAnalyzer customStaticCodeAnalyzer;
     private final ScannerContext scannerContext;
-    private final List<Rule> customRules;
 
-    public CustomCodeAnalyzer(ScannerContext scannerContext, List<Rule> customRules,
-                              CustomStaticCodeAnalyzer customStaticCodeAnalyzer) {
-        this.customStaticCodeAnalyzer = customStaticCodeAnalyzer;
+    public CustomCodeAnalyzer(ScannerContext scannerContext) {
         this.scannerContext = scannerContext;
-        this.customRules = customRules.stream().toList();
     }
 
     @Override
     public void init(CodeAnalysisContext codeAnalysisContext) {
-        codeAnalysisContext.addSyntaxNodeAnalysisTask(new CustomAnalysisTask(scannerContext, customRules,
-                customStaticCodeAnalyzer), SyntaxKind.FUNCTION_BODY_BLOCK);
+        codeAnalysisContext.addSyntaxNodeAnalysisTask(new CustomAnalysisTask(scannerContext),
+                SyntaxKind.FUNCTION_BODY_BLOCK);
     }
 }

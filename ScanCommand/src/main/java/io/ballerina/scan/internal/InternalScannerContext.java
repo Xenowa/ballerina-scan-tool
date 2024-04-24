@@ -19,6 +19,7 @@
 package io.ballerina.scan.internal;
 
 import io.ballerina.scan.Issue;
+import io.ballerina.scan.Rule;
 
 import java.util.List;
 
@@ -26,8 +27,8 @@ public class InternalScannerContext {
 
     private final InternalReporter reporter;
 
-    InternalScannerContext(List<Issue> issues) {
-        this.reporter = new InternalReporter(issues);
+    InternalScannerContext(List<Issue> issues, List<Rule> rules) {
+        this.reporter = new InternalReporter(issues, rules);
     }
 
     InternalReporter getReporter() {
