@@ -221,7 +221,7 @@ class BallerinaSensor implements Sensor {
                 JsonObject issue = issueElement.getAsJsonObject();
 
                 // Retrieve the absolute path of the scanned ballerina file
-                String absoluteFilePath = issue.get("reportedFilePath").getAsString();
+                String absoluteFilePath = issue.get("filePath").getAsString();
 
                 // retrieve the InputFile relevant to the path of the analyzed file
                 InputFile inputFile = pathAndInputFiles.get(absoluteFilePath);

@@ -62,7 +62,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
         context.fileSystem().add(inputFile8);
 
         // Setting up dummy rules
-        CheckFactory checkFactory = checkFactory("S107", "S108");
+        CheckFactory checkFactory = checkFactory("B107", "B108");
         BallerinaSensor sensor = sensor(checkFactory);
 
         sensor.execute(context);

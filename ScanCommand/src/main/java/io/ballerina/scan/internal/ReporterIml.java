@@ -73,7 +73,7 @@ public class ReporterIml implements Reporter {
         }
 
         Issue issue = new IssueIml(location, rule, source,
-                moduleName + System.lineSeparator() + documentName, issuesFilePath.toString());
+                moduleName + PATH_SEPARATOR + documentName, issuesFilePath.toString());
         issues.add(issue);
     }
 

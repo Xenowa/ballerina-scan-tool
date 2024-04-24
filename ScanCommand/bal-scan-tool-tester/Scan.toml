@@ -10,7 +10,7 @@ name = "custom_static_code_analyzer"
 
 [rule]
 include = ["B107", "B108", "tharana_wanigaratne/custom_static_code_analyzer:B109"]
-exclude = ["B107"]
+#exclude = ["B107"]
 
 # ================================================
 # Invalid use cases which are ignored by scan tool

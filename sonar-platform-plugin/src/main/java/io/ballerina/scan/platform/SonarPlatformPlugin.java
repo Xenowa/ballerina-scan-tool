@@ -130,7 +130,6 @@ public class SonarPlatformPlugin implements StaticCodeAnalysisPlatformPlugin {
 
             String fullyQualifiedRuleId = reportedIssue.rule().id();
             String[] parts = fullyQualifiedRuleId.split(":");
-            String reportedSource;
             String ruleWithPrefix;
             if (parts.length == 2) {
                 ruleWithPrefix = parts[1];
