@@ -72,8 +72,4 @@ public class InternalReporter {
                 moduleName + ScanToolConstants.PATH_SEPARATOR + documentName, issuesFilePath.toString());
         issues.add(issue);
     }
-
-    void addExternalIssues(List<Issue> externalIssues) {
-        issues.addAll(externalIssues);
-    }
 }

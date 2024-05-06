@@ -18,36 +18,14 @@
 package org.arc.scanner;
 
 import io.ballerina.projects.plugins.CompilerPluginContext;
-import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
-import io.ballerina.scan.Severity;
-import io.ballerina.scan.internal.RuleFactory;
 import io.ballerina.scan.internal.StaticCodeAnalyzerPlugin;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
 
     @Override
-    public List<Rule> rules() {
-        List<Rule> customRules = new ArrayList<>();
-        customRules.add(RuleFactory.createRule(109, Severity.CODE_SMELL,
-                "Add a nested comment explaining why" +
-                        " this function is empty or complete the implementation."));
-
-        customRules.add(RuleFactory.createRule(110, Severity.CODE_SMELL, "rule 110"));
-        customRules.add(RuleFactory.createRule(111, Severity.CODE_SMELL, "rule 111"));
-        customRules.add(RuleFactory.createRule(112, Severity.CODE_SMELL, "rule 112"));
-
-        return customRules;
-    }
-
-    @Override
     public void init(CompilerPluginContext compilerPluginContext) {
         ScannerContext scannerContext = (ScannerContext) compilerPluginContext.userData().get("ScannerContext");
-//        ScannerContext scannerContext = getScannerContext(compilerPluginContext);
-
         compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(scannerContext));
     }
 }

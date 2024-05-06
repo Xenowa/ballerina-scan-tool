@@ -42,10 +42,12 @@ public class ScanToolConstants {
     public static final String RULES_TABLE = "rule";
     public static final String JAR_PREDICATE = ".jar";
 
-    // Import generation constants
+    // Compiler Plugins Constants
     public static final String USE_IMPORT_AS_SERVICE = " as _;";
     public static final String CUSTOM_RULES_COMPILER_PLUGIN_VERSION_PATTERN = "^\\d+\\.\\d+\\.\\d+$";
     static final String BALLERINA_RULE_PREFIX = "B";
+
+    static final String RULES_FILE = "rules.json";
 
     private ScanToolConstants() {
     }

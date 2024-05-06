@@ -21,63 +21,21 @@ package io.ballerina.scan.internal;
 import io.ballerina.scan.Rule;
 import io.ballerina.scan.Severity;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 import static io.ballerina.scan.internal.ScanToolConstants.BALLERINA_RULE_PREFIX;
 import static io.ballerina.scan.internal.ScanToolConstants.PATH_SEPARATOR;
 
 public class RuleFactory {
 
-    private RuleFactory() {
-    }
-
     static Rule createRule(int numericId, String description, Severity severity) {
         return new RuleIml(BALLERINA_RULE_PREFIX + numericId, numericId, description, severity);
     }
 
-    public static Rule createRule(int numericId, Severity severity, String description) {
-        // Getting org/name from URL through protection domain
-        URL jarUrl = severity.getClass()
-                .getProtectionDomain()
-                .getCodeSource()
-                .getLocation();
-        URI jarUri;
-        try {
-            jarUri = jarUrl.toURI();
-        } catch (URISyntaxException ex) {
-            throw new RuntimeException(ex);
-        }
+    static Rule createRule(int numericId, String description, Severity severity, String org, String name) {
+        String reportedSource = org + PATH_SEPARATOR + name;
+        return new RuleIml(reportedSource + ":" + BALLERINA_RULE_PREFIX + numericId, numericId, description,
+                severity);
+    }
 
-        Path jarPath = Paths.get(jarUri);
-        String pluginName = Optional.of(jarPath)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .orElse("");
-
-        String pluginOrg = Optional.of(jarPath)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getParent)
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .orElse("");
-
-        String fullyQualifiedId = String.format("%s" + PATH_SEPARATOR + "%s:%s%d", pluginOrg,
-                pluginName, BALLERINA_RULE_PREFIX, numericId);
-
-        return new RuleIml(fullyQualifiedId, numericId, description, severity);
+    private RuleFactory() {
     }
 }

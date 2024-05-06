@@ -18,6 +18,10 @@
 
 package io.ballerina.scan.internal;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.BallerinaToml;
@@ -38,15 +42,20 @@ import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
+import io.ballerina.scan.Severity;
 import io.ballerina.scan.utilities.ScanTomlFile;
 import io.ballerina.tools.text.LineRange;
 import io.ballerina.tools.text.TextRange;
 import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,9 +64,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
-import static io.ballerina.scan.internal.ScanToolConstants.BALLERINA_RULE_PREFIX;
 import static io.ballerina.scan.internal.ScanToolConstants.MAIN_BAL;
 import static io.ballerina.scan.internal.ScanToolConstants.PATH_SEPARATOR;
+import static io.ballerina.scan.internal.ScanToolConstants.RULES_FILE;
 import static io.ballerina.scan.internal.ScanToolConstants.USE_IMPORT_AS_SERVICE;
 
 public class ProjectAnalyzer {
@@ -160,30 +169,41 @@ public class ProjectAnalyzer {
                                 URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
                                         this.getClass().getClassLoader());
 
-                                // TODO: Create method to retrieve external rules defined in a JSON file in the plugins
-                                //  resources folder instead of creating new instances
-                                // Load the class dynamically using the UCL
-                                Class<?> pluginClass = ucl.loadClass(fqn);
-                                StaticCodeAnalyzerPlugin plugin = (StaticCodeAnalyzerPlugin) pluginClass
-                                        .getConstructor()
-                                        .newInstance();
+                                // Obtain the rules from the resource file
+                                InputStream resourceAsStream = ucl.getResourceAsStream(RULES_FILE);
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
+                                        StandardCharsets.UTF_8));
 
-                                // Collect all rules from the compiler plugin
-                                List<Rule> rules = plugin.rules();
-                                rules.forEach(rule -> {
-                                    String fullyQualifiedId = String.format("%s" + PATH_SEPARATOR
-                                            + "%s:%s%d", org, name, BALLERINA_RULE_PREFIX, rule.numericId());
-                                    RuleIml correctedRule = new RuleIml(fullyQualifiedId, rule.numericId(),
-                                            rule.description(), rule.severity());
-                                    externalRules.add(correctedRule);
+                                // Parse the rules
+                                StringBuilder stringBuilder = new StringBuilder();
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    stringBuilder.append(line);
+                                }
+                                reader.close();
+                                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                                JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
+
+                                // Generate in memory rules
+                                ruleArray.forEach(rule -> {
+                                    JsonObject ruleObject = rule.getAsJsonObject();
+                                    int numericId = ruleObject.get("id").getAsInt();
+                                    Severity severity = switch (ruleObject.get("severity").getAsString()) {
+                                        case "BUG" -> Severity.BUG;
+                                        case "VULNERABILITY" -> Severity.VULNERABILITY;
+                                        case "CODE_SMELL" -> Severity.CODE_SMELL;
+                                        default -> null;
+                                    };
+                                    String description = ruleObject.get("description").getAsString();
+
+                                    // Create in memory rule objects
+                                    if (severity != null) {
+                                        Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
+                                                org.value(), name.value());
+                                        externalRules.add(inMemoryRule);
+                                    }
                                 });
-                            } catch (ClassNotFoundException |
-                                     NoSuchMethodException |
-                                     SecurityException |
-                                     InstantiationException |
-                                     IllegalAccessException |
-                                     IllegalArgumentException |
-                                     InvocationTargetException ex) {
+                            } catch (SecurityException | IllegalArgumentException | IOException ex) {
                                 throw new RuntimeException(ex);
                             }
                         }
@@ -325,61 +345,78 @@ public class ProjectAnalyzer {
                 // Get the URL of the imported compiler plugin
                 List<String> jarPaths = new ArrayList<>();
 
-                pkgManifest.compilerPluginDescriptor()
-                        .ifPresent(pluginDesc -> {
-                            // There is only 1 pluginDesc per compiler plugin
-                            pluginDesc.dependencies().forEach(dependency -> {
-                                jarPaths.add(dependency.getPath());
-                            });
+                pkgManifest.compilerPluginDescriptor().ifPresent(pluginDesc -> {
+                    // There is only 1 pluginDesc per compiler plugin
+                    pluginDesc.dependencies().forEach(dependency -> {
+                        jarPaths.add(dependency.getPath());
+                    });
 
-                            // Get fully qualified class name of the class implementing the compiler plugin
-                            String fqn = pluginDesc.plugin().getClassName();
+                    // Get fully qualified class name of the class implementing the compiler plugin
+                    String fqn = pluginDesc.plugin().getClassName();
 
-                            List<Rule> externalRules = new ArrayList<>();
-                            try {
-                                // Create a URLClassLoader
-                                List<URL> jarUrls = new ArrayList<>();
-                                jarPaths.forEach(jarPath -> {
-                                    try {
-                                        URL jarUrl = Path.of(jarPath).toUri().toURL();
-                                        jarUrls.add(jarUrl);
-                                    } catch (MalformedURLException ex) {
-                                        throw new RuntimeException(ex);
-                                    }
-                                });
-                                URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
-                                        this.getClass().getClassLoader());
+                    List<Rule> externalRules = new ArrayList<>();
 
-                                // TODO: Change Obtaining rules defined in a JSON file on compiler plugins
-                                Class<?> pluginClass = ucl.loadClass(fqn);
-                                StaticCodeAnalyzerPlugin plugin = (StaticCodeAnalyzerPlugin) pluginClass
-                                        .getConstructor()
-                                        .newInstance();
+                    // Create a URLClassLoader
+                    List<URL> jarUrls = new ArrayList<>();
+                    jarPaths.forEach(jarPath -> {
+                        try {
+                            URL jarUrl = Path.of(jarPath).toUri().toURL();
+                            jarUrls.add(jarUrl);
+                        } catch (MalformedURLException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                    URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
+                            this.getClass().getClassLoader());
 
-                                List<Rule> rules = plugin.rules();
-                                rules.forEach(rule -> {
-                                    String fullyQualifiedId = String.format("%s" + PATH_SEPARATOR
-                                            + "%s:%s%d", org, name, BALLERINA_RULE_PREFIX, rule.numericId());
-                                    RuleIml correctedRule = new RuleIml(fullyQualifiedId, rule.numericId(),
-                                            rule.description(), rule.severity());
-                                    externalRules.add(correctedRule);
-                                });
-                            } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
-                                     IllegalAccessException | NoSuchMethodException e) {
-                                throw new RuntimeException(e);
-                            }
+                    // Obtain the rules from the resource file
+                    InputStream resourceAsStream = ucl.getResourceAsStream(RULES_FILE);
 
-                            // Create and add scanner context to static analysis compiler plugins
-                            ScannerContext context = new ScannerContextIml(externalRules);
-                            scannerContextList.add(context);
+                    // Parse the rules
+                    StringBuilder stringBuilder = new StringBuilder();
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
+                            StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stringBuilder.append(line);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                    JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
 
-                            Map<String, Object> pluginProperties = new HashMap<>();
-                            pluginProperties.put("ScannerContext", context);
+                    // Generate in memory rules
+                    ruleArray.forEach(rule -> {
+                        JsonObject ruleObject = rule.getAsJsonObject();
+                        int numericId = ruleObject.get("id").getAsInt();
+                        Severity severity = switch (ruleObject.get("severity").getAsString()) {
+                            case "BUG" -> Severity.BUG;
+                            case "VULNERABILITY" -> Severity.VULNERABILITY;
+                            case "CODE_SMELL" -> Severity.CODE_SMELL;
+                            default -> null;
+                        };
+                        String description = ruleObject.get("description").getAsString();
 
-                            project.projectEnvironmentContext()
-                                    .getService(CompilerPluginCache.class)
-                                    .putData(fqn, pluginProperties);
-                        });
+                        // Create in memory rule objects
+                        if (severity != null) {
+                            Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
+                                    org.value(), name.value());
+                            externalRules.add(inMemoryRule);
+                        }
+                    });
+
+                    // Create and add scanner context to static analysis compiler plugins
+                    ScannerContext context = new ScannerContextIml(externalRules);
+                    scannerContextList.add(context);
+
+                    Map<String, Object> pluginProperties = new HashMap<>();
+                    pluginProperties.put("ScannerContext", context);
+
+                    project.projectEnvironmentContext()
+                            .getService(CompilerPluginCache.class)
+                            .putData(fqn, pluginProperties);
+                });
             }
         }
 

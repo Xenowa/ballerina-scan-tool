@@ -19,16 +19,7 @@
 package io.ballerina.scan.internal;
 
 import io.ballerina.projects.plugins.CompilerPlugin;
-import io.ballerina.scan.Rule;
-
-import java.util.List;
 
 public abstract class StaticCodeAnalyzerPlugin extends CompilerPlugin {
 
-    /**
-     * Used for loading custom rules from compiler plugins to the scan tool.
-     */
-    // It's not just to display the rules. This is what we will rely on in the final report for description, kind,
-    // severity, etc. too.
-    public abstract List<Rule> rules();
 }
