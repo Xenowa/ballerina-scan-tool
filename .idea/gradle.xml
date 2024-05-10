@@ -10,7 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/ScanCommand" />
             <option value="$PROJECT_DIR$/sample-ballerina-io-rules-analyzer" />
-            <option value="$PROJECT_DIR$/sample-ballerinai-observe-rules-analyzer" />
             <option value="$PROJECT_DIR$/sample-ballerinax-github-rules-analyzer" />
             <option value="$PROJECT_DIR$/sample-custom-rules-analyzer" />
             <option value="$PROJECT_DIR$/sonar-ballerina-plugin" />

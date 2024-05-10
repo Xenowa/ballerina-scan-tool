@@ -1,5 +1,0 @@
-[plugin] # Have to check if below path is needed
-class = "org.arc.scanner.CustomStaticCodeAnalyzer"
-
-[[dependency]]
-path = "../build/libs/sample-ballerinai-observe-rules-analyzer-0.1.0.jar"
