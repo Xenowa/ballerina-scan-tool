@@ -2,4 +2,4 @@
 class = "org.arc.scanner.CustomStaticCodeAnalyzer"
 
 [[dependency]]
-path = "../build/libs/custom-rules-analyzer-0.1.0.jar"
+path = "../build/libs/sample-ballerina-io-rules-analyzer-0.1.0.jar"

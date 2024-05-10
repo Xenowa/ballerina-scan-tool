@@ -79,7 +79,6 @@ public class ProjectAnalyzer {
 
     public List<Rule> getExternalAnalyzerRules(Project project) {
         List<Rule> externalRules = new ArrayList<>();
-
         Module defaultModule = project.currentPackage().getDefaultModule();
         Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
 
@@ -87,8 +86,8 @@ public class ProjectAnalyzer {
         StringBuilder newImports = new StringBuilder();
         StringBuilder tomlDependencies = new StringBuilder();
         AtomicInteger importCounter = new AtomicInteger(0);
-
         List<String> analyzerDescriptors = new ArrayList<>();
+
         scanTomlFile.getAnalyzers().forEach(analyzer -> {
             // Generate analyzer as import
             String analyzerImport = IMPORT_PREFIX + analyzer.getOrg() + PATH_SEPARATOR + analyzer.getName()
@@ -120,6 +119,14 @@ public class ProjectAnalyzer {
         String documentContent = mainBAL.textDocument().toString();
         mainBAL.modify().withContent(newImports + documentContent).apply();
 
+        // Generating toml dependencies
+        String tomlDocumentContent = "";
+        BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
+        if (ballerinaToml != null) {
+            tomlDocumentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            ballerinaToml.modify().withContent(tomlDocumentContent + tomlDependencies).apply();
+        }
+
         // Get direct dependencies of in memory BAL file through project API
         PackageResolution packageResolution = project.currentPackage().getResolution();
         ResolvedPackageDependency rootPkgNode = new ResolvedPackageDependency(project.currentPackage(),
@@ -144,7 +151,6 @@ public class ProjectAnalyzer {
                     .ifPresent(pluginDesc -> {
 
                         // Check if compiler plugin is one defined in Scan.toml file by comparing org and name
-                        String fqn = pluginDesc.plugin().getClassName();
                         String reportedSource = org + PATH_SEPARATOR + name;
                         if (analyzerDescriptors.contains(reportedSource)) {
                             try {
@@ -212,6 +218,11 @@ public class ProjectAnalyzer {
 
         // Replace mainBAL file with its original content once to preserve initial line numbers during core scans
         mainBAL.modify().withContent(documentContent).apply();
+
+        // Replace Ballerina.toml file with its original content
+        if (ballerinaToml != null) {
+            ballerinaToml.modify().withContent(tomlDocumentContent).apply();
+        }
 
         return externalRules;
     }

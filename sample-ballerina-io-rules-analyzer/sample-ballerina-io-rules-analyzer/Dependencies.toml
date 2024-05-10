@@ -8,10 +8,10 @@ dependencies-toml-version = "2"
 distribution-version = "2201.9.0"
 
 [[package]]
-org = "tharana_wanigaratne"
-name = "custom_static_code_analyzer"
+org = "ballerina"
+name = "io_static_code_analyzer"
 version = "0.1.0"
 modules = [
-	{org = "tharana_wanigaratne", packageName = "custom_static_code_analyzer", moduleName = "custom_static_code_analyzer"}
+	{org = "ballerina", packageName = "io_static_code_analyzer", moduleName = "io_static_code_analyzer"}
 ]
 

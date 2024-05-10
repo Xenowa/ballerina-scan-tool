@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -42,23 +41,33 @@ public class Main {
 
     private static final PrintStream outputStream = System.out;
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) {
+        try {
+            readExternalRules();
+        } catch (Exception e) {
+            outputStream.println(e.getMessage());
+        }
+    }
+
+    private static void readExternalRules() throws IOException {
         // Get the rules
         List<URL> urls = new ArrayList<>();
         urls.add(
                 Path.of("C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool" +
-                                "\\custom-rules-analyzer\\build\\libs\\custom-rules-analyzer-0.1.0.jar")
+                                "\\sample-custom-rules-analyzer\\build\\libs\\sample-custom-rules-analyzer-0.1.0.jar")
                         .toUri()
                         .toURL());
         CustomToolClassLoader cl = new CustomToolClassLoader(urls.toArray(new URL[0]), Main.class.getClassLoader());
         InputStream resourceAsStream = cl.getResourceAsStream("rules.json");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8));
 
         // Read the rules
         StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
+                StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
         }
 
         // Convert string to JSON Array
@@ -67,7 +76,7 @@ public class Main {
 
         // Generate rules from the array
         String org = "tharanawanigaratne";
-        String name = "custom_ballerina_rules";
+        String name = "custom_rules_analyzer";
         List<Rule> rules = new ArrayList<>();
 
         ruleArray.forEach(rule -> {

@@ -4,4 +4,4 @@ path = "sonar-platform-plugin-1.0.jar"
 
 [[analyzer]]
 org = "tharana_wanigaratne"
-name = "custom_static_code_analyzer"
+name = "custom_rules_analyzer"

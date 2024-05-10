@@ -27,8 +27,6 @@ plugins {
     id "com.github.spotbugs" version "5.0.14"
     // For providing file download tasks functionality of checkstyle files
     id "de.undercouch.download" version "5.4.0"
-    // Required plugin to create an executable jar which does not require external dependencies
-    id "com.github.johnrengelman.shadow" version "7.1.0"
 }
 
 group = 'org.arc.scanner'
@@ -216,148 +214,20 @@ tasks.jar {
     }
 }
 
-// Configuration required to create the shadow jar file
-def shadowJar = tasks.shadowJar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
-}
-
-tasks.shadowJar {
-    minimize {}
-
-    // build related files, useless for the plugin
-    exclude '**/*.js'
-    exclude '**/*.properties'
-    exclude '**/*.proto'
-    exclude '**/*.txt'
-
-    // Other unwanted exclusions
-    exclude "cli-help/**"
-    exclude "com/**"
-    exclude "create_cmd_templates/**"
-    exclude "doc-ui/**"
-    exclude "io/ballerina/compiler/**"
-    exclude "io/ballerina/identifier/**"
-    exclude "io/ballerina/projects/**"
-    exclude "io/ballerina/runtime/**"
-    exclude "io/ballerina/toml/**"
-    exclude "io/ballerina/tools/**"
-    exclude "io/netty/**"
-    exclude "io/opentelemetry/**"
-    exclude "javax/**"
-    exclude "kotlin/**"
-    exclude "licenses/**"
-    exclude "META-INF/maven/**"
-    exclude "META-INF/native-image/**"
-    exclude "META-INF/native/**"
-    exclude "META-INF/proguard/**"
-    exclude "META-INF/resources/**"
-    exclude "META-INF/services/org/**"
-    exclude "META-INF/services/com.atomikos.icatch.provider.Assembler"
-    exclude "META-INF/services/com.atomikos.icatch.TransactionServicePlugin"
-    exclude "META-INF/services/com.ctc.wstx.shaded.msv.relaxng_datatype.DatatypeLibraryFactory"
-    exclude "META-INF/services/io.ballerina.cli.BLauncherCmd"
-    exclude "META-INF/services/io.ballerina.cli.launcher.BLauncherCmd"
-    exclude "META-INF/services/io.ballerina.runtime.internal.services.spi.EmbeddedExecutor"
-    exclude "META-INF/services/javax.annotation.processing.Processor"
-    exclude "META-INF/services/javax.xml.stream.XMLEventFactory"
-    exclude "META-INF/services/javax.xml.stream.XMLInputFactory"
-    exclude "META-INF/services/javax.xml.stream.XMLOutputFactory"
-    exclude "META-INF/services/org.ballerinalang.compiler.plugins.CompilerPlugin"
-    exclude "META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory"
-    exclude "META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.dtd"
-    exclude "META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.relaxng"
-    exclude "META-INF/services/org.codehaus.stax2.validation.XMLValidationSchemaFactory.w3c"
-    exclude "META-INF/services/org.testng.xml.ISuiteParser"
-    exclude "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
-    exclude "META-INF/sisu/**"
-    exclude "META-INF/versions/**"
-    exclude "META-INF/axiom.xml"
-    exclude "META-INF/DEPENDENCIES"
-    exclude "META-INF/kotlin-stdlib.kotlin_module"
-    exclude "META-INF/kotlin-stdlib-common.kotlin_module"
-    exclude "META-INF/kotlin-stdlib-jdk7.kotlin_module"
-    exclude "META-INF/kotlin-stdlib-jdk8.kotlin_module"
-    exclude "META-INF/LICENSE"
-    exclude "META-INF/LICENSE.md"
-    exclude "META-INF/NOTICE"
-    exclude "META-INF/NOTICE.md"
-    exclude "META-INF/okio.kotlin_module"
-    exclude "META-INF/properties"
-    exclude "me/**"
-    exclude "new_cmd_defaults/**"
-    exclude "okhttp3/**"
-    exclude "okio/**"
-    exclude "org/apache/**"
-    exclude "org/ballerinalang/**"
-    exclude "org/codehaus/**"
-    exclude "org/eclipse/**"
-    exclude "org/jacoco/**"
-    exclude "org/jetbrains/**"
-    exclude "org/jline/**"
-    exclude "org/objectweb/**"
-    exclude "org/slf4j/**"
-    exclude "org/sonatype/**"
-    exclude "org/testng/**"
-    exclude "org/wso2/ballerinalang/**"
-    exclude "about.html"
-    exclude "bal-tools-toml-schema.json"
-    exclude "ballerina-toml-schema.json"
-    exclude "dependencies-toml-schema.json"
-    exclude "jballerina-tools-2201.8.6.zip"
-    exclude "old-dependencies-toml-schema.json"
-    exclude "plugin.xml"
-    exclude "production.html"
-    exclude "release-description.md"
-    exclude "settings-toml-schema.json"
-    exclude "syntax_tree_descriptor.json"
-    exclude "template.declaration.mustache"
-    exclude "template.execution.mustache"
-    exclude "testng.css"
-    exclude "testngtasks"
-    exclude "ballerina-scan.help"
-    exclude "report.zip"
-    exclude "testng-1.0.dtd"
-}
-
-artifacts {
-    archives shadowJar
-}
-
 // Configurations to automatically build and deploy custom static code analyzer compiler plugin
-def packageName = "custom_static_code_analyzer"
-def tomlVersion = "${project.pluginVersion}"
-def ballerinaTomlFilePlaceHolder = new File("${projectDir}/custom-static-code-analyzer/Ballerina.toml")
-def compilerPluginTomlFilePlaceHolder = new File("${projectDir}/custom-static-code-analyzer/CompilerPlugin.toml")
-def ballerinaTomlFile = new File("${projectDir}/custom-static-code-analyzer/Ballerina.toml")
-def compilerPluginTomlFile = new File("${projectDir}/custom-static-code-analyzer/CompilerPlugin.toml")
-def pluginCentralDirectory = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/tharana_wanigaratne"
-def pluginLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/tharana_wanigaratne"
+def packageName = "io_static_code_analyzer"
+def pluginCentralDirectory = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
+def pluginLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/ballerina"
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
-
-task updateTomlFiles {
-    // Update the Ballerina.toml and Dependencies.toml files
-    doLast {
-        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@project.pluginVersion@", project.pluginVersion)
-        newConfig = newConfig.replace("@toml.version@", tomlVersion)
-        ballerinaTomlFile.text = newConfig
-
-        def newToolConfig = compilerPluginTomlFilePlaceHolder.text.replace("@project.pluginVersion@", project.pluginVersion)
-        newToolConfig = newToolConfig.replace("@toml.version@", tomlVersion)
-        compilerPluginTomlFile.text = newToolConfig
-    }
-}
 
 task buildCompilerPlugin {
     doLast {
         // Pack and push to local repo of distribution
         exec {
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', 'cd custom-static-code-analyzer & bal pack & bal push --repository=local'
+                commandLine 'cmd', '/c', 'cd sample-ballerina-io-rules-analyzer & bal pack & bal push --repository=local'
             } else {
-                commandLine 'sh', '-c', 'cd custom-static-code-analyzer ; bal pack ; bal push --repository=local'
+                commandLine 'sh', '-c', 'cd sample-ballerina-io-rules-analyzer ; bal pack ; bal push --repository=local'
             }
         }
         println("Successfully build and pushed the custom static code analyzer compiler plugin to the local repository")
@@ -385,9 +255,5 @@ task buildCompilerPlugin {
 }
 
 build {
-    dependsOn updateTomlFiles
     dependsOn buildCompilerPlugin
 }
-
-// To make sure the compiler plugins gets built after the fat JAR is created
-buildCompilerPlugin.dependsOn shadowJar

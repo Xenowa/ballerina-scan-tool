@@ -3,12 +3,13 @@ import {
     CodeOffOutlined,
     LockOpenOutlined
 } from '@mui/icons-material';
-import { IconButton } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import {
     DataGrid,
     GridToolbar
 } from '@mui/x-data-grid';
+import { render } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 
 
@@ -16,7 +17,7 @@ const issueSeverityCell = (cellValue) => {
     switch (cellValue) {
         case "CODE_SMELL":
             return (
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "9rem" }}>
+                <Box key={cellValue} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "9rem" }}>
                     <IconButton disabled>
                         <CodeOffOutlined fontSize="large" sx={{ color: "#33B4AF" }} />
                     </IconButton>
@@ -42,7 +43,7 @@ const issueSeverityCell = (cellValue) => {
                 </Box>
             )
         default:
-            return(<Box />)
+            return (<Box />)
     }
 }
 
@@ -55,6 +56,8 @@ const columns = [
             )
         },
         width: 100,
+        headerAlign: "left",
+        align: "left",
     },
     {
         field: 'issueSeverity',
@@ -86,7 +89,7 @@ const columns = [
                 <strong>Description</strong>
             )
         },
-        width: 245 + 145 * 2,
+        width: 535,
         headerAlign: "right",
         align: "right",
     }
@@ -98,6 +101,8 @@ function SingleFileTable({ issues }) {
 
     useEffect(() => {
         if (issues?.length !== 0) {
+            const issuesArray = [];
+
             issues?.forEach((issue, issueID) => {
                 const newRow = {
                     id: issueID,
@@ -107,8 +112,10 @@ function SingleFileTable({ issues }) {
                     description: issue.message
                 }
 
-                setRows(prevRows => [...prevRows, newRow]);
+                issuesArray.push(newRow);
             })
+
+            setRows(issuesArray);
         }
     }, [issues])
 
@@ -139,7 +146,7 @@ function SingleFileTable({ issues }) {
                 disableColumnMenu={true}
                 checkboxSelection={true}
                 disableRowSelectionOnClick
-                getRowHeight={() => 'auto'}
+                autoHeight
             />
         </Box>
     );

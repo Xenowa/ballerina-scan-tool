@@ -3,13 +3,35 @@
 #name = "sonarqube"
 #path = "https://github.com/SonarDance/remotePlatformPluginJARs/raw/main/sonar-platform-analyzer-1.0.jar"
 
+# ballerina module compiler plugin
+[[analyzer]]
+org = "ballerina"
+name = "io_static_code_analyzer"
+
+# ballerinax module compiler plugin
+[[analyzer]]
+org = "ballerinax"
+name = "github_static_code_analyzer"
+
+# ballerinai module compiler plugin
+[[analyzer]]
+org = "ballerinai"
+name = "observe_static_code_analyzer"
+
+# custom compiler plugin
 [[analyzer]]
 org = "tharana_wanigaratne"
-name = "custom_static_code_analyzer"
-# version = "0.1.0"
+name = "custom_rules_analyzer"
 
 [rule]
-include = ["B107", "B108", "tharana_wanigaratne/custom_static_code_analyzer:B109"]
+include = [
+    "B107",
+    "B108",
+    "tharana_wanigaratne/custom_rules_analyzer:B109",
+    "ballerina/io_static_code_analyzer:B109",
+    "ballerinai/observe_static_code_analyzer:B109",
+    "ballerinax/github_static_code_analyzer:B109",
+]
 exclude = ["B107"]
 
 # ================================================

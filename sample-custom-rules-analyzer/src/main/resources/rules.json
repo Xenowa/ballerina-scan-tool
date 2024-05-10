@@ -1,0 +1,22 @@
+[
+  {
+    "id": 109,
+    "severity": "CODE_SMELL",
+    "description": "Add a nested comment explaining why this function is empty or complete the implementation"
+  },
+  {
+    "id": 110,
+    "severity": "CODE_SMELL",
+    "description": "rule 110"
+  },
+  {
+    "id": 111,
+    "severity": "CODE_SMELL",
+    "description": "rule 111"
+  },
+  {
+    "id": 112,
+    "severity": "CODE_SMELL",
+    "description": "rule 112"
+  }
+]

@@ -331,6 +331,7 @@ public class ScanCmd implements BLauncherCmd {
             try {
                 if (path.toFile().isDirectory()) {
                     return BuildProject.load(path);
+                    // return BuildProject.load(path, BuildOptions.builder().setSticky(true).build()); (For sticky)
                 } else {
                     return SingleFileProject.load(Paths.get(argList.get(0)));
                 }

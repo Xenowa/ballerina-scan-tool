@@ -42,12 +42,14 @@ const ContentMapper = ({ fileContent, issueLines }) => {
             {
                 fileContent.split("\n").map((line, index) => {
                     return (
-                        <pre style={{
-                            margin: "0",
-                            padding: "0.3rem 1rem",
-                            // backgroundColor: "#f5f5f5",
-                            backgroundColor: issueLines.includes(index + REACT_REPORT_OFFSET) ? "#F74B5A" : "#f5f5f5",
-                        }}>
+                        <pre
+                            key={index}
+                            style={{
+                                margin: "0",
+                                padding: "0.3rem 1rem",
+                                // backgroundColor: "#f5f5f5",
+                                backgroundColor: issueLines.includes(index + REACT_REPORT_OFFSET) ? "#F74B5A" : "#f5f5f5",
+                            }}>
                             <Box key={index + REACT_REPORT_OFFSET} sx={{ display: "flex", gap: "1rem" }}>
                                 <Box>
                                     {index + REACT_REPORT_OFFSET}

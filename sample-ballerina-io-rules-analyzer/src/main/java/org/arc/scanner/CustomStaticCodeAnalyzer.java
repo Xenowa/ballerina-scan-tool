@@ -17,11 +17,11 @@
 
 package org.arc.scanner;
 
+import io.ballerina.projects.plugins.CompilerPlugin;
 import io.ballerina.projects.plugins.CompilerPluginContext;
 import io.ballerina.scan.ScannerContext;
-import io.ballerina.scan.internal.StaticCodeAnalyzerPlugin;
 
-public class CustomStaticCodeAnalyzer extends StaticCodeAnalyzerPlugin {
+public class CustomStaticCodeAnalyzer extends CompilerPlugin {
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {

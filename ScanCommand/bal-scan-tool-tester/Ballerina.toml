@@ -2,10 +2,7 @@
 org = "ballerina"
 name = "bal_scan_tool_tester"
 version = "0.1.0"
-distribution = "2201.8.5"
-
-[build-options]
-observabilityIncluded = true
+distribution = "2201.9.0"
 
 # Testing custom property retrieving from toml file
 [scan]
