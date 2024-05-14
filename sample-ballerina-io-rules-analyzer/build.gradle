@@ -215,7 +215,7 @@ tasks.jar {
 }
 
 // Configurations to automatically build and deploy custom static code analyzer compiler plugin
-def packageName = "io_static_code_analyzer"
+def packageName = "io"
 def pluginCentralDirectory = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
 def pluginLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/ballerina"
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
@@ -241,8 +241,8 @@ task buildCompilerPlugin {
         println("Successfully cleaned the .ballerina/cache* directories")
 
         // Update the central repository
-        def balDestinationDir = "$pluginCentralDirectory/$packageName"
-        def balSourceDir = "$pluginLocalDir/$packageName"
+        def balDestinationDir = "$pluginCentralDirectory/$packageName/1.5.0/java11/compiler-plugin"
+        def balSourceDir = "$pluginLocalDir/$packageName/1.5.0/java17/compiler-plugin"
         if (file(balDestinationDir).exists()) {
             file(balDestinationDir).deleteDir()
         }

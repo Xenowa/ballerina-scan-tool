@@ -6,17 +6,14 @@
 # ballerina module compiler plugin
 [[analyzer]]
 org = "ballerina"
-name = "io_static_code_analyzer"
+name = "io"
+version = "1.5.0"
 
 # ballerinax module compiler plugin
 [[analyzer]]
 org = "ballerinax"
-name = "github_static_code_analyzer"
-
-# ballerinai module compiler plugin
-[[analyzer]]
-org = "ballerinai"
-name = "observe_static_code_analyzer"
+name = "github"
+version = "4.6.0"
 
 # custom compiler plugin
 [[analyzer]]
@@ -27,10 +24,9 @@ name = "custom_rules_analyzer"
 include = [
     "B107",
     "B108",
-    "tharana_wanigaratne/custom_rules_analyzer:B109",
-    "ballerina/io_static_code_analyzer:B109",
-    "ballerinai/observe_static_code_analyzer:B109",
-    "ballerinax/github_static_code_analyzer:B109",
+    "ballerina/io:B109",
+    "ballerinax/github:B109",
+    "tharana_wanigaratne/custom_rules_analyzer:B109"
 ]
 exclude = ["B107"]
 

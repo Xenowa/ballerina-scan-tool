@@ -1,5 +1,5 @@
 [package]
 org = "ballerinax"
-name = "github_static_code_analyzer"
-version = "0.1.0"
+name = "github"
+version = "4.6.0"
 distribution = "2201.9.0"

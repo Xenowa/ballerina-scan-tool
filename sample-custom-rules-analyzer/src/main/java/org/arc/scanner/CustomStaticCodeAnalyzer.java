@@ -25,7 +25,10 @@ public class CustomStaticCodeAnalyzer extends CompilerPlugin {
 
     @Override
     public void init(CompilerPluginContext compilerPluginContext) {
-        ScannerContext scannerContext = (ScannerContext) compilerPluginContext.userData().get("ScannerContext");
-        compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(scannerContext));
+        Object context = compilerPluginContext.userData().get("ScannerContext");
+        if (context != null) {
+            ScannerContext scannerContext = (ScannerContext) context;
+            compilerPluginContext.addCodeAnalyzer(new CustomCodeAnalyzer(scannerContext));
+        }
     }
 }

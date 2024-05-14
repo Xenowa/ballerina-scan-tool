@@ -1,5 +1,5 @@
 [plugin] # Have to check if below path is needed
-class = "org.arc.scanner.CustomStaticCodeAnalyzer"
+class = "ballerinax.github.CustomStaticCodeAnalyzer"
 
 [[dependency]]
 path = "../build/libs/sample-ballerinax-github-rules-analyzer-0.1.0.jar"
