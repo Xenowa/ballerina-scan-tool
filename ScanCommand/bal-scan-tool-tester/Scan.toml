@@ -20,13 +20,21 @@ version = "4.6.0"
 org = "tharana_wanigaratne"
 name = "custom_rules_analyzer"
 
+# For testing http module locally
+[[analyzer]]
+org = "ballerina"
+name = "http"
+version = "2.11.1"
+repository = "local"
+
 [rule]
 include = [
     "B107",
     "B108",
     "ballerina/io:B109",
+    "ballerina/http:B109",
     "ballerinax/github:B109",
-    "tharana_wanigaratne/custom_rules_analyzer:B109"
+    "tharana_wanigaratne/custom_rules_analyzer:B109",
 ]
 exclude = ["B107"]
 

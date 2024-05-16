@@ -31,10 +31,9 @@ plugins {
     id "com.github.spotbugs" version "5.0.14"
     // For providing file download tasks functionality
     id "de.undercouch.download" version "5.4.0"
+    // For publishing modules
+    id 'maven-publish'
 }
-
-group = 'io.ballerina.scan'
-version = "${scanToolVersion}"
 
 repositories {
     mavenLocal()
@@ -296,7 +295,6 @@ createBallerinaToolConfigFile.dependsOn updateTomlFiles
 buildScanTool.dependsOn createBallerinaToolConfigFile
 
 build {
-    dependsOn ':static-code-analysis-report:createScanReportZip'
     dependsOn updateTomlFiles
     dependsOn createBallerinaToolConfigFile
     dependsOn buildScanTool
@@ -319,4 +317,29 @@ test {
             .resolve("ballerina-${ballerinaVersion}").toString()
 
     useJUnitPlatform()
+}
+
+// Configurations for publishing the module as a package
+group = 'io.ballerina.scan'
+version = "${scanToolVersion}"
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId "scan-command"
+            version version
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Xenowa/ballerina-scan-tool")
+            credentials {
+                username = System.getenv("publishUser")
+                password = System.getenv("publishPAT")
+            }
+        }
+    }
 }

@@ -229,8 +229,6 @@ spotbugsMain.finalizedBy validateSpotbugs
 // =======================================
 // Required to run tests relevant to the plugin
 tasks.test {
-    dependsOn ':static-code-analysis-report:createScanReportZip'
-
     doFirst {
         // For copying the platform plugin JAR into sonar-ballerina module
         def targetJar = file("/src/test/java/io/ballerina/sonar/sonar_bal_testing/sonar-platform-plugin-1.0.jar")

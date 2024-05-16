@@ -44,9 +44,7 @@ jobs:
         env:
           packageUser: ${{ github.actor }}
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
-        # To make sure the scan command gets built before running tests
-        run: |
-          ./gradlew build
+        run: ./gradlew build
 
   windows_build:
     name: Build with tests on Windows
@@ -80,4 +78,4 @@ jobs:
         env:
           packageUser: ${{ github.actor }}
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew.bat build
+        run: ./gradlew build

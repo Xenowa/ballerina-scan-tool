@@ -175,41 +175,45 @@ public class ProjectAnalyzer {
                                 URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
                                         this.getClass().getClassLoader());
 
-                                // Obtain the rules from the resource file
+                                // Obtain rules if present
                                 InputStream resourceAsStream = ucl.getResourceAsStream(RULES_FILE);
-                                BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
-                                        StandardCharsets.UTF_8));
 
-                                // Parse the rules
-                                StringBuilder stringBuilder = new StringBuilder();
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    stringBuilder.append(line);
-                                }
-                                reader.close();
-                                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                                JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
-
-                                // Generate in memory rules
-                                ruleArray.forEach(rule -> {
-                                    JsonObject ruleObject = rule.getAsJsonObject();
-                                    int numericId = ruleObject.get("id").getAsInt();
-                                    Severity severity = switch (ruleObject.get("severity").getAsString()) {
-                                        case "BUG" -> Severity.BUG;
-                                        case "VULNERABILITY" -> Severity.VULNERABILITY;
-                                        case "CODE_SMELL" -> Severity.CODE_SMELL;
-                                        default -> null;
-                                    };
-                                    String description = ruleObject.get("description").getAsString();
-
-                                    // Create in memory rule objects
-                                    if (severity != null) {
-                                        Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
-                                                org.value(), name.value());
-                                        externalRules.add(inMemoryRule);
+                                if (resourceAsStream != null) {
+                                    StringBuilder stringBuilder = new StringBuilder();
+                                    try (BufferedReader reader = new BufferedReader(
+                                            new InputStreamReader(resourceAsStream,
+                                                    StandardCharsets.UTF_8))) {
+                                        String line;
+                                        while ((line = reader.readLine()) != null) {
+                                            stringBuilder.append(line);
+                                        }
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
                                     }
-                                });
-                            } catch (SecurityException | IllegalArgumentException | IOException ex) {
+                                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                                    JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
+
+                                    // Generate in memory rules
+                                    ruleArray.forEach(rule -> {
+                                        JsonObject ruleObject = rule.getAsJsonObject();
+                                        int numericId = ruleObject.get("id").getAsInt();
+                                        Severity severity = switch (ruleObject.get("severity").getAsString()) {
+                                            case "BUG" -> Severity.BUG;
+                                            case "VULNERABILITY" -> Severity.VULNERABILITY;
+                                            case "CODE_SMELL" -> Severity.CODE_SMELL;
+                                            default -> null;
+                                        };
+                                        String description = ruleObject.get("description").getAsString();
+
+                                        // Create in memory rule objects
+                                        if (severity != null) {
+                                            Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
+                                                    org.value(), name.value());
+                                            externalRules.add(inMemoryRule);
+                                        }
+                                    });
+                                }
+                            } catch (SecurityException | IllegalArgumentException ex) {
                                 throw new RuntimeException(ex);
                             }
                         }
@@ -380,42 +384,44 @@ public class ProjectAnalyzer {
                     URLClassLoader ucl = new URLClassLoader(jarUrls.toArray(new URL[0]),
                             this.getClass().getClassLoader());
 
-                    // Obtain the rules from the resource file
+                    // Obtain rules if present
                     InputStream resourceAsStream = ucl.getResourceAsStream(RULES_FILE);
 
-                    // Parse the rules
-                    StringBuilder stringBuilder = new StringBuilder();
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
-                            StandardCharsets.UTF_8))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            stringBuilder.append(line);
+                    if (resourceAsStream != null) {
+                        // Parse the rules
+                        StringBuilder stringBuilder = new StringBuilder();
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream,
+                                StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                stringBuilder.append(line);
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                        JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
+
+                        // Generate in memory rules
+                        ruleArray.forEach(rule -> {
+                            JsonObject ruleObject = rule.getAsJsonObject();
+                            int numericId = ruleObject.get("id").getAsInt();
+                            Severity severity = switch (ruleObject.get("severity").getAsString()) {
+                                case "BUG" -> Severity.BUG;
+                                case "VULNERABILITY" -> Severity.VULNERABILITY;
+                                case "CODE_SMELL" -> Severity.CODE_SMELL;
+                                default -> null;
+                            };
+                            String description = ruleObject.get("description").getAsString();
+
+                            // Create in memory rule objects
+                            if (severity != null) {
+                                Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
+                                        org.value(), name.value());
+                                externalRules.add(inMemoryRule);
+                            }
+                        });
                     }
-                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                    JsonArray ruleArray = gson.fromJson(stringBuilder.toString(), JsonArray.class);
-
-                    // Generate in memory rules
-                    ruleArray.forEach(rule -> {
-                        JsonObject ruleObject = rule.getAsJsonObject();
-                        int numericId = ruleObject.get("id").getAsInt();
-                        Severity severity = switch (ruleObject.get("severity").getAsString()) {
-                            case "BUG" -> Severity.BUG;
-                            case "VULNERABILITY" -> Severity.VULNERABILITY;
-                            case "CODE_SMELL" -> Severity.CODE_SMELL;
-                            default -> null;
-                        };
-                        String description = ruleObject.get("description").getAsString();
-
-                        // Create in memory rule objects
-                        if (severity != null) {
-                            Rule inMemoryRule = RuleFactory.createRule(numericId, description, severity,
-                                    org.value(), name.value());
-                            externalRules.add(inMemoryRule);
-                        }
-                    });
 
                     // Create and add scanner context to static analysis compiler plugins
                     ScannerContext context = new ScannerContextIml(externalRules);
