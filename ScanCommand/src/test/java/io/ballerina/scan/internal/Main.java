@@ -23,6 +23,17 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.ballerina.cli.launcher.CustomToolClassLoader;
+import io.ballerina.projects.BallerinaToml;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageDependencyScope;
+import io.ballerina.projects.PackageDescriptor;
+import io.ballerina.projects.PackageManifest;
+import io.ballerina.projects.PackageResolution;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.ResolvedPackageDependency;
+import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.scan.Rule;
 import io.ballerina.scan.Severity;
 
@@ -47,6 +58,55 @@ public class Main {
         } catch (Exception e) {
             outputStream.println(e.getMessage());
         }
+        resolveProjectDependenciesAfterModification();
+    }
+
+    private static void resolveProjectDependenciesAfterModification() {
+        // 1. Load the Ballerina project
+        Project project = BuildProject.load(Path.of("C:\\Users\\Tharana Wanigaratne\\Desktop\\sample_project"));
+
+        // 2. define the local module to be used for the project
+        StringBuilder tomlDependencies = new StringBuilder();
+        tomlDependencies.append("[[dependency]]" + "\n");
+        tomlDependencies.append("org='" + "ballerina" + "'\n");
+        tomlDependencies.append("name='" + "io" + "'\n");
+        tomlDependencies.append("version='" + "1.5.0" + "'\n");
+
+        // 3. Retrieve Ballerina.toml file and generate dependency
+        String tomlDocumentContent = "";
+        BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
+        if (ballerinaToml != null) {
+            tomlDocumentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            ballerinaToml.modify().withContent(tomlDocumentContent + tomlDependencies).apply();
+        }
+
+        // 4. Retrieve the deault module and generate the dependency as an import
+        String dependencyAsImport = "import ballerina/io as _;\n";
+        Module defaultModule = project.currentPackage().getDefaultModule();
+        Document document = defaultModule.document(defaultModule.documentIds().iterator().next());
+        String documentContent = document.textDocument().toString();
+        document.modify().withContent(dependencyAsImport + documentContent).apply();
+
+        // 5. Get direct dependencies of the default module file
+        PackageResolution packageResolution = project.currentPackage().getResolution();
+        ResolvedPackageDependency rootPkgNode = new ResolvedPackageDependency(project.currentPackage(),
+                PackageDependencyScope.DEFAULT);
+
+        List<Package> directDependencies = packageResolution.dependencyGraph()
+                .getDirectDependencies(rootPkgNode)
+                .stream()
+                .map(ResolvedPackageDependency::packageInstance)
+                .toList();
+
+        // 6. Print the information of the dependencies in use
+        directDependencies.forEach(dependency -> {
+            PackageManifest manifest = dependency.manifest();
+            PackageDescriptor descriptor = manifest.descriptor();
+            outputStream.println("descriptor info: "
+                    + descriptor.org() + "/"
+                    + descriptor.name() + ":"
+                    + descriptor.version());
+        });
     }
 
     private static void readExternalRules() throws IOException {

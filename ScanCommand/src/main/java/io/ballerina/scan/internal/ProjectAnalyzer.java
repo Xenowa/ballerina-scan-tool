@@ -115,10 +115,6 @@ public class ProjectAnalyzer {
             importCounter.getAndIncrement();
         });
 
-        // Generating imports
-        String documentContent = mainBAL.textDocument().toString();
-        mainBAL.modify().withContent(newImports + documentContent).apply();
-
         // Generating toml dependencies
         String tomlDocumentContent = "";
         BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
@@ -126,6 +122,10 @@ public class ProjectAnalyzer {
             tomlDocumentContent = ballerinaToml.tomlDocument().textDocument().toString();
             ballerinaToml.modify().withContent(tomlDocumentContent + tomlDependencies).apply();
         }
+
+        // Generating imports
+        String documentContent = mainBAL.textDocument().toString();
+        mainBAL.modify().withContent(newImports + documentContent).apply();
 
         // Get direct dependencies of in memory BAL file through project API
         PackageResolution packageResolution = project.currentPackage().getResolution();
