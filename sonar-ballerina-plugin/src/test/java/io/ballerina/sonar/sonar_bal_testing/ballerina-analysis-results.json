@@ -1,17 +1,5 @@
 [
   {
-    "startLine": 0,
-    "startLineOffset": 25,
-    "endLine": 0,
-    "endLineOffset": 93,
-    "ruleID": "B107",
-    "message": "Functions should not have too many parameters!",
-    "severity": "CODE_SMELL",
-    "source": "BUILT_IN",
-    "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
-    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal"
-  },
-  {
     "startLine": 1,
     "startLineOffset": 24,
     "endLine": 1,
@@ -24,16 +12,16 @@
     "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal"
   },
   {
-    "startLine": 16,
-    "startLineOffset": 23,
-    "endLine": 24,
-    "endLineOffset": 1,
-    "ruleID": "B109",
-    "message": "Add a nested comment explaining why this function is empty or complete the implementation",
+    "startLine": 0,
+    "startLineOffset": 25,
+    "endLine": 0,
+    "endLineOffset": 93,
+    "ruleID": "B107",
+    "message": "Functions should not have too many parameters!",
     "severity": "CODE_SMELL",
-    "source": "EXTERNAL",
-    "fileName": "sonar_bal_testing/main.bal",
-    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\main.bal"
+    "source": "BUILT_IN",
+    "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
+    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal"
   },
   {
     "startLine": 0,
@@ -46,5 +34,17 @@
     "source": "EXTERNAL",
     "fileName": "sonar_bal_testing.emptyFunction/emptyFunction.bal",
     "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\emptyFunction\\emptyFunction.bal"
+  },
+  {
+    "startLine": 16,
+    "startLineOffset": 23,
+    "endLine": 24,
+    "endLineOffset": 1,
+    "ruleID": "B109",
+    "message": "Add a nested comment explaining why this function is empty or complete the implementation",
+    "severity": "CODE_SMELL",
+    "source": "EXTERNAL",
+    "fileName": "sonar_bal_testing/main.bal",
+    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\main.bal"
   }
 ]
