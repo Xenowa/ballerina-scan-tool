@@ -27,7 +27,6 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.BallerinaToml;
 import io.ballerina.projects.CompilerPluginCache;
 import io.ballerina.projects.Document;
-import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
 import io.ballerina.projects.Package;
@@ -79,8 +78,6 @@ public class ProjectAnalyzer {
 
     public List<Rule> getExternalAnalyzerRules(Project project) {
         List<Rule> externalRules = new ArrayList<>();
-        Module defaultModule = project.currentPackage().getDefaultModule();
-        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
 
         // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
         StringBuilder newImports = new StringBuilder();
@@ -115,17 +112,18 @@ public class ProjectAnalyzer {
             importCounter.getAndIncrement();
         });
 
-        // Generating toml dependencies
-        String tomlDocumentContent = "";
-        BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
-        if (ballerinaToml != null) {
-            tomlDocumentContent = ballerinaToml.tomlDocument().textDocument().toString();
-            ballerinaToml.modify().withContent(tomlDocumentContent + tomlDependencies).apply();
-        }
-
         // Generating imports
+        Module defaultModule = project.currentPackage().getDefaultModule();
+        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
         String documentContent = mainBAL.textDocument().toString();
         mainBAL.modify().withContent(newImports + documentContent).apply();
+
+        // Generating toml dependencies
+        BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
+        if (ballerinaToml != null) {
+            documentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
+        }
 
         // Get direct dependencies of in memory BAL file through project API
         PackageResolution packageResolution = project.currentPackage().getResolution();
@@ -220,14 +218,6 @@ public class ProjectAnalyzer {
                     });
         }
 
-        // Replace mainBAL file with its original content once to preserve initial line numbers during core scans
-        mainBAL.modify().withContent(documentContent).apply();
-
-        // Replace Ballerina.toml file with its original content
-        if (ballerinaToml != null) {
-            ballerinaToml.modify().withContent(tomlDocumentContent).apply();
-        }
-
         return externalRules;
     }
 
@@ -240,7 +230,7 @@ public class ProjectAnalyzer {
         if (project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
             Module tempModule = project.currentPackage().getDefaultModule();
             tempModule.documentIds().forEach(documentId -> {
-                analyzeDocument(project, tempModule, documentId, internalScannerContext);
+                analyzeDocument(tempModule.document(documentId), internalScannerContext);
             });
         } else {
             // Iterate through each module of the project
@@ -250,12 +240,12 @@ public class ProjectAnalyzer {
 
                 // Iterate through each ballerina test file in a ballerina project and perform static analysis
                 module.testDocumentIds().forEach(testDocumentID -> {
-                    analyzeDocument(project, module, testDocumentID, internalScannerContext);
+                    analyzeDocument(module.document(testDocumentID), internalScannerContext);
                 });
 
                 // Iterate through each document of the Main module/project + submodules
                 module.documentIds().forEach(documentId -> {
-                    analyzeDocument(project, module, documentId, internalScannerContext);
+                    analyzeDocument(module.document(documentId), internalScannerContext);
                 });
             });
         }
@@ -264,18 +254,12 @@ public class ProjectAnalyzer {
         return allIssues;
     }
 
-    public void analyzeDocument(Project currentProject,
-                                Module currentModule,
-                                DocumentId documentId,
-                                InternalScannerContext internalScannerContext) {
-        // Retrieve each document from the module
-        Document currentDocument = currentModule.document(documentId);
-
+    public void analyzeDocument(Document currentDocument, InternalScannerContext internalScannerContext) {
         // Retrieve syntax tree of each document
         SyntaxTree syntaxTree = currentDocument.syntaxTree();
 
         // Get semantic model from module compilation
-        ModuleCompilation compilation = currentModule.getCompilation();
+        ModuleCompilation compilation = currentDocument.module().getCompilation();
         SemanticModel semanticModel = compilation.getSemanticModel();
 
         // Perform core scans
@@ -288,9 +272,6 @@ public class ProjectAnalyzer {
     }
 
     public List<Issue> runExternalAnalyzers(Project project) {
-        Module defaultModule = project.currentPackage().getDefaultModule();
-        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
-
         // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
         StringBuilder newImports = new StringBuilder();
         StringBuilder tomlDependencies = new StringBuilder();
@@ -325,6 +306,8 @@ public class ProjectAnalyzer {
         });
 
         // Generating imports
+        Module defaultModule = project.currentPackage().getDefaultModule();
+        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
         String documentContent = mainBAL.textDocument().toString();
         mainBAL.modify().withContent(newImports + documentContent).apply();
 

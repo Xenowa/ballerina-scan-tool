@@ -30,7 +30,7 @@ public class ScanTomlFile {
     private final Set<RuleToFilter> rulesToInclude = new HashSet<>();
     private final Set<RuleToFilter> rulesToExclude = new HashSet<>();
 
-    public void setPlatform(Platform platform) {
+    void setPlatform(Platform platform) {
         platforms.add(platform);
     }
 
@@ -38,7 +38,7 @@ public class ScanTomlFile {
         return platforms;
     }
 
-    public void setAnalyzer(Analyzer analyzer) {
+    void setAnalyzer(Analyzer analyzer) {
         analyzers.add(analyzer);
     }
 
@@ -46,7 +46,7 @@ public class ScanTomlFile {
         return analyzers;
     }
 
-    public void setRuleToInclude(RuleToFilter rule) {
+    void setRuleToInclude(RuleToFilter rule) {
         rulesToInclude.add(rule);
     }
 
@@ -54,7 +54,7 @@ public class ScanTomlFile {
         return rulesToInclude;
     }
 
-    public void setRuleToExclude(RuleToFilter rule) {
+    void setRuleToExclude(RuleToFilter rule) {
         rulesToExclude.add(rule);
     }
 
@@ -68,7 +68,7 @@ public class ScanTomlFile {
         private String path;
         private Map<String, Object> arguments;
 
-        public Platform(String name, String path, Map<String, Object> arguments) {
+        Platform(String name, String path, Map<String, Object> arguments) {
 
             this.name = name;
             this.path = path;
@@ -95,7 +95,7 @@ public class ScanTomlFile {
         private String version;
         private String repository;
 
-        public Analyzer(String org, String name, String version, String repository) {
+        Analyzer(String org, String name, String version, String repository) {
 
             this.org = org;
             this.name = name;
@@ -124,7 +124,7 @@ public class ScanTomlFile {
 
         private String id;
 
-        public RuleToFilter(String id) {
+        RuleToFilter(String id) {
             this.id = id;
         }
 

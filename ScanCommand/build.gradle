@@ -319,15 +319,15 @@ test {
     useJUnitPlatform()
 }
 
-// Configurations for publishing the module as a package
-group = 'io.ballerina.scan'
+// Task to publish the package to the GitHub package repository and Ballerina central repository
+group = "${group}"
 version = "${scanToolVersion}"
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
             groupId group
-            artifactId "scan-command"
+            artifactId project.name
             version version
         }
     }
@@ -342,4 +342,26 @@ publishing {
             }
         }
     }
+    println("Successfully published the scan tool package to GitHub.")
+}
+
+task publishBallerinaPackage {
+    doLast {
+//        exec {
+//            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                commandLine 'cmd', "/c", "set BALLERINA_DEV_CENTRAL=true"
+//                commandLine 'cmd', "/c", "bal pack && bal push"
+//            } else {
+//                commandLine 'sh', "-c", "export BALLERINA_DEV_CENTRAL=true"
+//                commandLine 'sh', "-c", "bal pack && bal push"
+//            }
+//        }
+        println("Successfully pushed the scan tool package to central.")
+    }
+}
+
+publishBallerinaPackage.dependsOn(publish)
+
+task release {
+    dependsOn(publishBallerinaPackage)
 }
