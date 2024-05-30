@@ -70,7 +70,7 @@ dependencies {
     implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${project.ballerinaVersion}"
 
     // Adding dependency to the bal scan tool to retrieve the interface methods
-    implementation project(path: ':ScanCommand')
+    implementation project(path: ':scan-command')
 }
 
 // Setting up the ballerina home property for the project

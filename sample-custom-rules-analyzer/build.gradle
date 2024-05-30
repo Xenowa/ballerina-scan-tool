@@ -84,7 +84,7 @@ dependencies {
     checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version: '10.12.1'
 
     // Adding dependency to the bal scan tool to retrieve the interface methods
-    implementation project(path: ':ScanCommand')
+    implementation project(path: ':scan-command')
 }
 
 // Setting up the ballerina home property for the project

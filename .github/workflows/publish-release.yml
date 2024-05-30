@@ -39,8 +39,14 @@ jobs:
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew build -x check -x test
 
-      - name: publish and release artifacts
+      - name: publish artifacts to GitHub package registry
         env:
           publishUser: ${{ github.actor }}
           publishPAT: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew release -x check -x test
+        run: ./gradlew publish
+
+      - name: Release package to Ballerina Central
+        env:
+          publishUser: ${{ github.actor }}
+          publishPAT: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew release
