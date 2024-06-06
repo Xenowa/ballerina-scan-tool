@@ -1,17 +1,5 @@
 [
   {
-    "startLine": 1,
-    "startLineOffset": 24,
-    "endLine": 1,
-    "endLineOffset": 44,
-    "ruleID": "B108",
-    "message": "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
-    "severity": "CODE_SMELL",
-    "source": "BUILT_IN",
-    "fileName": "sonar_bal_testing.panicChecker/panicChecker.bal",
-    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal"
-  },
-  {
     "startLine": 0,
     "startLineOffset": 25,
     "endLine": 0,
@@ -22,6 +10,18 @@
     "source": "BUILT_IN",
     "fileName": "sonar_bal_testing.tooManyParameters/tooManyParameters.bal",
     "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\tooManyParameters\\tooManyParameters.bal"
+  },
+  {
+    "startLine": 1,
+    "startLineOffset": 24,
+    "endLine": 1,
+    "endLineOffset": 44,
+    "ruleID": "B108",
+    "message": "Avoid checkpanic, prefer explicit error handling using check keyword instead!",
+    "severity": "CODE_SMELL",
+    "source": "BUILT_IN",
+    "fileName": "sonar_bal_testing.panicChecker/panicChecker.bal",
+    "filePath": "C:\\Users\\Tharana Wanigaratne\\Desktop\\ballerina-scan-tool\\sonar-ballerina-plugin\\src\\test\\java\\io\\ballerina\\sonar\\sonar_bal_testing\\modules\\panicChecker\\panicChecker.bal"
   },
   {
     "startLine": 0,

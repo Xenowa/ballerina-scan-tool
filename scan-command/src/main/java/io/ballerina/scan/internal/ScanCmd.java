@@ -24,6 +24,7 @@ import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.util.ProjectConstants;
+import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.scan.Issue;
 import io.ballerina.scan.PlatformPluginContext;
 import io.ballerina.scan.Rule;
@@ -320,7 +321,14 @@ public class ScanCmd implements BLauncherCmd {
         if (argList.isEmpty()) {
             // Return the loaded project or the relevant error message
             try {
-                return BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
+                Project project = BuildProject.load(Paths.get(System.getProperty(ProjectConstants.USER_DIR)));
+
+                // Check if there is at least 1 ballerina file in the project and proceed
+                if (ProjectUtils.isProjectEmpty(project)) {
+                    outputStream.println("ballerina: package is empty. Please add at least one .bal file.");
+                    return null;
+                }
+                return project;
             } catch (RuntimeException ex) {
                 outputStream.println(ex.getMessage());
                 return null;
@@ -330,8 +338,14 @@ public class ScanCmd implements BLauncherCmd {
             Path path = Paths.get(argList.get(0));
             try {
                 if (path.toFile().isDirectory()) {
-                    return BuildProject.load(path);
-                    // return BuildProject.load(path, BuildOptions.builder().setSticky(true).build()); (For sticky)
+                    Project project = BuildProject.load(path);
+
+                    // Check if there is at least 1 ballerina file in the project and proceed
+                    if (ProjectUtils.isProjectEmpty(project)) {
+                        outputStream.println("ballerina: package is empty. Please add at least one .bal file.");
+                        return null;
+                    }
+                    return project;
                 } else {
                     return SingleFileProject.load(Paths.get(argList.get(0)));
                 }

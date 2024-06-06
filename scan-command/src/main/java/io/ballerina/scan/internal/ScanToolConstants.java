@@ -48,6 +48,7 @@ public class ScanToolConstants {
     static final String BALLERINA_RULE_PREFIX = "B";
 
     static final String RULES_FILE = "rules.json";
+    static final String IMPORT_GENERATOR_FILE = "scanFile";
 
     private ScanToolConstants() {
     }

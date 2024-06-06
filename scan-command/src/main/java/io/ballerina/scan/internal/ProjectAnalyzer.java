@@ -27,8 +27,11 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.projects.BallerinaToml;
 import io.ballerina.projects.CompilerPluginCache;
 import io.ballerina.projects.Document;
+import io.ballerina.projects.DocumentConfig;
+import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleCompilation;
+import io.ballerina.projects.ModuleId;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageDependencyScope;
 import io.ballerina.projects.PackageManifest;
@@ -43,9 +46,6 @@ import io.ballerina.scan.Rule;
 import io.ballerina.scan.ScannerContext;
 import io.ballerina.scan.Severity;
 import io.ballerina.scan.utilities.ScanTomlFile;
-import io.ballerina.tools.text.LineRange;
-import io.ballerina.tools.text.TextRange;
-import org.wso2.ballerinalang.compiler.diagnostic.BLangDiagnosticLocation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,10 +60,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.ballerina.projects.util.ProjectConstants.IMPORT_PREFIX;
-import static io.ballerina.scan.internal.ScanToolConstants.MAIN_BAL;
+import static io.ballerina.scan.internal.ScanToolConstants.IMPORT_GENERATOR_FILE;
 import static io.ballerina.scan.internal.ScanToolConstants.PATH_SEPARATOR;
 import static io.ballerina.scan.internal.ScanToolConstants.RULES_FILE;
 import static io.ballerina.scan.internal.ScanToolConstants.USE_IMPORT_AS_SERVICE;
@@ -112,16 +113,30 @@ public class ProjectAnalyzer {
             importCounter.getAndIncrement();
         });
 
-        // Generating imports
+        // Creating an in-memory document with the plugin imports
         Module defaultModule = project.currentPackage().getDefaultModule();
-        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
-        String documentContent = mainBAL.textDocument().toString();
-        mainBAL.modify().withContent(newImports + documentContent).apply();
+
+        // Making sure the generated document file name is unique
+        List<String> defaultModuleFiles = defaultModule.documentIds()
+                .stream()
+                .map(documentId -> defaultModule.document(documentId).name())
+                .toList();
+        String documentName;
+        do {
+            documentName = String.format("%s-%s.bal", IMPORT_GENERATOR_FILE, UUID.randomUUID());
+        } while (defaultModuleFiles.contains(documentName));
+
+        ModuleId defaultModuleId = defaultModule.moduleId();
+        DocumentId documentId = DocumentId.create(documentName, defaultModuleId);
+        DocumentConfig documentConfig = DocumentConfig.from(documentId, newImports.toString(), documentName);
+
+        // Adding the in-memory document to the default module
+        defaultModule.modify().addDocument(documentConfig).apply();
 
         // Generating toml dependencies
         BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
         if (ballerinaToml != null) {
-            documentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            String documentContent = ballerinaToml.tomlDocument().textDocument().toString();
             ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
         }
 
@@ -305,16 +320,30 @@ public class ProjectAnalyzer {
             importCounter.getAndIncrement();
         });
 
-        // Generating imports
+        // Creating an in-memory document with the plugin imports
         Module defaultModule = project.currentPackage().getDefaultModule();
-        Document mainBAL = defaultModule.document(defaultModule.documentIds().iterator().next());
-        String documentContent = mainBAL.textDocument().toString();
-        mainBAL.modify().withContent(newImports + documentContent).apply();
+
+        // Making sure the generated document file name is unique
+        List<String> defaultModuleFiles = defaultModule.documentIds()
+                .stream()
+                .map(documentId -> defaultModule.document(documentId).name())
+                .toList();
+        String documentName;
+        do {
+            documentName = String.format("%s-%s.bal", IMPORT_GENERATOR_FILE, UUID.randomUUID());
+        } while (defaultModuleFiles.contains(documentName));
+
+        ModuleId defaultModuleId = defaultModule.moduleId();
+        DocumentId documentId = DocumentId.create(documentName, defaultModuleId);
+        DocumentConfig documentConfig = DocumentConfig.from(documentId, newImports.toString(), documentName);
+
+        // Adding the in-memory document to the default module
+        defaultModule.modify().addDocument(documentConfig).apply();
 
         // Generating dependencies
         BallerinaToml ballerinaToml = project.currentPackage().ballerinaToml().orElse(null);
         if (ballerinaToml != null) {
-            documentContent = ballerinaToml.tomlDocument().textDocument().toString();
+            String documentContent = ballerinaToml.tomlDocument().textDocument().toString();
             ballerinaToml.modify().withContent(documentContent + tomlDependencies).apply();
         }
 
@@ -430,33 +459,6 @@ public class ProjectAnalyzer {
             externalIssues.addAll(reporter.getIssues());
         });
 
-        List<Issue> modifiedExternalIssues = new ArrayList<>();
-        externalIssues.forEach(issue -> {
-            // Cast the external issue to its implementation to retrieve additional getters
-            IssueIml externalIssueIml = (IssueIml) issue;
-            if (externalIssueIml.fileName().equals(project.currentPackage()
-                    .packageName()
-                    + PATH_SEPARATOR
-                    + MAIN_BAL)) {
-                // Modify the issue
-                LineRange lineRange = issue.location().lineRange();
-                TextRange textRange = issue.location().textRange();
-                BLangDiagnosticLocation modifiedLocation = new BLangDiagnosticLocation(lineRange.fileName(),
-                        lineRange.startLine().line() - importCounter.get(),
-                        lineRange.endLine().line() - importCounter.get(),
-                        lineRange.startLine().offset(),
-                        lineRange.endLine().offset(),
-                        textRange.startOffset(),
-                        textRange.length());
-                IssueIml modifiedExternalIssue = new IssueIml(modifiedLocation, externalIssueIml.rule(),
-                        externalIssueIml.source(), externalIssueIml.fileName(), externalIssueIml.filePath());
-
-                modifiedExternalIssues.add(modifiedExternalIssue);
-            } else {
-                modifiedExternalIssues.add(issue);
-            }
-        });
-
-        return modifiedExternalIssues;
+        return externalIssues;
     }
 }
