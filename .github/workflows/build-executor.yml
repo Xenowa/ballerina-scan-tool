@@ -2,9 +2,7 @@ name: Build
 
 # Action Listeners
 on:
-  pull_request:
-    branches:
-      - main
+  push:
   workflow_dispatch:
 
 # Actions

@@ -23,8 +23,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.rule.CheckFactory;
-import org.sonar.api.batch.sensor.issue.internal.DefaultNoSonarFilter;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -61,9 +59,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
                 "tooManyParameters/tooManyParameters.bal");
         context.fileSystem().add(inputFile8);
 
-        // Setting up dummy rules
-        CheckFactory checkFactory = checkFactory("B107", "B108");
-        BallerinaSensor sensor = sensor(checkFactory);
+        BallerinaSensor sensor = sensor();
 
         sensor.execute(context);
 
@@ -72,8 +68,7 @@ class BallerinaSensorTest extends AbstractSensorTest {
                 .baseDir().getPath()).resolve(ISSUES_FILE_PATH))).isEqualTo(true);
     }
 
-    private BallerinaSensor sensor(CheckFactory checkFactory) {
-
-        return new BallerinaSensor(checkFactory, fileLinesContextFactory, new DefaultNoSonarFilter(), language());
+    private BallerinaSensor sensor() {
+        return new BallerinaSensor(language());
     }
 }

@@ -27,12 +27,10 @@ public class BallerinaPlugin implements Plugin {
     public static final String BALLERINA_LANGUAGE_KEY = "ballerina";
     public static final String BALLERINA_LANGUAGE_NAME = "Ballerina";
     public static final String BALLERINA_REPOSITORY_KEY = "ballerina";
-    public static final String REPOSITORY_NAME = "SonarAnalyzer";
-    public static final String PROFILE_NAME = "Sonar way";
+    public static final String REPOSITORY_NAME = "BallerinaAnalyzer";
+    public static final String PROFILE_NAME = "Ballerina way";
     public static final String BALLERINA_FILE_SUFFIXES_KEY = "sonar.ballerina.file.suffixes";
     public static final String BALLERINA_FILE_SUFFIXES_DEFAULT_VALUE = ".bal";
-    public static final String PERFORMANCE_MEASURE_ACTIVATION_PROPERTY = "sonar.ballerina.performance.measure";
-    public static final String PERFORMANCE_MEASURE_DESTINATION_FILE = "sonar.ballerina.performance.measure.json";
 
     // Required Categories
     private static final String GENERAL = "General";

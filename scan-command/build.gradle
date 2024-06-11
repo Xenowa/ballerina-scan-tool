@@ -31,9 +31,10 @@ plugins {
     id "com.github.spotbugs" version "5.0.14"
     // For providing file download tasks functionality
     id "de.undercouch.download" version "5.4.0"
-    // For publishing modules
-    id 'maven-publish'
 }
+
+group = "${group}"
+version = "${scanToolVersion}"
 
 repositories {
     mavenLocal()
@@ -194,14 +195,15 @@ task validateSpotbugs() {
 spotbugsMain.finalizedBy validateSpotbugs
 
 // Configurations to automatically build and deploy scan tool
+def packageOrg = "ballerina";
 def packageName = "tool_scan"
-def tomlVersion = "${project.scanToolVersion}"
+def tomlVersion = "${scanToolVersion}"
 def ballerinaTomlFilePlaceHolder = new File("${rootDir}/build-config/resources/Ballerina.toml")
 def balToolTomlFilePlaceHolder = new File("${rootDir}/build-config/resources/BalTool.toml")
 def ballerinaTomlFile = new File("${projectDir}/tool-scan/Ballerina.toml")
 def balToolTomlFile = new File("${projectDir}/tool-scan/BalTool.toml")
-def balerinaCentralDir = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/ballerina"
-def ballerinaLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/ballerina"
+def balerinaCentralDir = System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io/bala/${packageOrg}"
+def ballerinaLocalDir = System.getProperty("user.home") + "/.ballerina/repositories/local/bala/${packageOrg}"
 def balCentralCacheDir = project.file(System.getProperty("user.home") + "/.ballerina/repositories/central.ballerina.io")
 def ballerinaToolConfigDir = System.getProperty("user.home") + "/.ballerina/.config"
 def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.config/bal-tools.toml"
@@ -209,7 +211,7 @@ def ballerinaToolConfigToml = System.getProperty("user.home") + "/.ballerina/.co
 task updateTomlFiles {
     // Update the Ballerina.toml and BalTool.toml files
     doLast {
-        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@toml.distribution@", project.ballerinaVersion)
+        def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@toml.distribution@", ballerinaVersion)
         newConfig = newConfig.replace("@toml.version@", tomlVersion)
         ballerinaTomlFile.text = newConfig
 
@@ -223,9 +225,9 @@ task createBallerinaToolConfigFile {
     def configFileContent = """
         [[tool]]
         id = "scan"
-        org = "ballerina"
-        name = "tool_scan"
-        version = "${project.scanToolVersion}"
+        org = "${packageOrg}"
+        name = "${packageName}"
+        version = "${scanToolVersion}"
         active = true
     """.stripIndent()
 
@@ -241,7 +243,7 @@ task createBallerinaToolConfigFile {
         def tomlFileContent = tomlFile.text
 
         // Regex to identify existing scan tool entry
-        def entryRegex = /\n\[\[tool]]\nid = "scan"\norg = "ballerina"\nname = "tool_scan"\nversion = ".+"\nactive = true/
+        def entryRegex = /\n\[\[tool]]\nid = "scan"\norg = "${packageOrg}"\nname = "${packageName}"\nversion = ".+"\nactive = true/
         def match = tomlFileContent.find(entryRegex)
 
         if (match) {
@@ -317,49 +319,4 @@ test {
             .resolve("ballerina-${ballerinaVersion}").toString()
 
     useJUnitPlatform()
-}
-
-// Task to publish the package to the GitHub package repository and Ballerina central repository
-group = "${group}"
-version = "${scanToolVersion}"
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            groupId "${group}"
-            artifactId "${project.name}"
-            version "${scanToolVersion}"
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/Xenowa/ballerina-scan-tool")
-            credentials {
-                username = System.getenv("publishUser")
-                password = System.getenv("publishPAT")
-            }
-        }
-    }
-    println("Successfully published the scan tool package to GitHub.")
-}
-
-task publishBallerinaPackage {
-    doLast {
-//        exec {
-//            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-//                commandLine 'cmd', "/c", "set BALLERINA_DEV_CENTRAL=true"
-//                commandLine 'cmd', "/c", "bal pack && bal push"
-//            } else {
-//                commandLine 'sh', "-c", "export BALLERINA_DEV_CENTRAL=true"
-//                commandLine 'sh', "-c", "bal pack && bal push"
-//            }
-//        }
-        println("Successfully pushed the scan tool package to central.")
-    }
-}
-
-task release {
-    dependsOn(publishBallerinaPackage)
 }

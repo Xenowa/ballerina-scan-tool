@@ -83,7 +83,6 @@ public class ProjectAnalyzer {
         // Get the analyzer plugins as imports & generate them as toml dependencies if version is provided
         StringBuilder newImports = new StringBuilder();
         StringBuilder tomlDependencies = new StringBuilder();
-        AtomicInteger importCounter = new AtomicInteger(0);
         List<String> analyzerDescriptors = new ArrayList<>();
 
         scanTomlFile.getAnalyzers().forEach(analyzer -> {
@@ -108,9 +107,6 @@ public class ProjectAnalyzer {
 
                 tomlDependencies.append("\n");
             }
-
-            // Increment the imports counter
-            importCounter.getAndIncrement();
         });
 
         // Creating an in-memory document with the plugin imports

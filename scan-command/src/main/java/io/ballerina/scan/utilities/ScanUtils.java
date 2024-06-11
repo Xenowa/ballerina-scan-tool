@@ -295,18 +295,36 @@ public class ScanUtils {
     }
 
     public static void printRulesToConsole(List<Rule> rules) {
-        outputStream.println("Default available rules:");
+        // Define the table columns
+        String ruleIDColumn = "RuleID";
+        String ruleSeverityColumn = "Rule Severity";
+        String ruleDescriptionColumn = "Rule Description";
 
-        outputStream.println("\t" + "RuleID" + "\t"
-                + " | " + "Rule Severity" + "\t"
-                + " | " + "Rule Description" + "\n" + "\t"
-                + "---------------------------------------------------");
+        // Find the maximum length of each column
+        int maxRuleIDLength = ruleIDColumn.length();
+        int maxSeverityLength = ruleSeverityColumn.length();
+        int maxDescriptionLength = ruleDescriptionColumn.length();
 
-        rules.forEach(rule -> {
-            outputStream.println("\t" + rule.id() + "\t"
-                    + " | " + rule.severity().toString() + "\t"
-                    + " | " + rule.description());
-        });
+        // Find the maximum length of each column
+        for (Rule rule : rules) {
+            maxRuleIDLength = Math.max(maxRuleIDLength, rule.id().length());
+            maxSeverityLength = Math.max(maxSeverityLength, rule.severity().toString().length());
+            maxDescriptionLength = Math.max(maxDescriptionLength, rule.description().length());
+        }
+
+        // Create the format string
+        String format = "\t%-" + maxRuleIDLength + "s | %-" + maxSeverityLength + "s | %-" + maxDescriptionLength
+                + "s%n";
+
+        // Print the headers
+        outputStream.printf(format, ruleIDColumn, ruleSeverityColumn, ruleDescriptionColumn);
+        outputStream.printf("\t" + "-".repeat(maxRuleIDLength + 1) + "--" +
+                "-".repeat(maxSeverityLength + 1) + "--" + "-".repeat(maxDescriptionLength + 1) + "%n");
+
+        // Print the rules
+        for (Rule rule : rules) {
+            outputStream.printf(format, rule.id(), rule.severity().toString(), rule.description());
+        }
 
         outputStream.println();
     }

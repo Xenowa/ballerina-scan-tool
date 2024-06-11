@@ -292,9 +292,6 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 tasks.shadowJar {
     minimize {}
 
-//    exclude 'sonar-scanner-api-batch.jar'
-//    exclude 'META-INF/proguard/**'
-
     exclude 'ch/**'
     exclude 'javax/**'
     exclude 'license/**'

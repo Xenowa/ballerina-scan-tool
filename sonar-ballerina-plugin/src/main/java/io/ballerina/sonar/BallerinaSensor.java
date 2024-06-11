@@ -25,13 +25,10 @@ import org.apache.commons.lang3.SystemUtils;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.rule.CheckFactory;
 import org.sonar.api.batch.rule.Severity;
 import org.sonar.api.batch.sensor.Sensor;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
-import org.sonar.api.issue.NoSonarFilter;
-import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.utils.log.Logger;
@@ -41,6 +38,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,38 +49,23 @@ import static io.ballerina.sonar.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
 
 class BallerinaSensor implements Sensor {
 
-    private static final String TARGET_FOLDER = "target";
-    private static final String REPORT_FOLDER = "report";
     private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
     private static final String BUILT_IN = "BUILT_IN";
     private static final String EXTERNAL = "EXTERNAL";
     private static final Logger LOG = Loggers.get(BallerinaSensor.class);
-    private final FileLinesContextFactory fileLinesContextFactory;
-    private final NoSonarFilter noSonarFilter;
     private final BallerinaLanguage language;
-    private final CheckFactory checkFactory;
 
     private final ArrayList<String> externalRules = new ArrayList<>();
 
     // Initialize language specific information when the plugin is triggered
-    public BallerinaSensor(CheckFactory checkFactory,
-                           FileLinesContextFactory fileLinesContextFactory,
-                           NoSonarFilter noSonarFilter,
-                           BallerinaLanguage language) {
-
-        this.checkFactory = checkFactory;
-        this.fileLinesContextFactory = fileLinesContextFactory;
-        this.noSonarFilter = noSonarFilter;
+    public BallerinaSensor(BallerinaLanguage language) {
         this.language = language;
     }
 
     // Method which defines which language files the plugin should work with
     @Override
     public void describe(SensorDescriptor descriptor) {
-
-        descriptor
-                .onlyOnLanguage(language.getKey())
-                .name(language.getName() + " Sensor");
+        descriptor.onlyOnLanguage(language.getKey()).name(language.getName() + " Sensor");
     }
 
     // The place which the entire scan logic should be defined, this is the starting point of the scanner
@@ -91,13 +74,11 @@ class BallerinaSensor implements Sensor {
         // Separate the InputFile components to a Map
         FileSystem fileSystem = sensorContext.fileSystem();
         FilePredicate mainFilePredicate = sensorContext.fileSystem().predicates()
-                .and(
-                        fileSystem.predicates().hasLanguage(language.getKey()),
-                        fileSystem.predicates().hasType(InputFile.Type.MAIN)
-                );
+                .and(fileSystem.predicates().hasLanguage(language.getKey()),
+                        fileSystem.predicates().hasType(InputFile.Type.MAIN));
         Map<String, InputFile> pathAndInputFiles = new HashMap<>();
         fileSystem.inputFiles(mainFilePredicate).forEach(inputFile -> {
-            pathAndInputFiles.put(inputFile.path().toString(), inputFile);
+            pathAndInputFiles.put(Path.of(inputFile.uri()).toString(), inputFile);
         });
 
         // Check if a scanned files report is present
@@ -264,13 +245,11 @@ class BallerinaSensor implements Sensor {
                 .at(context.newIssue()
                         .newLocation()
                         .on(inputFile)
-                        .message(message)
-                        .at(inputFile.newRange(
-                                startLine + sonarScannerOffset,
+                        .at(inputFile.newRange(startLine + sonarScannerOffset,
                                 startLineOffset,
                                 endLine + sonarScannerOffset,
-                                endLineOffset
-                        ))
+                                endLineOffset))
+                        .message(message)
                 )
                 .save();
     }
@@ -319,14 +298,11 @@ class BallerinaSensor implements Sensor {
                 .at(context.newIssue()
                         .newLocation()
                         .on(inputFile)
-                        .message(message)
-                        .at(inputFile.newRange(
-                                startLine + sonarScannerOffset,
+                        .at(inputFile.newRange(startLine + sonarScannerOffset,
                                 startLineOffset,
                                 endLine + sonarScannerOffset,
-                                endLineOffset
-                        ))
-                )
+                                endLineOffset))
+                        .message(message))
                 .save();
     }
 }

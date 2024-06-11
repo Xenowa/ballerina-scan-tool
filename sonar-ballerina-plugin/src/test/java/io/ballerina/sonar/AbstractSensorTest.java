@@ -19,18 +19,10 @@ package io.ballerina.sonar;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
-import org.sonar.api.batch.rule.CheckFactory;
-import org.sonar.api.batch.rule.internal.ActiveRulesBuilder;
-import org.sonar.api.batch.rule.internal.NewActiveRule;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.config.internal.MapSettings;
-import org.sonar.api.measures.FileLinesContext;
-import org.sonar.api.measures.FileLinesContextFactory;
-import org.sonar.api.rule.RuleKey;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -43,55 +35,23 @@ public abstract class AbstractSensorTest {
     public Path temp;
     protected Path baseDir;
     protected SensorContextTester context;
-    protected FileLinesContextFactory fileLinesContextFactory = Mockito.mock(FileLinesContextFactory.class);
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() {
         // Pointing the testing directory
         baseDir = Path.of(System.getProperty("user.dir") + "/"
                 + "src/test/java/io/ballerina/sonar/sonar_bal_testing");
 
         // Setting the context for the testing directory
         context = SensorContextTester.create(baseDir);
-
-        FileLinesContext fileLinesContext = Mockito.mock(FileLinesContext.class);
-        Mockito.when(fileLinesContextFactory.createFor(ArgumentMatchers.any(InputFile.class)))
-                .thenReturn(fileLinesContext);
-    }
-
-    protected CheckFactory checkFactory(String... ruleKeys) {
-
-        ActiveRulesBuilder builder = new ActiveRulesBuilder();
-        for (String ruleKey : ruleKeys) {
-            NewActiveRule newRule = new NewActiveRule.Builder()
-                    .setRuleKey(RuleKey.of(BallerinaPlugin.BALLERINA_REPOSITORY_KEY, ruleKey))
-                    .setName(ruleKey)
-                    .build();
-            builder.addRule(newRule);
-        }
-        context.setActiveRules(builder.build());
-        return new CheckFactory(context.activeRules());
-    }
-
-    protected InputFile createInputFile(String relativePath, String content, InputFile.Status status) {
-
-        return TestInputFileBuilder.create("moduleKey", relativePath)
-                .setModuleBaseDir(baseDir)
-                .setType(InputFile.Type.MAIN)
-                .setLanguage(language().getKey())
-                .setCharset(StandardCharsets.UTF_8)
-                .setContents(content)
-                .setStatus(status)
-                .build();
     }
 
     protected InputFile createInputFileFromPath(String relativePath) {
-
         Path balFilePath = Path.of(baseDir.toString() + "/" + relativePath);
 
-        String fileContent = null;
+        String fileContent;
         try {
-            fileContent = new String(Files.readAllBytes(balFilePath), StandardCharsets.UTF_8).trim();
+            fileContent = Files.readString(balFilePath).trim();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -107,7 +67,6 @@ public abstract class AbstractSensorTest {
     }
 
     protected BallerinaLanguage language() {
-
         return new BallerinaLanguage(new MapSettings().asConfig());
     }
 }
