@@ -45,7 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.ballerina.sonar.BallerinaPlugin.BALLERINA_REPOSITORY_KEY;
+import static io.ballerina.sonar.Constants.RULE_REPOSITORY_KEY;
 
 class BallerinaSensor implements Sensor {
 
@@ -237,7 +237,7 @@ class BallerinaSensor implements Sensor {
         int sonarScannerOffset = 1;
 
         // Creating the initial rule
-        RuleKey ruleKey = RuleKey.of(BALLERINA_REPOSITORY_KEY, ruleID);
+        RuleKey ruleKey = RuleKey.of(RULE_REPOSITORY_KEY, ruleID);
 
         // reporting the issue to SonarQube
         context.newIssue()

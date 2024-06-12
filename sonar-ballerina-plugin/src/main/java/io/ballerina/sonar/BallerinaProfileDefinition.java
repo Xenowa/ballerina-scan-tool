@@ -20,22 +20,31 @@ package io.ballerina.sonar;
 import org.sonar.api.server.profile.BuiltInQualityProfilesDefinition;
 import org.sonarsource.analyzer.commons.BuiltInQualityProfileJsonLoader;
 
+import static io.ballerina.sonar.Constants.JSON_PROFILE_PATH;
+import static io.ballerina.sonar.Constants.LANGUAGE_KEY;
+import static io.ballerina.sonar.Constants.PROFILE_NAME;
+import static io.ballerina.sonar.Constants.RULE_REPOSITORY_KEY;
+
 public class BallerinaProfileDefinition implements BuiltInQualityProfilesDefinition {
 
-    public static final String PATH_TO_JSON = "io/ballerina/sonar/Sonar_way_profile.json";
-
+    /**
+     * <p> Define the quality profile for Ballerina. </p>
+     *
+     * <p>
+     * Quality profiles are shown in the SonarQube dashboard. They are required to be activated for analysis issues to
+     * be reported.
+     * </p>
+     *
+     * @param context The quality profile definition context
+     */
     @Override
     public void define(Context context) {
         // Create a new quality profile for Ballerina
-        NewBuiltInQualityProfile ballerinaQualityProfile = context.createBuiltInQualityProfile(
-                BallerinaPlugin.PROFILE_NAME,
-                BallerinaPlugin.BALLERINA_LANGUAGE_KEY);
+        NewBuiltInQualityProfile ballerinaQualityProfile = context.createBuiltInQualityProfile(PROFILE_NAME,
+                LANGUAGE_KEY);
 
         // Load the new quality profile
-        BuiltInQualityProfileJsonLoader.load(ballerinaQualityProfile
-                , BallerinaPlugin.BALLERINA_REPOSITORY_KEY
-                , PATH_TO_JSON
-        );
+        BuiltInQualityProfileJsonLoader.load(ballerinaQualityProfile, RULE_REPOSITORY_KEY, JSON_PROFILE_PATH);
 
         // Signal that the new profile has been loaded to SonarQube
         ballerinaQualityProfile.done();

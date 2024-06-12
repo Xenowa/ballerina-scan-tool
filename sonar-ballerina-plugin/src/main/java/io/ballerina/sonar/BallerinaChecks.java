@@ -23,11 +23,11 @@ import java.util.List;
 public class BallerinaChecks {
 
     // List for default checks
-    static final List<String> DEFAULT_CHECKS = new ArrayList<>();
+    static final List<String> CORE_RULES = new ArrayList<>();
 
     // Populating default checks
     static {
-        DEFAULT_CHECKS.add("B107");
-        DEFAULT_CHECKS.add("B108");
+        CORE_RULES.add("B107");
+        CORE_RULES.add("B108");
     }
 }

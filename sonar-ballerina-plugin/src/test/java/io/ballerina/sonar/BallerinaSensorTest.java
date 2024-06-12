@@ -17,55 +17,43 @@
 
 package io.ballerina.sonar;
 
-// Testing imports
-
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import org.sonar.api.batch.fs.InputFile;
+import org.testng.annotations.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-class BallerinaSensorTest extends AbstractSensorTest {
+public class BallerinaSensorTest extends AbstractSensorTest {
 
     private static final String ISSUES_FILE_PATH = "ballerina-analysis-results.json";
 
-    @AfterEach
-    @Test
-    void test_one_rule() {
-        // Simulating Ballerina files in a project
-        InputFile inputFile1 = createInputFileFromPath("main.bal");
-        context.fileSystem().add(inputFile1);
-        InputFile inputFile2 = createInputFileFromPath("modules/" +
+    @Test(description = "Test the BallerinaSensor")
+    void test_ballerina_sensor() {
+        InputFile ballerinaFile = createInputFileFromPath("main.bal");
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" +
                 "credentialsNotHardCoded/credentialsNotHardCoded.bal");
-        context.fileSystem().add(inputFile2);
-        InputFile inputFile3 = createInputFileFromPath("modules/" +
-                "databaseInjection/databaseInjection.bal");
-        context.fileSystem().add(inputFile3);
-        InputFile inputFile4 = createInputFileFromPath("modules/" +
-                "emptyFunction/emptyFunction.bal");
-        context.fileSystem().add(inputFile4);
-        InputFile inputFile5 = createInputFileFromPath("modules/" +
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" + "databaseInjection/databaseInjection.bal");
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" + "emptyFunction/emptyFunction.bal");
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" +
                 "functionPathInjection/functionPathInjection.bal");
-        context.fileSystem().add(inputFile5);
-        InputFile inputFile6 = createInputFileFromPath("modules/" +
-                "insecureEndpoint/insecureEndpoint.bal");
-        context.fileSystem().add(inputFile6);
-        InputFile inputFile7 = createInputFileFromPath("modules/" +
-                "panicChecker/panicChecker.bal");
-        context.fileSystem().add(inputFile7);
-        InputFile inputFile8 = createInputFileFromPath("modules/" +
-                "tooManyParameters/tooManyParameters.bal");
-        context.fileSystem().add(inputFile8);
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" + "insecureEndpoint/insecureEndpoint.bal");
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" + "panicChecker/panicChecker.bal");
+        context.fileSystem().add(ballerinaFile);
+        ballerinaFile = createInputFileFromPath("modules/" + "tooManyParameters/tooManyParameters.bal");
+        context.fileSystem().add(ballerinaFile);
 
         BallerinaSensor sensor = sensor();
-
         sensor.execute(context);
-
-        // Assert if a results file was generated during the process
-        Assertions.assertThat(Files.exists(Paths.get(context.fileSystem()
-                .baseDir().getPath()).resolve(ISSUES_FILE_PATH))).isEqualTo(true);
+        Assertions.assertThat(Files.exists(Paths.get(context.fileSystem().baseDir().getPath())
+                        .resolve(ISSUES_FILE_PATH)))
+                .isEqualTo(true);
     }
 
     private BallerinaSensor sensor() {

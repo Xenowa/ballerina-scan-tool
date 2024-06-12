@@ -20,22 +20,25 @@ package io.ballerina.sonar;
 import org.sonar.api.config.Configuration;
 import org.sonar.api.resources.AbstractLanguage;
 
+import static io.ballerina.sonar.Constants.FILE_SUFFIXES_DEFAULT_VALUE;
+import static io.ballerina.sonar.Constants.FILE_SUFFIXES_KEY;
+import static io.ballerina.sonar.Constants.LANGUAGE_KEY;
+import static io.ballerina.sonar.Constants.LANGUAGE_NAME;
+
 public class BallerinaLanguage extends AbstractLanguage {
 
     private final Configuration configuration;
 
     public BallerinaLanguage(Configuration configuration) {
-
-        super(BallerinaPlugin.BALLERINA_LANGUAGE_KEY, BallerinaPlugin.BALLERINA_LANGUAGE_NAME);
+        super(LANGUAGE_KEY, LANGUAGE_NAME);
         this.configuration = configuration;
     }
 
     @Override
     public String[] getFileSuffixes() {
-
-        String[] suffixes = configuration.getStringArray(BallerinaPlugin.BALLERINA_FILE_SUFFIXES_KEY);
+        String[] suffixes = configuration.getStringArray(FILE_SUFFIXES_KEY);
         if (suffixes == null || suffixes.length == 0) {
-            return BallerinaPlugin.BALLERINA_FILE_SUFFIXES_DEFAULT_VALUE.split(",");
+            return FILE_SUFFIXES_DEFAULT_VALUE.split(",");
         } else {
             return suffixes;
         }

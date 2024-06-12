@@ -17,37 +17,30 @@
 
 package io.ballerina.sonar;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.io.TempDir;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.config.internal.MapSettings;
+import org.testng.annotations.BeforeTest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public abstract class AbstractSensorTest {
 
-    @TempDir
-    public Path temp;
-    protected Path baseDir;
-    protected SensorContextTester context;
+    protected final Path baseDir = Paths.get("src", "test", "resources", "sonar_bal_testing");
+    protected final SensorContextTester context = SensorContextTester.create(baseDir);
 
-    @BeforeEach
-    public void setup() {
-        // Pointing the testing directory
-        baseDir = Path.of(System.getProperty("user.dir") + "/"
-                + "src/test/java/io/ballerina/sonar/sonar_bal_testing");
+    @BeforeTest
+    void setup() {
 
-        // Setting the context for the testing directory
-        context = SensorContextTester.create(baseDir);
     }
 
     protected InputFile createInputFileFromPath(String relativePath) {
-        Path balFilePath = Path.of(baseDir.toString() + "/" + relativePath);
+        Path balFilePath = baseDir.resolve(relativePath);
 
         String fileContent;
         try {

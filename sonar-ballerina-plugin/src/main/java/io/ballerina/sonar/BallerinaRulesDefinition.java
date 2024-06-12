@@ -21,27 +21,39 @@ import org.sonar.api.SonarRuntime;
 import org.sonar.api.server.rule.RulesDefinition;
 import org.sonarsource.analyzer.commons.RuleMetadataLoader;
 
+import static io.ballerina.sonar.BallerinaChecks.CORE_RULES;
+import static io.ballerina.sonar.Constants.JSON_PROFILE_PATH;
+import static io.ballerina.sonar.Constants.LANGUAGE_KEY;
+import static io.ballerina.sonar.Constants.RULE_REPOSITORY_KEY;
+import static io.ballerina.sonar.Constants.RULE_REPOSITORY_NAME;
+import static io.ballerina.sonar.Constants.RULE_RESOURCE_FOLDER;
+
 public class BallerinaRulesDefinition implements RulesDefinition {
 
-    private static final String RESOURCE_FOLDER = "io/ballerina/sonar";
     private final SonarRuntime runtime;
 
     public BallerinaRulesDefinition(SonarRuntime runtime) {
         this.runtime = runtime;
     }
 
-    // To define rules we have 1 of the two ways below
-    // 1. Add rules by the annotated class (Requires defining the visitors in a checks folder)
-    // 2. Add rules by the rule keys
+    /**
+     * Define the rules for the Ballerina language.
+     * <p>There are two ways to define a rule for a language: </p>
+     *  <ol>
+     *     <li>Add rules by the annotated class (Requires defining the Java class visitors in a checks folder)</li>
+     *     <li>Add rules by the rule keys</li>
+     *  </ol>
+     * <p>Since in Ballerina the visitors are defined in the Ballerina static code analysis tool rule keys are used </p>
+     *
+     * @param context The rule definition context
+     */
     @Override
     public void define(Context context) {
-        NewRepository repository = context.createRepository(BallerinaPlugin.BALLERINA_REPOSITORY_KEY,
-                BallerinaPlugin.BALLERINA_LANGUAGE_KEY);
-        repository.setName(BallerinaPlugin.REPOSITORY_NAME);
-        RuleMetadataLoader ruleMetadataLoader = new RuleMetadataLoader(RESOURCE_FOLDER,
-                BallerinaProfileDefinition.PATH_TO_JSON,
+        NewRepository repository = context.createRepository(RULE_REPOSITORY_KEY, LANGUAGE_KEY);
+        repository.setName(RULE_REPOSITORY_NAME);
+        RuleMetadataLoader ruleMetadataLoader = new RuleMetadataLoader(RULE_RESOURCE_FOLDER, JSON_PROFILE_PATH,
                 runtime);
-        ruleMetadataLoader.addRulesByRuleKey(repository, BallerinaChecks.DEFAULT_CHECKS);
+        ruleMetadataLoader.addRulesByRuleKey(repository, CORE_RULES);
         repository.done();
     }
 }
