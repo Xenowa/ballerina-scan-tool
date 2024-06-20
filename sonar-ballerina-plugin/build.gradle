@@ -32,9 +32,6 @@ plugins {
 
     // Required plugin for checks testing
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
-
-    // Required plugin to create an executable jar which does not require external dependencies
-    id "com.github.johnrengelman.shadow" version "7.1.0"
 }
 
 group = 'io.ballerina.sonar'
@@ -244,6 +241,8 @@ ext {
 }
 
 tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
     manifest {
         def displayVersion = (project.property("buildNumber") == null ? project.version : project.version.substring(0, project.version.lastIndexOf('.')) + " (build ${project.property("buildNumber")})")
         def buildDate = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -270,42 +269,29 @@ tasks.jar {
                 'Jre-Min-Version': '17'
         )
     }
-}
 
-// Configuration required to create the shadow jar file
-def shadowJar = tasks.shadowJar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
-}
-
-tasks.shadowJar {
-    minimize {}
-
-    exclude 'ch/**'
-    exclude 'javax/**'
-    exclude 'org/apache/xerces/**'
-    exclude 'org/apache/xml/**'
-    exclude 'org/sonarsource/performance/**'
-    exclude 'license/**'
-    exclude 'META-INF/maven/**'
-    exclude 'META-INF/versions/**'
-    exclude 'META-INF/LICENSE'
-    exclude 'META-INF/LICENSE.txt'
-    exclude 'META-INF/NOTICE'
-    exclude 'META-INF/NOTICE.txt'
-    exclude 'META-INF/services/**'
-
-    // The following command actually creates the final jar file if the build is between the size ranges given
-    // enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, MINSIZE, MAXSIZE)
-    doLast {
-        enforceJarSizeAndCheckContent(shadowJar.archiveFile.get().asFile, 10L, 500_000_000L)
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-}
 
-artifacts {
-    archives shadowJar
+    exclude('com/ctc/**')
+    exclude('javax/**')
+    exclude('license/**')
+    exclude('META-INF/maven/**')
+    exclude('META-INF/versions/**')
+    exclude('META-INF/LICENSE')
+    exclude('META-INF/LICENSE.txt')
+    exclude('META-INF/NOTICE')
+    exclude('META-INF/NOTICE.txt')
+    exclude('META-INF/services/**')
+    exclude('org/apache/xerces/**')
+    exclude('org/apache/xml/**')
+    exclude('org/sonarsource/performance/**')
+    exclude('module-info.class')
+
+    doLast {
+        enforceJarSizeAndCheckContent(archiveFile.get().asFile, 10L, 500_000_000L)
+    }
 }
 
 // This function determines the size of the shadow jar file
